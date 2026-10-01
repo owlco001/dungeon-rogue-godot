@@ -1,0 +1,19 @@
+# Godot import cache
+.godot/
+
+# Web export artifacts (deployed to R2, not versioned)
+web/
+!web/shell.html
+
+# Large binaries
+*.pck
+*.wasm
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/

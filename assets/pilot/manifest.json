@@ -1,0 +1,166 @@
+{
+  "batch": "pilot",
+  "assets": [
+    {
+      "file": "characters/aila/char_aila_down_idle_00.png",
+      "size": [
+        128,
+        128
+      ],
+      "has_alpha": true,
+      "id": "aila",
+      "direction": "down",
+      "action": "idle",
+      "frame": 0,
+      "prompt": "txt2img style anchor (right = mirrored left)"
+    },
+    {
+      "file": "characters/aila/char_aila_up_idle_00.png",
+      "size": [
+        128,
+        128
+      ],
+      "has_alpha": true,
+      "id": "aila",
+      "direction": "up",
+      "action": "idle",
+      "frame": 0,
+      "prompt": "img2img from down-idle anchor"
+    },
+    {
+      "file": "characters/aila/char_aila_left_idle_00.png",
+      "size": [
+        128,
+        128
+      ],
+      "has_alpha": true,
+      "id": "aila",
+      "direction": "left",
+      "action": "idle",
+      "frame": 0,
+      "prompt": "img2img from down-idle anchor"
+    },
+    {
+      "file": "characters/aila/char_aila_right_idle_00.png",
+      "size": [
+        128,
+        128
+      ],
+      "has_alpha": true,
+      "id": "aila",
+      "direction": "right",
+      "action": "idle",
+      "frame": 0,
+      "prompt": "img2img from down-idle anchor"
+    },
+    {
+      "file": "characters/aila/char_aila_down_walk_00.png",
+      "size": [
+        128,
+        128
+      ],
+      "has_alpha": true,
+      "id": "aila",
+      "direction": "down",
+      "action": "walk",
+      "frame": 0,
+      "prompt": "img2img walk cycle frame from down-idle anchor"
+    },
+    {
+      "file": "characters/aila/char_aila_down_walk_01.png",
+      "size": [
+        128,
+        128
+      ],
+      "has_alpha": true,
+      "id": "aila",
+      "direction": "down",
+      "action": "walk",
+      "frame": 1,
+      "prompt": "img2img walk cycle frame from down-idle anchor"
+    },
+    {
+      "file": "characters/aila/char_aila_down_walk_02.png",
+      "size": [
+        128,
+        128
+      ],
+      "has_alpha": true,
+      "id": "aila",
+      "direction": "down",
+      "action": "walk",
+      "frame": 2,
+      "prompt": "img2img walk cycle frame from down-idle anchor"
+    },
+    {
+      "file": "characters/aila/char_aila_down_walk_03.png",
+      "size": [
+        128,
+        128
+      ],
+      "has_alpha": true,
+      "id": "aila",
+      "direction": "down",
+      "action": "walk",
+      "frame": 3,
+      "prompt": "img2img walk cycle frame from down-idle anchor"
+    },
+    {
+      "file": "enemies/enemy_slime_idle_00.png",
+      "size": [
+        64,
+        64
+      ],
+      "has_alpha": true,
+      "id": "slime",
+      "action": "idle",
+      "frame": 0,
+      "prompt": "txt2img"
+    },
+    {
+      "file": "enemies/enemy_slime_idle_01.png",
+      "size": [
+        64,
+        64
+      ],
+      "has_alpha": true,
+      "id": "slime",
+      "action": "idle",
+      "frame": 1,
+      "prompt": "img2img squash variant"
+    },
+    {
+      "file": "tiles/corridor/tile_corridor_floor.png",
+      "size": [
+        48,
+        48
+      ],
+      "has_alpha": false,
+      "id": "corridor",
+      "kind": "floor",
+      "prompt": "txt2img seamless texture"
+    },
+    {
+      "file": "tiles/corridor/tile_corridor_wall.png",
+      "size": [
+        48,
+        48
+      ],
+      "has_alpha": false,
+      "id": "corridor",
+      "kind": "wall",
+      "prompt": "txt2img seamless texture"
+    },
+    {
+      "file": "tiles/corridor/tile_corridor_hazard.png",
+      "size": [
+        48,
+        48
+      ],
+      "has_alpha": false,
+      "id": "corridor",
+      "kind": "hazard",
+      "prompt": "txt2img seamless texture"
+    }
+  ]
+}

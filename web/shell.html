@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>地牢肉鸽</title>
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+body {
+	color: white;
+	background-color: #060509;
+	overflow: hidden;
+	touch-action: none;
+	font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+#canvas { display: block; }
+#canvas:focus { outline: none; }
+
+/* ---------- 地牢加载屏 ---------- */
+#status {
+	position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+	display: flex; flex-direction: column; justify-content: center; align-items: center;
+	visibility: hidden; overflow: hidden;
+	background:
+		radial-gradient(ellipse 90% 60% at 50% 110%, rgba(255,122,26,0.10), transparent 60%),
+		radial-gradient(ellipse 70% 50% at 50% -10%, rgba(88,40,140,0.16), transparent 60%),
+		linear-gradient(180deg, #0a0714 0%, #060509 60%, #0b0605 100%);
+}
+#embers { position: absolute; inset: 0; pointer-events: none; }
+.ember {
+	position: absolute; bottom: -12px; border-radius: 50%;
+	background: radial-gradient(circle, #ffca7a 0%, #ff7a1a 60%, transparent 70%);
+	opacity: 0; animation: rise linear infinite;
+}
+@keyframes rise {
+	0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+	10% { opacity: .9; }
+	100% { transform: translateY(-105vh) translateX(4vw) scale(.3); opacity: 0; }
+}
+#loader-box { position: relative; text-align: center; padding: 0 24px; z-index: 1; }
+#game-title {
+	font-size: clamp(44px, 11vw, 84px); font-weight: 900; letter-spacing: .12em;
+	color: #f5c453; margin: 0 0 4px;
+	animation: flicker 2.6s ease-in-out infinite;
+}
+@keyframes flicker {
+	0%, 100% { text-shadow: 0 0 18px rgba(255,150,40,.55), 0 0 60px rgba(255,110,20,.25), 0 3px 0 #5a2d00; }
+	45% { text-shadow: 0 0 26px rgba(255,170,60,.8), 0 0 80px rgba(255,120,30,.35), 0 3px 0 #5a2d00; }
+	60% { text-shadow: 0 0 12px rgba(255,140,40,.4), 0 0 46px rgba(255,110,20,.2), 0 3px 0 #5a2d00; }
+}
+#game-sub {
+	color: #8f7fb8; letter-spacing: .5em; font-size: 13px; margin-bottom: 42px; text-indent: .5em;
+}
+#bar-track {
+	width: min(420px, 72vw); height: 14px; margin: 0 auto; border-radius: 8px;
+	background: #1a1426; border: 1px solid #3a2c55;
+	box-shadow: inset 0 2px 6px rgba(0,0,0,.7); overflow: hidden; position: relative;
+}
+#bar-fill {
+	height: 100%; width: 0%; border-radius: 8px;
+	background: linear-gradient(90deg, #b3541e, #f5c453, #ffe9a8);
+	box-shadow: 0 0 14px rgba(245,196,83,.7);
+	transition: width .25s ease-out; position: relative;
+}
+#bar-fill::after {
+	content: ''; position: absolute; inset: 0;
+	background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%);
+	background-size: 200% 100%; animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -100% 0; } }
+#load-pct { margin-top: 12px; color: #f5c453; font-size: 15px; font-variant-numeric: tabular-nums; }
+#load-msg { margin-top: 6px; color: #b9a8d9; font-size: 15px; }
+#load-msg .dots::after { content: ''; animation: dots 1.2s steps(4) infinite; }
+@keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+#tip {
+	margin-top: 34px; max-width: 78vw; color: #7d6f9e; font-size: 13.5px; line-height: 1.6;
+	transition: opacity .5s; min-height: 44px;
+}
+#tip b { color: #c9a44e; font-weight: 600; }
+#status-notice {
+	display: none; background-color: #5b3943; border-radius: .5rem; border: 1px solid #9b3943;
+	color: #e0e0e0; line-height: 1.3; margin: 0 2rem; padding: 1rem; text-align: center; z-index: 2;
+}
+		</style>
+		$GODOT_HEAD_INCLUDE
+	</head>
+	<body>
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
+
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
+
+		<div id="status">
+			<div id="embers"></div>
+			<div id="loader-box">
+				<h1 id="game-title">地牢肉鸽</h1>
+				<div id="game-sub">ROGUE DUNGEON</div>
+				<div id="bar-track"><div id="bar-fill"></div></div>
+				<div id="load-pct">0%</div>
+				<div id="load-msg">正在深入地牢<span class="dots"></span></div>
+				<div id="tip"></div>
+			</div>
+			<div id="status-notice"></div>
+		</div>
+
+		<script src="$GODOT_URL"></script>
+		<script>
+const GODOT_CONFIG = $GODOT_CONFIG;
+const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+const engine = new Engine(GODOT_CONFIG);
+
+// 浏览器原生音效管理器：复刻 Sfx 的 13 种程序化音效（Web Audio API）。
+// Godot 4.7 Web 音频在桌面端唤醒不可靠，这里走原生通道，GDScript 经 JavaScriptBridge 调用。
+window._gameSfx = (function () {
+	var ctx = null, master = null, muted = false, noiseBuf = null;
+	function ac() {
+		if (!ctx) {
+			var C = window.AudioContext || window.webkitAudioContext;
+			ctx = new C();
+			master = ctx.createGain();
+			master.gain.value = 0.40; // -8dB
+			master.connect(ctx.destination);
+		}
+		if (ctx.state === 'suspended') { ctx.resume(); }
+		return ctx;
+	}
+	function getNoise(c) {
+		if (!noiseBuf) {
+			noiseBuf = c.createBuffer(1, c.sampleRate, c.sampleRate);
+			var d = noiseBuf.getChannelData(0);
+			for (var i = 0; i < d.length; i++) { d[i] = Math.random() * 2 - 1; }
+		}
+		return noiseBuf;
+	}
+	function tone(f0, f1, dur, vol, type, delay) {
+		var c = ac(), t = c.currentTime + (delay || 0);
+		var o = c.createOscillator(), g = c.createGain();
+		o.type = type;
+		o.frequency.setValueAtTime(Math.max(f0, 1), t);
+		if (f1 !== f0) { o.frequency.exponentialRampToValueAtTime(Math.max(f1, 1), t + dur); }
+		g.gain.setValueAtTime(vol, t);
+		g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+		o.connect(g); g.connect(master);
+		o.start(t); o.stop(t + dur + 0.02);
+	}
+	function noise(dur, vol, delay) {
+		var c = ac(), t = c.currentTime + (delay || 0);
+		var s = c.createBufferSource(); s.buffer = getNoise(c);
+		var g = c.createGain();
+		g.gain.setValueAtTime(vol, t);
+		g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+		s.connect(g); g.connect(master);
+		s.start(t); s.stop(t + dur + 0.02);
+	}
+	function boom(dur, vol) {
+		tone(90, 40, dur, vol * 0.8, 'sine');
+		noise(dur, vol * 0.35);
+	}
+	function roar(dur, vol) {
+		tone(110, 55, dur, vol * 0.6, 'sawtooth');
+		noise(dur, vol * 0.3);
+	}
+	var PLAYERS = {
+		shoot: function () { tone(880, 440, 0.07, 0.5 * 0.6, 'square'); },
+		hit: function () { noise(0.08, 0.45); },
+		explosion: function () { boom(0.45, 0.8); },
+		gem: function () { tone(1320, 1760, 0.12, 0.4, 'sine'); },
+		coin: function () { tone(990, 990, 0.08, 0.4, 'sine'); tone(1320, 1320, 0.08, 0.4, 'sine', 0.08); },
+		levelup: function () { var f = [523, 659, 784, 1046]; for (var i = 0; i < f.length; i++) { tone(f[i], f[i], 0.11, 0.45, 'sine', i * 0.11); } },
+		hurt: function () { tone(220, 110, 0.22, 0.5, 'sawtooth'); },
+		stairs: function () { tone(784, 1568, 0.35, 0.35, 'sine'); },
+		click: function () { tone(660, 660, 0.06, 0.35 * 0.6, 'square'); },
+		boss_roar: function () { roar(0.9, 0.7); },
+		superfuse: function () { tone(200, 2000, 0.7, 0.5 * 0.7, 'sine'); },
+		relic: function () { var f = [392, 523, 659, 784, 1046]; for (var i = 0; i < f.length; i++) { tone(f[i], f[i], 0.08, 0.4, 'sine', i * 0.08); } },
+		achievement: function () { var f = [659, 784, 1046, 1318, 1568]; for (var i = 0; i < f.length; i++) { tone(f[i], f[i], 0.11, 0.45, 'sine', i * 0.11); } }
+	};
+	return {
+		play: function (name) {
+			if (muted) { return; }
+			try {
+				ac(); // 确保 resume（真实手势下来调才有效）
+				if (PLAYERS[name]) { PLAYERS[name](); }
+			} catch (e) {}
+		},
+		setMuted: function (m) { muted = !!m; },
+		unlock: function () { try { ac(); } catch (e) {} } // 手势里调，确保 resume 生效
+	};
+})();
+
+// BGM 播放器：Web Audio 循环播放地牢环境音（CC0，OpenGameArt）
+window._gameBgm = (function () {
+	var ctx = null, master = null, source = null, buffer = null;
+	var muted = false, playing = false, loading = false;
+	var BGM_URL = 'https://pub-6d672ee312244873adb8f72bb964be94.r2.dev/dungeon_ambient.ogg';
+	function ac() {
+		if (!ctx) {
+			var C = window.AudioContext || window.webkitAudioContext;
+			ctx = new C();
+			master = ctx.createGain();
+			master.gain.value = muted ? 0 : 0.60; // BGM (-4.4dB)，建时也要看静音标志
+			master.connect(ctx.destination);
+		}
+		if (ctx.state === 'suspended') { ctx.resume(); }
+		return ctx;
+	}
+	function startLoop() {
+		if (playing || !buffer) { return; }
+		try {
+			var c = ac();
+			source = c.createBufferSource();
+			source.buffer = buffer;
+			source.loop = true;
+			source.connect(master);
+			source.start(0);
+			playing = true;
+		} catch (e) {}
+	}
+	return {
+		play: function () {
+			try {
+				ac(); // 确保 resume
+				if (buffer) {
+					startLoop();
+				} else if (!loading) {
+					loading = true;
+					var c = ac();
+					fetch(BGM_URL).then(function (r) { return r.arrayBuffer(); }).then(function (ab) {
+						return c.decodeAudioData(ab);
+					}).then(function (buf) {
+						buffer = buf;
+						startLoop();
+					}).catch(function () { loading = false; });
+				}
+			} catch (e) {}
+		},
+		stop: function () {
+			try {
+				if (source) { source.stop(0); source = null; }
+				playing = false;
+			} catch (e) {}
+		},
+		setMuted: function (m) {
+			muted = !!m;
+			try {
+				if (master) { master.gain.value = muted ? 0 : 0.60; }
+			} catch (e) {}
+		}
+	};
+})();
+
+// 首次真实用户手势时启动 BGM（AudioContext 需要手势解锁）
+(function () {
+	function kickoff() {
+		try { window._gameBgm.play(); } catch (e) {}
+		try { window._gameSfx.unlock(); } catch (e) {} // 唤醒音效的 AudioContext
+		document.removeEventListener('pointerdown', kickoff, true);
+		document.removeEventListener('touchstart', kickoff, true);
+		document.removeEventListener('keydown', kickoff, true);
+	}
+	document.addEventListener('pointerdown', kickoff, true);
+	document.addEventListener('touchstart', kickoff, true);
+	document.addEventListener('keydown', kickoff, true);
+})();
+
+// mousedown 时补合成 keydown 触发引擎自己的 resume（双保险）
+(function () {
+	var cv = document.getElementById('canvas');
+	function nudgeAudio() {
+		try {
+			cv.dispatchEvent(new KeyboardEvent('keydown', {key: 'F24', code: 'F24', bubbles: true}));
+		} catch (err) {}
+	}
+	document.addEventListener('mousedown', nudgeAudio, true);
+})();
+
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const barFill = document.getElementById('bar-fill');
+	const loadPct = document.getElementById('load-pct');
+	const statusNotice = document.getElementById('status-notice');
+
+	// 余烬粒子
+	const embers = document.getElementById('embers');
+	for (let i = 0; i < 22; i++) {
+		const e = document.createElement('div');
+		e.className = 'ember';
+		const s = 3 + Math.random() * 6;
+		e.style.width = e.style.height = s + 'px';
+		e.style.left = (Math.random() * 100) + 'vw';
+		e.style.animationDuration = (5 + Math.random() * 7) + 's';
+		e.style.animationDelay = (Math.random() * 8) + 's';
+		embers.appendChild(e);
+	}
+
+	// 小贴士轮播
+	const tips = [
+		'<b>小贴士</b>：武器升满级后，配齐对应被动可进化为超武',
+		'<b>小贴士</b>：遗物不占升级位，精英怪和宝箱才会掉落',
+		'<b>小贴士</b>：左半屏任意位置按住拖动，摇杆跟手出现',
+		'<b>小贴士</b>：每 5 分钟一只 Boss，30 分钟通关即胜利',
+		'<b>小贴士</b>：金币既能强化属性，也能解锁新角色',
+	];
+	const tipEl = document.getElementById('tip');
+	let tipIdx = 0;
+	function showTip() {
+		tipEl.style.opacity = 0;
+		setTimeout(() => { tipEl.innerHTML = tips[tipIdx % tips.length]; tipEl.style.opacity = 1; tipIdx++; }, 450);
+	}
+	showTip();
+	const tipTimer = setInterval(showTip, 3600);
+
+	let initializing = true;
+	let statusMode = '';
+
+	function setStatusMode(mode) {
+		if (statusMode === mode || !initializing) {
+			return;
+		}
+		if (mode === 'hidden') {
+			clearInterval(tipTimer);
+			statusOverlay.remove();
+			initializing = false;
+			return;
+		}
+		statusOverlay.style.visibility = 'visible';
+		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+		statusMode = mode;
+	}
+
+	function setStatusNotice(text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+	}
+
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === 'string') {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice('An unknown error occurred.');
+		}
+		setStatusMode('notice');
+		initializing = false;
+	}
+
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
+
+	if (missing.length !== 0) {
+		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
+			let serviceWorkerRegistrationPromise;
+			try {
+				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
+			} catch (err) {
+				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
+			}
+			Promise.race([
+				serviceWorkerRegistrationPromise.then((registration) => {
+					if (registration != null) {
+						return Promise.reject(new Error('Service worker already exists.'));
+					}
+					return registration;
+				}).then(() => engine.installServiceWorker()),
+				new Promise((resolve) => {
+					setTimeout(() => resolve(), 2000);
+				}),
+			]).then(() => {
+				window.location.reload();
+			}).catch((err) => {
+				console.error('Error while registering service worker:', err);
+			});
+		} else {
+			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
+			displayFailureNotice(missingMsg + missing.join('\n'));
+		}
+	} else {
+		setStatusMode('progress');
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					const pct = Math.min(100, Math.round(current / total * 100));
+					barFill.style.width = pct + '%';
+					loadPct.textContent = pct + '%';
+				} else {
+					loadPct.textContent = '准备中';
+				}
+			},
+		}).then(() => {
+			barFill.style.width = '100%';
+			loadPct.textContent = '100%';
+			setTimeout(() => setStatusMode('hidden'), 350);
+		}, displayFailureNotice);
+	}
+}());
+		</script>
+	</body>
+</html>

@@ -1,0 +1,2635 @@
+{
+ "version": 2,
+ "total": 164,
+ "generated_at": "2026-10-01",
+ "assets": [
+  {
+   "id": "char_aila_down_idle_00",
+   "file": "assets/sprites/characters/aila/char_aila_down_idle_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "pilot",
+   "direction": "down",
+   "action": "idle",
+   "frame": 0,
+   "prompt": "txt2img style anchor (right = mirrored left)",
+   "source": "pilot"
+  },
+  {
+   "id": "char_aila_up_idle_00",
+   "file": "assets/sprites/characters/aila/char_aila_up_idle_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "pilot",
+   "direction": "up",
+   "action": "idle",
+   "frame": 0,
+   "prompt": "img2img from down-idle anchor",
+   "source": "pilot"
+  },
+  {
+   "id": "char_aila_left_idle_00",
+   "file": "assets/sprites/characters/aila/char_aila_left_idle_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "pilot",
+   "direction": "left",
+   "action": "idle",
+   "frame": 0,
+   "prompt": "img2img from down-idle anchor",
+   "source": "pilot"
+  },
+  {
+   "id": "char_aila_right_idle_00",
+   "file": "assets/sprites/characters/aila/char_aila_right_idle_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "pilot",
+   "direction": "right",
+   "action": "idle",
+   "frame": 0,
+   "prompt": "img2img from down-idle anchor",
+   "source": "pilot"
+  },
+  {
+   "id": "char_aila_down_walk_00",
+   "file": "assets/sprites/characters/aila/char_aila_down_walk_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "pilot",
+   "direction": "down",
+   "action": "walk",
+   "frame": 0,
+   "prompt": "img2img walk cycle frame from down-idle anchor",
+   "source": "pilot"
+  },
+  {
+   "id": "char_aila_down_walk_01",
+   "file": "assets/sprites/characters/aila/char_aila_down_walk_01.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "pilot",
+   "direction": "down",
+   "action": "walk",
+   "frame": 1,
+   "prompt": "img2img walk cycle frame from down-idle anchor",
+   "source": "pilot"
+  },
+  {
+   "id": "char_aila_down_walk_02",
+   "file": "assets/sprites/characters/aila/char_aila_down_walk_02.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "pilot",
+   "direction": "down",
+   "action": "walk",
+   "frame": 2,
+   "prompt": "img2img walk cycle frame from down-idle anchor",
+   "source": "pilot"
+  },
+  {
+   "id": "char_aila_down_walk_03",
+   "file": "assets/sprites/characters/aila/char_aila_down_walk_03.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "pilot",
+   "direction": "down",
+   "action": "walk",
+   "frame": 3,
+   "prompt": "img2img walk cycle frame from down-idle anchor",
+   "source": "pilot"
+  },
+  {
+   "id": "enemy_slime_idle_00",
+   "file": "assets/sprites/enemies/enemy_slime_idle_00.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "pilot",
+   "direction": null,
+   "action": "idle",
+   "frame": 0,
+   "prompt": "txt2img",
+   "source": "pilot"
+  },
+  {
+   "id": "enemy_slime_idle_01",
+   "file": "assets/sprites/enemies/enemy_slime_idle_01.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "pilot",
+   "direction": null,
+   "action": "idle",
+   "frame": 1,
+   "prompt": "img2img squash variant",
+   "source": "pilot"
+  },
+  {
+   "id": "tile_corridor_floor",
+   "file": "assets/tiles/corridor/tile_corridor_floor.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "pilot",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "txt2img seamless texture",
+   "source": "pilot"
+  },
+  {
+   "id": "tile_corridor_wall",
+   "file": "assets/tiles/corridor/tile_corridor_wall.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "pilot",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "txt2img seamless texture",
+   "source": "pilot"
+  },
+  {
+   "id": "tile_corridor_hazard",
+   "file": "assets/tiles/corridor/tile_corridor_hazard.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "pilot",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "txt2img seamless texture",
+   "source": "pilot"
+  },
+  {
+   "id": "char_batong_down_idle_00",
+   "file": "assets/sprites/characters/batong/char_batong_down_idle_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "down",
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, heavily armored male warrior holding a giant axe, facing down toward viewer, 3/4 top-down view, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12",
+   "source": "batong",
+   "notes": "txt2img 锚点（第 1 版定稿）。模型不输出真透明通道，背景为纯白实色，便于后续 rembg。"
+  },
+  {
+   "id": "char_batong_up_idle_00",
+   "file": "assets/sprites/characters/batong/char_batong_up_idle_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "up",
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing up, seen from behind, back view, 3/4 top-down view, identical armor design, identical giant axe, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=down_idle）。第 1 版脚下带柔光阴影+白底不纯，已返工重画。"
+  },
+  {
+   "id": "char_batong_left_idle_00",
+   "file": "assets/sprites/characters/batong/char_batong_left_idle_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "left",
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing left, side profile view, 3/4 top-down view, identical armor design, identical giant axe, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=down_idle）。第 1 版背景被模型画成假透明棋盘格，已返工重画。"
+  },
+  {
+   "id": "char_batong_right_idle_00",
+   "file": "assets/sprites/characters/batong/char_batong_right_idle_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "right",
+   "action": "idle",
+   "frame": 0,
+   "prompt": "N/A (no API call)",
+   "source": "batong",
+   "notes": "PIL ImageOps.mirror 由 left_idle_00 生成，未调用 API，一致性完美。"
+  },
+  {
+   "id": "char_batong_down_walk_00",
+   "file": "assets/sprites/characters/batong/char_batong_down_walk_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "down",
+   "action": "walk",
+   "frame": 0,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing down toward viewer, 3/4 top-down view, marching walk cycle animation frame, left leg stepping forward, right leg back, mid-stride pose, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_down_idle_00.png）。"
+  },
+  {
+   "id": "char_batong_down_walk_01",
+   "file": "assets/sprites/characters/batong/char_batong_down_walk_01.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "down",
+   "action": "walk",
+   "frame": 1,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing down toward viewer, 3/4 top-down view, marching walk cycle animation frame, legs passing each other mid-step, body slightly lowered, weight shifting, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_down_idle_00.png）。"
+  },
+  {
+   "id": "char_batong_down_walk_02",
+   "file": "assets/sprites/characters/batong/char_batong_down_walk_02.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "down",
+   "action": "walk",
+   "frame": 2,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing down toward viewer, 3/4 top-down view, marching walk cycle animation frame, right leg stepping forward, left leg back, mid-stride pose, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_down_idle_00.png）。"
+  },
+  {
+   "id": "char_batong_down_walk_03",
+   "file": "assets/sprites/characters/batong/char_batong_down_walk_03.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "down",
+   "action": "walk",
+   "frame": 3,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing down toward viewer, 3/4 top-down view, marching walk cycle animation frame, legs coming together, slight body lift, push-off pose, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_down_idle_00.png）。"
+  },
+  {
+   "id": "char_batong_up_walk_00",
+   "file": "assets/sprites/characters/batong/char_batong_up_walk_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "up",
+   "action": "walk",
+   "frame": 0,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing up, seen from behind, back view, 3/4 top-down view, marching walk cycle animation frame, left leg stepping forward, right leg back, mid-stride pose, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_up_idle_00.png）。"
+  },
+  {
+   "id": "char_batong_up_walk_01",
+   "file": "assets/sprites/characters/batong/char_batong_up_walk_01.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "up",
+   "action": "walk",
+   "frame": 1,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing up, seen from behind, back view, 3/4 top-down view, marching walk cycle animation frame, legs passing each other mid-step, body slightly lowered, weight shifting, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_up_idle_00.png）。"
+  },
+  {
+   "id": "char_batong_up_walk_02",
+   "file": "assets/sprites/characters/batong/char_batong_up_walk_02.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "up",
+   "action": "walk",
+   "frame": 2,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing up, seen from behind, back view, 3/4 top-down view, marching walk cycle animation frame, right leg stepping forward, left leg back, mid-stride pose, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_up_idle_00.png）。"
+  },
+  {
+   "id": "char_batong_up_walk_03",
+   "file": "assets/sprites/characters/batong/char_batong_up_walk_03.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "up",
+   "action": "walk",
+   "frame": 3,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing up, seen from behind, back view, 3/4 top-down view, marching walk cycle animation frame, legs coming together, slight body lift, push-off pose, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_up_idle_00.png）。"
+  },
+  {
+   "id": "char_batong_left_walk_00",
+   "file": "assets/sprites/characters/batong/char_batong_left_walk_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "left",
+   "action": "walk",
+   "frame": 0,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing left, side profile view, marching walk cycle animation frame, left leg stepping forward, right leg back, mid-stride pose, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_left_idle_00.png）。"
+  },
+  {
+   "id": "char_batong_left_walk_01",
+   "file": "assets/sprites/characters/batong/char_batong_left_walk_01.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "left",
+   "action": "walk",
+   "frame": 1,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing left, side profile view, marching walk cycle animation frame, legs passing each other mid-step, body slightly lowered, weight shifting, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_left_idle_00.png）。"
+  },
+  {
+   "id": "char_batong_left_walk_02",
+   "file": "assets/sprites/characters/batong/char_batong_left_walk_02.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "left",
+   "action": "walk",
+   "frame": 2,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing left, side profile view, marching walk cycle animation frame, right leg stepping forward, left leg back, mid-stride pose, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_left_idle_00.png）。第 1 次请求遇到 'Remote end closed connection without response' 网络瞬断，第 2 次重试成功。"
+  },
+  {
+   "id": "char_batong_left_walk_03",
+   "file": "assets/sprites/characters/batong/char_batong_left_walk_03.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "left",
+   "action": "walk",
+   "frame": 3,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing left, side profile view, marching walk cycle animation frame, legs coming together, slight body lift, push-off pose, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_left_idle_00.png）。"
+  },
+  {
+   "id": "char_batong_right_walk_00",
+   "file": "assets/sprites/characters/batong/char_batong_right_walk_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "right",
+   "action": "walk",
+   "frame": 0,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing right, side profile view, marching walk cycle animation frame, left leg stepping forward, right leg back, mid-stride pose, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_right_idle_00.png）。"
+  },
+  {
+   "id": "char_batong_right_walk_01",
+   "file": "assets/sprites/characters/batong/char_batong_right_walk_01.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "right",
+   "action": "walk",
+   "frame": 1,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing right, side profile view, marching walk cycle animation frame, legs passing each other mid-step, body slightly lowered, weight shifting, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_right_idle_00.png）。"
+  },
+  {
+   "id": "char_batong_right_walk_02",
+   "file": "assets/sprites/characters/batong/char_batong_right_walk_02.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "right",
+   "action": "walk",
+   "frame": 2,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing right, side profile view, marching walk cycle animation frame, right leg stepping forward, left leg back, mid-stride pose, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_right_idle_00.png）。"
+  },
+  {
+   "id": "char_batong_right_walk_03",
+   "file": "assets/sprites/characters/batong/char_batong_right_walk_03.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "right",
+   "action": "walk",
+   "frame": 3,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same heavily armored male warrior holding a giant axe as the reference image, bulky metal plate armor #B0B8C0 with warm gold #F0C060 trim, dark outline #0D0A12, facing right, side profile view, marching walk cycle animation frame, legs coming together, slight body lift, push-off pose, giant axe swinging slightly with the stride, body bobbing, character isolated on a solid pure white background, no shadow, no ground, no checkerboard",
+   "source": "batong",
+   "notes": "img2img（ref=char_batong_right_idle_00.png）。"
+  },
+  {
+   "id": "enemy_bat_idle_00",
+   "file": "assets/sprites/enemies/enemy_bat_idle_00.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game monster sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, fast diving dark-purple winged bat monster, wings spread mid-dive, frail low-hp look, cool dark violet tones with black shadows",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "enemy_spitter_idle_00",
+   "file": "assets/sprites/enemies/enemy_spitter_idle_00.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game monster sprite, one acid-spitting monster with a HUGE GAPING OPEN MOUTH full of sharp teeth, green acid dripping from its jaws, round toxic green #6AB04C body, single isolated character on plain white background, no scenery, no environment, dark fantasy, flat color with bold dark outline, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette",
+   "source": "enemies",
+   "notes": "rework x2: v1 was a 16-cell sprite sheet, v2 a mouthless green blob; v3 final with big toothed mouth"
+  },
+  {
+   "id": "enemy_brute_idle_00",
+   "file": "assets/sprites/enemies/enemy_brute_idle_00.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game monster sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, charging giant horned beast in ramming pose, danger red #C0392B accents on dark hide, massive and threatening",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "enemy_skeleton_idle_00",
+   "file": "assets/sprites/enemies/enemy_skeleton_idle_00.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game monster sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, skeleton warrior holding a rusty sword, bone-white skull and ribs, metal gray #B0B8C0 armor scraps, cold tones",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "enemy_spider_idle_00",
+   "file": "assets/sprites/enemies/enemy_spider_idle_00.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game monster sprite, single isolated character on fully transparent background, no background scene, no scenery, no environment, one venomous spider, eight legs spread wide, purple and green body, glowing toxic eyes, dark fantasy, flat color with bold dark outline, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette",
+   "source": "enemies",
+   "notes": "rework x1: v1 drew a full dungeon scene background, unusable for rembg; v2 single isolated creature"
+  },
+  {
+   "id": "enemy_exploder_idle_00",
+   "file": "assets/sprites/enemies/enemy_exploder_idle_00.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game monster sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, bloated glowing self-detonating beetle, swollen sac with pulsing red glowing cracks, danger red core",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "enemy_gargoyle_idle_00",
+   "file": "assets/sprites/enemies/enemy_gargoyle_idle_00.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game monster sprite, single isolated character on fully transparent background, no background scene, no scenery, no environment, one stone gargoyle, gray rock body with spread carved wings, cold gray tones, dark fantasy, flat color with bold dark outline, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette",
+   "source": "enemies",
+   "notes": "rework x1: v1 drew a full dungeon scene background; v2 single isolated creature"
+  },
+  {
+   "id": "enemy_frost_idle_00",
+   "file": "assets/sprites/enemies/enemy_frost_idle_00.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game monster sprite, single isolated character on fully transparent background, no background scene, no scenery, no environment, one ice elemental creature, crystalline ice-blue core with floating ice shards, ice blue #6FB7D6, dark fantasy, flat color with bold dark outline, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette",
+   "source": "enemies",
+   "notes": "rework x1: v1 drew a full dungeon scene background; v2 single isolated creature"
+  },
+  {
+   "id": "enemy_witchdoctor_idle_00",
+   "file": "assets/sprites/enemies/enemy_witchdoctor_idle_00.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game monster sprite, single isolated character on fully transparent background, no background scene, no scenery, no environment, one robed undead spellcaster holding a twisted staff, undead purple #8E44AD robe, hooded skull face, dark fantasy, flat color with bold dark outline, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette",
+   "source": "enemies",
+   "notes": "rework x1: v1 drew a full dungeon scene background; v2 single isolated creature"
+  },
+  {
+   "id": "enemy_bat_idle_01",
+   "file": "assets/sprites/enemies/enemy_bat_idle_01.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 1,
+   "prompt": "top-down 2D game monster sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same dark-purple winged bat monster, squash and stretch lunging pose, wings folded for a second dive, same colors and style",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "enemy_spitter_idle_01",
+   "file": "assets/sprites/enemies/enemy_spitter_idle_01.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 1,
+   "prompt": "top-down 2D game monster sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same acid-spitting monster, spitting a stream of green acid from its huge mouth, squash and stretch recoil, same toxic green #6AB04C",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "enemy_brute_idle_01",
+   "file": "assets/sprites/enemies/enemy_brute_idle_01.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 1,
+   "prompt": "top-down 2D game monster sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same giant horned beast, mid-charge ramming pose, body leaning forward, dust kick, danger red #C0392B accents, same style",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "enemy_skeleton_idle_01",
+   "file": "assets/sprites/enemies/enemy_skeleton_idle_01.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 1,
+   "prompt": "top-down 2D game monster sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same skeleton warrior, sword raised overhead about to strike, attacking pose, same bone-white and metal gray #B0B8C0",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "enemy_spider_idle_01",
+   "file": "assets/sprites/enemies/enemy_spider_idle_01.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 1,
+   "prompt": "top-down 2D game monster sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same purple-green venomous spider, legs lifted in a pouncing pose, lunging forward, same colors and style",
+   "source": "enemies",
+   "notes": "1 transient API retry then success"
+  },
+  {
+   "id": "enemy_exploder_idle_01",
+   "file": "assets/sprites/enemies/enemy_exploder_idle_01.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 1,
+   "prompt": "top-down 2D game monster sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same self-detonating beetle, body swelling even larger, red cracks glowing brighter about to burst, squash and stretch inflation, same style",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "enemy_gargoyle_idle_01",
+   "file": "assets/sprites/enemies/enemy_gargoyle_idle_01.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 1,
+   "prompt": "top-down 2D game monster sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same stone gargoyle, wings raised high swooping down to attack, lunging pose, same gray stone tones",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "enemy_frost_idle_01",
+   "file": "assets/sprites/enemies/enemy_frost_idle_01.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 1,
+   "prompt": "top-down 2D game monster sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same ice-blue elemental creature, pulsing and compressing, ice shards spinning outward, squash and stretch, ice blue #6FB7D6, same style",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "enemy_witchdoctor_idle_01",
+   "file": "assets/sprites/enemies/enemy_witchdoctor_idle_01.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "enemy",
+   "direction": null,
+   "action": "idle",
+   "frame": 1,
+   "prompt": "top-down 2D game monster sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette, same robed undead spellcaster, staff raised casting a purple spell, glowing undead purple #8E44AD magic, casting pose, same style",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "boss_colossus",
+   "file": "assets/sprites/bosses/boss_colossus.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "boss",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D game boss sprite, massive, imposing, single isolated character on fully transparent background, no background scene, no scenery, no environment, giant stone-skull colossus, massive gray stone golem with a giant skull head, cold gray rock tones, dark fantasy, flat color with bold dark outline, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "boss_batking",
+   "file": "assets/sprites/bosses/boss_batking.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "boss",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D game boss sprite, massive, imposing, single isolated character on fully transparent background, no background scene, no scenery, no environment, giant shadow bat king, dark wings spread wide, shadowy black-purple body, cold dark tones, dark fantasy, flat color with bold dark outline, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "boss_forgemaster",
+   "file": "assets/sprites/bosses/boss_forgemaster.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "boss",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D game boss sprite, massive, imposing, single isolated character on fully transparent background, no background scene, no scenery, no environment, molten forge construct with mounted cannons, glowing lava cracks across dark metal body, danger red and orange glow, dark fantasy, flat color with bold dark outline, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "boss_widow_a",
+   "file": "assets/sprites/bosses/boss_widow_a.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "boss",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D game boss sprite, massive, imposing, single isolated character on fully transparent background, no background scene, no scenery, no environment, twin necromancer spirit, floating robed wraith, tattered undead purple #8E44AD robe, ghostly hooded face, cold eerie tones, dark fantasy, flat color with bold dark outline, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "boss_thorntyrant",
+   "file": "assets/sprites/bosses/boss_thorntyrant.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "boss",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D game boss sprite, massive, imposing, single isolated character on fully transparent background, no background scene, no scenery, no environment, thorn-covered massive tyrant, green thorns growing from red flesh, danger red and toxic green, dark fantasy, flat color with bold dark outline, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "boss_mohei_phase1",
+   "file": "assets/sprites/bosses/boss_mohei_phase1.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "boss",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D game boss sprite, massive, imposing, dark abyssal warlock seen from the FRONT, hooded humanoid figure facing the viewer, glowing purple eyes under the hood, flowing black-purple robe with abyssal energy wisps, single isolated character on fully transparent background, no background scene, no scenery, dark fantasy, flat color with bold dark outline, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette",
+   "source": "enemies",
+   "notes": "rework x1: v1 was a back-view hooded figure, weak boss presence; v2 front-facing with glowing eyes"
+  },
+  {
+   "id": "boss_widow_b",
+   "file": "assets/sprites/bosses/boss_widow_b.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "boss",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D game boss sprite, massive, imposing, single isolated character on fully transparent background, no background scene, no scenery, no environment, same twin necromancer spirit as the reference image, mirrored pose, same undead purple robe but with teal-green accents instead of purple, floating robed wraith, twin sister feel, dark fantasy, flat color with bold dark outline, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "boss_mohei_phase2",
+   "file": "assets/sprites/bosses/boss_mohei_phase2.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "boss",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D game boss sprite, massive, imposing, single isolated character on fully transparent background, no background scene, no scenery, no environment, same dark abyssal warlock as the reference image but empowered and larger, spikes growing from shoulders, abyssal purple energy swirling around, stronger phase 2 form, dark fantasy, flat color with bold dark outline, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "boss_mohei_phase3",
+   "file": "assets/sprites/bosses/boss_mohei_phase3.png",
+   "size": [
+    256,
+    256
+   ],
+   "kind": "boss",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D game boss sprite, massive, imposing, single isolated character on fully transparent background, no background scene, no scenery, no environment, same abyssal warlock as the reference image transformed into a monstrous true form, massive hulking demon-like body, huge horns and spikes, black-purple abyssal energy erupting, final phase, dark fantasy, flat color with bold dark outline, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette",
+   "source": "enemies",
+   "notes": ""
+  },
+  {
+   "id": "proj_bullet",
+   "file": "assets/sprites/fx/projectiles/proj_bullet.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "projectile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "small warm golden bullet projectile with glowing tip and short shimmer trail, horizontal flying left to right",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "proj_pellet",
+   "file": "assets/sprites/fx/projectiles/proj_pellet.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "projectile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "one tiny round shotgun pellet with small orange spark trail, horizontal flying left to right (regen: isolated, white bg)",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "proj_sniper",
+   "file": "assets/sprites/fx/projectiles/proj_sniper.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "projectile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "long rifle tracer bullet with elongated bright gold-white light trail, horizontal flying left to right, sleek elongated projectile",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "proj_mg",
+   "file": "assets/sprites/fx/projectiles/proj_mg.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "projectile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "small compact rapid-fire machine gun bullet with stubby orange tracer flame, horizontal flying left to right, short stubby projectile",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "proj_arrow",
+   "file": "assets/sprites/fx/projectiles/proj_arrow.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "projectile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "wooden arrow with feather fletching and sharp metal tip, horizontal flying left to right, viewed from above",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "proj_orb",
+   "file": "assets/sprites/fx/projectiles/proj_orb.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "projectile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "one glowing undead purple #8E44AD magic orb sphere with violet swirl glow (regen: isolated, white bg)",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "proj_axe",
+   "file": "assets/sprites/fx/projectiles/proj_axe.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "projectile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "small spinning throwing axe with motion blur rotation, wooden handle and steel blade, flying horizontal left to right",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "proj_meteor",
+   "file": "assets/sprites/fx/projectiles/proj_meteor.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "projectile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "burning rock meteor falling, cracked stone with red #C0392B fire trail and embers, viewed from above",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "summon_turret_idle_00",
+   "file": "assets/sprites/summons/summon_turret_idle_00.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "summon",
+   "direction": null,
+   "action": "idle",
+   "frame": 0,
+   "prompt": "stationary sentry turret, round metal #B0B8C0 base with gun barrel aiming up",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "summon_turret_idle_01",
+   "file": "assets/sprites/summons/summon_turret_idle_01.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "summon",
+   "direction": null,
+   "action": "idle",
+   "frame": 1,
+   "prompt": "img2img from 00: gun barrel rotated aiming right, slightly raised",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "summon_hound_idle_00",
+   "file": "assets/sprites/summons/summon_hound_idle_00.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "summon",
+   "direction": null,
+   "action": "idle",
+   "frame": 0,
+   "prompt": "lean fast hound beast, four legs mid-stride running pose, dark armored fur, top view (regen: replaced rear-view blob)",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "summon_hound_idle_01",
+   "file": "assets/sprites/summons/summon_hound_idle_01.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "summon",
+   "direction": null,
+   "action": "idle",
+   "frame": 1,
+   "prompt": "img2img from new 00: legs in alternate stride pose",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "summon_skeleton_warrior_idle_00",
+   "file": "assets/sprites/summons/summon_skeleton_warrior_idle_00.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "summon",
+   "direction": null,
+   "action": "idle",
+   "frame": 0,
+   "prompt": "skeleton warrior holding a round shield and short sword, viewed from above",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "summon_skeleton_warrior_idle_01",
+   "file": "assets/sprites/summons/summon_skeleton_warrior_idle_01.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "summon",
+   "direction": null,
+   "action": "idle",
+   "frame": 1,
+   "prompt": "img2img from 00: shield raised higher, sword swung to side",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "summon_bee_idle_00",
+   "file": "assets/sprites/summons/summon_bee_idle_00.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "summon",
+   "direction": null,
+   "action": "idle",
+   "frame": 0,
+   "prompt": "small venomous bee, green #6AB04C striped body with translucent wings spread, viewed from above",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "summon_bee_idle_01",
+   "file": "assets/sprites/summons/summon_bee_idle_01.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "summon",
+   "direction": null,
+   "action": "idle",
+   "frame": 1,
+   "prompt": "img2img from 00: wings flapping to lower position, body tilted",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "fx_corpse_explosion",
+   "file": "assets/sprites/fx/fx_corpse_explosion.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "fx",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "undead purple-black corpse explosion burst, radial dark violet blast with bone shards",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "fx_whirlwind",
+   "file": "assets/sprites/fx/fx_whirlwind.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "fx",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "circular whirlwind axe slash arc, ring-shaped spinning blade trail",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "fx_shield_slam",
+   "file": "assets/sprites/fx/fx_shield_slam.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "fx",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "fan-shaped arc shockwave blast radiating outward (regen: was shell-like)",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "fx_warcry",
+   "file": "assets/sprites/fx/fx_warcry.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "fx",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "warcry sound wave expanding rings, concentric circular shock rings",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "fx_arrow_rain_zone",
+   "file": "assets/sprites/fx/fx_arrow_rain_zone.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "fx",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "arrow rain target warning zone, glowing red danger circle ring with arrows",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "fx_stomp_crack",
+   "file": "assets/sprites/fx/fx_stomp_crack.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "fx",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "stomp ground cracks, jagged cracked earth lines radiating from center impact point",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "fx_soul_orb",
+   "file": "assets/sprites/fx/fx_soul_orb.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "fx",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "soul siphon glowing wisp orb with trailing tail",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "fx_dash_ghost",
+   "file": "assets/sprites/fx/fx_dash_ghost.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "fx",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "ghostly afterimage motion-blur trail of a dashing figure, speed streaks (regen: was human runner scene)",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "fx_holy_shield",
+   "file": "assets/sprites/fx/fx_holy_shield.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "fx",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "golden translucent dome shield barrier, smooth arc hemisphere (regen x2: was room scene, then medal-like)",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "fx_time_ripple",
+   "file": "assets/sprites/fx/fx_time_ripple.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "fx",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "time stasis ripple wave, concentric pale blue time distortion rings with clock shards",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "fx_hit_spark",
+   "file": "assets/sprites/fx/fx_hit_spark.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "fx",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "bright yellow-white impact spark starburst, clean radiating spikes (regen x2: was tile scene, then pawn-like center; hit HTTP500 once, retried after 30s)",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "fx_explosion_s",
+   "file": "assets/sprites/fx/fx_explosion_s.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "fx",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "small round orange fireball explosion burst with smoke, fills center (regen: was tiny on tile)",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "fx_explosion_m",
+   "file": "assets/sprites/fx/fx_explosion_m.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "fx",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "medium explosion burst, round orange-red fireball with debris and smoke ring",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "fx_explosion_l",
+   "file": "assets/sprites/fx/fx_explosion_l.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "fx",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "large explosion burst, big fireball with dark red core, flying debris and thick smoke ring",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "fx_levelup",
+   "file": "assets/sprites/fx/fx_levelup.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "fx",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "clean vertical golden light beam pillar rising (regen x2: was room scene, then candle-like blob)",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "gem_s",
+   "file": "assets/sprites/pickups/gem_s.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "pickup",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "exactly one small blue faceted sapphire diamond gem, glowing softly (regen: was two gems)",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "gem_m",
+   "file": "assets/sprites/pickups/gem_m.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "pickup",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "medium purple faceted amethyst crystal, glowing brightly, clearly bigger than small gem",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "gem_l",
+   "file": "assets/sprites/pickups/gem_l.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "pickup",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "exactly one large golden #F0C060 faceted topaz diamond gem, glowing strongly (regen: was two gems)",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "coin",
+   "file": "assets/sprites/pickups/coin.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "pickup",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "gold coin pickup, round warm gold coin with inner emblem ring, glowing",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "chest",
+   "file": "assets/sprites/pickups/chest.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "pickup",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "treasure chest pickup, wooden chest with metal bands and golden trim, slightly open with gold glow inside",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "portal_stairs",
+   "file": "assets/sprites/pickups/portal_stairs.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "pickup",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "upward dungeon staircase portal, stone stairs going up with warm gold glowing archway",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "pickup_magnet",
+   "file": "assets/sprites/pickups/pickup_magnet.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "pickup",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "horseshoe magnet pickup, red and silver U-shaped magnet with glowing pull rings",
+   "source": "fx36",
+   "notes": ""
+  },
+  {
+   "id": "icon_passive_armor",
+   "file": "assets/icons/passives/icon_passive_armor.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, iron shield, armor, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_passive_atkspeed",
+   "file": "assets/icons/passives/icon_passive_atkspeed.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, twin crossed swords, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_passive_attack",
+   "file": "assets/icons/passives/icon_passive_attack.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, single steel sword pointing up, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_passive_cooldown",
+   "file": "assets/icons/passives/icon_passive_cooldown.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, cooling timer, blue frost-covered stopwatch, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_passive_crit",
+   "file": "assets/icons/passives/icon_passive_crit.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, crosshair target reticle with center dot, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_passive_critdmg",
+   "file": "assets/icons/passives/icon_passive_critdmg.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, bursting orange star explosion, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_passive_duration",
+   "file": "assets/icons/passives/icon_passive_duration.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, circular clock with looping arrow, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_passive_exp",
+   "file": "assets/icons/passives/icon_passive_exp.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, glowing blue experience gemstone, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_passive_hp",
+   "file": "assets/icons/passives/icon_passive_hp.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, red heart, health, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_passive_magnet",
+   "file": "assets/icons/passives/icon_passive_magnet.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, horseshoe magnet, blue and red poles, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_passive_movespeed",
+   "file": "assets/icons/passives/icon_passive_movespeed.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, winged leather boot, fast movement, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_passive_range",
+   "file": "assets/icons/passives/icon_passive_range.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, radiating expanding circular waves, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_relic_berserk",
+   "file": "assets/icons/relics/icon_relic_berserk.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, raging demon face, berserker fury, red eyes, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_relic_bloodgem",
+   "file": "assets/icons/relics/icon_relic_bloodgem.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, blood-red gemstone relic glowing, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_relic_cross",
+   "file": "assets/icons/relics/icon_relic_cross.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, resurrection holy cross glowing with warm golden light, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_relic_greedcup",
+   "file": "assets/icons/relics/icon_relic_greedcup.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, golden chalice overflowing with gold coins, greed cup, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_relic_hourglass",
+   "file": "assets/icons/relics/icon_relic_hourglass.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, time hourglass with flowing golden sand, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_relic_infinitefire",
+   "file": "assets/icons/relics/icon_relic_infinitefire.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, infinite ammo box with bullets and flame emblem, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_relic_magnetcore",
+   "file": "assets/icons/relics/icon_relic_magnetcore.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, horseshoe magnet core, red and silver poles, metallic, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_relic_phoenixheart",
+   "file": "assets/icons/relics/icon_relic_phoenixheart.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, phoenix heart wreathed in red-orange flames, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_relic_sagestone",
+   "file": "assets/icons/relics/icon_relic_sagestone.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, glowing sage stone, wise emerald crystal on pedestal, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_relic_scythe",
+   "file": "assets/icons/relics/icon_relic_scythe.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, death reaper scythe with dark curved blade, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_relic_thornmail",
+   "file": "assets/icons/relics/icon_relic_thornmail.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, spiked thorn armor cuirass, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_relic_windboots",
+   "file": "assets/icons/relics/icon_relic_windboots.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, swift leather boots with wind speed lines, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_skill_arrowrain",
+   "file": "assets/icons/skills/icon_skill_arrowrain.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, volley of arrows raining down from sky, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_skill_dash",
+   "file": "assets/icons/skills/icon_skill_dash.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, blurred dashing figure with motion speed streaks, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_skill_holyshield",
+   "file": "assets/icons/skills/icon_skill_holyshield.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, holy knight shield with radiant golden glow, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_skill_meteor",
+   "file": "assets/icons/skills/icon_skill_meteor.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, flaming meteor crashing down with fire trail, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_skill_souldrain",
+   "file": "assets/icons/skills/icon_skill_souldrain.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, swirling blue soul wisp being siphoned, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_skill_stomp",
+   "file": "assets/icons/skills/icon_skill_stomp.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, heavy stomping boot with cracked ground shockwave, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "icon_skill_timestop",
+   "file": "assets/icons/skills/icon_skill_timestop.png",
+   "size": [
+    64,
+    64
+   ],
+   "kind": "icon",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "game UI icon, clock frozen in time, cracked dial, time stop, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object",
+   "source": "icons",
+   "notes": "RAW 1024x1024 transparent attempt; parent rembg+resize to 64"
+  },
+  {
+   "id": "char_mofei_down_idle_00",
+   "file": "assets/sprites/characters/mofei/char_mofei_down_idle_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "down",
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. idle pose, facing down toward viewer",
+   "source": "mofei",
+   "notes": "idle anchor frame"
+  },
+  {
+   "id": "char_mofei_down_walk_00",
+   "file": "assets/sprites/characters/mofei/char_mofei_down_walk_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "down",
+   "action": "walk",
+   "frame": 0,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing down toward viewer, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 0 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref)"
+  },
+  {
+   "id": "char_mofei_down_walk_01",
+   "file": "assets/sprites/characters/mofei/char_mofei_down_walk_01.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "down",
+   "action": "walk",
+   "frame": 1,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing down toward viewer, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 1 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref)"
+  },
+  {
+   "id": "char_mofei_down_walk_02",
+   "file": "assets/sprites/characters/mofei/char_mofei_down_walk_02.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "down",
+   "action": "walk",
+   "frame": 2,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing down toward viewer, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 2 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref)"
+  },
+  {
+   "id": "char_mofei_down_walk_03",
+   "file": "assets/sprites/characters/mofei/char_mofei_down_walk_03.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "down",
+   "action": "walk",
+   "frame": 3,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing down toward viewer, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 3 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref)"
+  },
+  {
+   "id": "char_mofei_up_idle_00",
+   "file": "assets/sprites/characters/mofei/char_mofei_up_idle_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "up",
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. idle pose, facing up, back view",
+   "source": "mofei",
+   "notes": "idle anchor frame"
+  },
+  {
+   "id": "char_mofei_up_walk_00",
+   "file": "assets/sprites/characters/mofei/char_mofei_up_walk_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "up",
+   "action": "walk",
+   "frame": 0,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing up, back view, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 0 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref)"
+  },
+  {
+   "id": "char_mofei_up_walk_01",
+   "file": "assets/sprites/characters/mofei/char_mofei_up_walk_01.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "up",
+   "action": "walk",
+   "frame": 1,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing up, back view, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 1 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref)"
+  },
+  {
+   "id": "char_mofei_up_walk_02",
+   "file": "assets/sprites/characters/mofei/char_mofei_up_walk_02.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "up",
+   "action": "walk",
+   "frame": 2,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing up, back view, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 2 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref)"
+  },
+  {
+   "id": "char_mofei_up_walk_03",
+   "file": "assets/sprites/characters/mofei/char_mofei_up_walk_03.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "up",
+   "action": "walk",
+   "frame": 3,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing up, back view, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 3 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref)"
+  },
+  {
+   "id": "char_mofei_left_idle_00",
+   "file": "assets/sprites/characters/mofei/char_mofei_left_idle_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "left",
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. idle pose, facing left, side profile",
+   "source": "mofei",
+   "notes": "REWORKED x4: first 3 img2img attempts from down_idle kept front-facing hood void (direction bias). 4th attempt using up_idle (back view) as ref with strict side-profile prompt succeeded: hood side silhouette, face in left profile, orb on left."
+  },
+  {
+   "id": "char_mofei_left_walk_00",
+   "file": "assets/sprites/characters/mofei/char_mofei_left_walk_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "left",
+   "action": "walk",
+   "frame": 0,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing left, side profile, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 0 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref)"
+  },
+  {
+   "id": "char_mofei_left_walk_01",
+   "file": "assets/sprites/characters/mofei/char_mofei_left_walk_01.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "left",
+   "action": "walk",
+   "frame": 1,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing left, side profile, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 1 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref); REWORKED x1: original frame had head turned toward viewer, regenerated with strict side-profile prompt."
+  },
+  {
+   "id": "char_mofei_left_walk_02",
+   "file": "assets/sprites/characters/mofei/char_mofei_left_walk_02.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "left",
+   "action": "walk",
+   "frame": 2,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing left, side profile, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 2 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref)"
+  },
+  {
+   "id": "char_mofei_left_walk_03",
+   "file": "assets/sprites/characters/mofei/char_mofei_left_walk_03.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "left",
+   "action": "walk",
+   "frame": 3,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing left, side profile, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 3 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref)"
+  },
+  {
+   "id": "char_mofei_right_idle_00",
+   "file": "assets/sprites/characters/mofei/char_mofei_right_idle_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "right",
+   "action": "idle",
+   "frame": 0,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. idle pose, facing right, side profile",
+   "source": "mofei",
+   "notes": "PIL ImageOps.mirror of char_mofei_left_idle_00.png, no API call."
+  },
+  {
+   "id": "char_mofei_right_walk_00",
+   "file": "assets/sprites/characters/mofei/char_mofei_right_walk_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "right",
+   "action": "walk",
+   "frame": 0,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing right, side profile, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 0 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref)"
+  },
+  {
+   "id": "char_mofei_right_walk_01",
+   "file": "assets/sprites/characters/mofei/char_mofei_right_walk_01.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "right",
+   "action": "walk",
+   "frame": 1,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing right, side profile, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 1 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref)"
+  },
+  {
+   "id": "char_mofei_right_walk_02",
+   "file": "assets/sprites/characters/mofei/char_mofei_right_walk_02.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "right",
+   "action": "walk",
+   "frame": 2,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing right, side profile, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 2 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref)"
+  },
+  {
+   "id": "char_mofei_right_walk_03",
+   "file": "assets/sprites/characters/mofei/char_mofei_right_walk_03.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "right",
+   "action": "walk",
+   "frame": 3,
+   "prompt": "top-down 2D game character sprite, dark fantasy dungeon, flat color with bold dark outline, transparent background, no text, no UI, no border, no photorealistic, no 3d render, clean silhouette. Mofei palette: long robe necromantic purple #8E44AD, warm gold #F0C060 accents, dark outline #0D0A12. Subject: hooded warlock with floating magic orb beside hand. marching walk cycle, facing right, side profile, robe swaying, legs stepping beneath robe, orb bobbing, walk cycle frame 3 of 4",
+   "source": "mofei",
+   "notes": "img2img from same-direction idle (right uses mirrored right idle as ref)"
+  },
+  {
+   "id": "tile_forge_floor",
+   "file": "assets/tiles/forge/tile_forge_floor.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "tile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D dungeon floor tile, dark basalt stone floor, ember-lit slag cracks, dark fantasy, flat color, seamless tileable pattern, NO grid lines, NOT a tileset atlas, no text, no UI",
+   "source": "tiles",
+   "notes": "RAW 1024x1024, full-bleed no cutout; parent crops/scales to 48"
+  },
+  {
+   "id": "tile_forge_hazard",
+   "file": "assets/tiles/forge/tile_forge_hazard.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "tile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D dungeon hazard tile, flowing lava cracks with glowing molten magma in deep red #C0392B on dark basalt ground, dark fantasy, flat color, seamless tileable pattern, NO grid lines, NOT a tileset atlas, no text, no UI",
+   "source": "tiles",
+   "notes": "RAW 1024x1024, full-bleed no cutout; parent crops/scales to 48"
+  },
+  {
+   "id": "tile_forge_wall",
+   "file": "assets/tiles/forge/tile_forge_wall.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "tile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D dungeon wall tile, dark basalt stone wall with glowing ember veins, dark fantasy, flat color, seamless tileable pattern, NO grid lines, NOT a tileset atlas, no text, no UI",
+   "source": "tiles",
+   "notes": "RAW 1024x1024, full-bleed no cutout; parent crops/scales to 48"
+  },
+  {
+   "id": "tile_ice_floor",
+   "file": "assets/tiles/ice/tile_ice_floor.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "tile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D dungeon floor tile, blue ice crystal cave floor with frost patterns, dark fantasy, flat color, seamless tileable pattern, NO grid lines, NOT a tileset atlas, no text, no UI",
+   "source": "tiles",
+   "notes": "RAW 1024x1024, full-bleed no cutout; parent crops/scales to 48"
+  },
+  {
+   "id": "tile_ice_hazard",
+   "file": "assets/tiles/ice/tile_ice_hazard.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "tile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D dungeon hazard tile, frost ice spikes and slippery icy ground in ice blue #6FB7D6, dark fantasy, flat color, seamless tileable pattern, NO grid lines, NOT a tileset atlas, no text, no UI",
+   "source": "tiles",
+   "notes": "RAW 1024x1024, full-bleed no cutout; parent crops/scales to 48"
+  },
+  {
+   "id": "tile_ice_wall",
+   "file": "assets/tiles/ice/tile_ice_wall.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "tile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D dungeon wall tile, blue ice crystal cave wall with frozen spikes, dark fantasy, flat color, seamless tileable pattern, NO grid lines, NOT a tileset atlas, no text, no UI",
+   "source": "tiles",
+   "notes": "RAW 1024x1024, full-bleed no cutout; parent crops/scales to 48"
+  },
+  {
+   "id": "tile_thorn_floor",
+   "file": "assets/tiles/thorn/tile_thorn_floor.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "tile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D dungeon floor tile, dark thorny vine-covered forest floor, dark fantasy, flat color, seamless tileable pattern, NO grid lines, NOT a tileset atlas, no text, no UI",
+   "source": "tiles",
+   "notes": "RAW 1024x1024, full-bleed no cutout; parent crops/scales to 48"
+  },
+  {
+   "id": "tile_thorn_hazard",
+   "file": "assets/tiles/thorn/tile_thorn_hazard.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "tile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D dungeon hazard tile, sharp thorn spike clusters bursting from ground, dark fantasy, flat color, seamless tileable pattern, NO grid lines, NOT a tileset atlas, no text, no UI",
+   "source": "tiles",
+   "notes": "RAW 1024x1024, full-bleed no cutout; parent crops/scales to 48"
+  },
+  {
+   "id": "tile_thorn_wall",
+   "file": "assets/tiles/thorn/tile_thorn_wall.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "tile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D dungeon wall tile, wall of dark twisted thorny vines with brambles, dark fantasy, flat color, seamless tileable pattern, NO grid lines, NOT a tileset atlas, no text, no UI",
+   "source": "tiles",
+   "notes": "RAW 1024x1024, full-bleed no cutout; parent crops/scales to 48"
+  },
+  {
+   "id": "tile_tomb_floor",
+   "file": "assets/tiles/tomb/tile_tomb_floor.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "tile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D dungeon floor tile, graveyard dirt floor with scattered bone fragments, dark fantasy, flat color, seamless tileable pattern, NO grid lines, NOT a tileset atlas, no text, no UI",
+   "source": "tiles",
+   "notes": "RAW 1024x1024, full-bleed no cutout; parent crops/scales to 48"
+  },
+  {
+   "id": "tile_tomb_hazard",
+   "file": "assets/tiles/tomb/tile_tomb_hazard.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "tile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D dungeon hazard tile, piles of corpses and poison green fog #6AB04C drifting over graveyard dirt, dark fantasy, flat color, seamless tileable pattern, NO grid lines, NOT a tileset atlas, no text, no UI",
+   "source": "tiles",
+   "notes": "RAW 1024x1024, full-bleed no cutout; parent crops/scales to 48"
+  },
+  {
+   "id": "tile_tomb_wall",
+   "file": "assets/tiles/tomb/tile_tomb_wall.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "tile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D dungeon wall tile, graveyard stone wall with mossy tombstones and skull carvings, dark fantasy, flat color, seamless tileable pattern, NO grid lines, NOT a tileset atlas, no text, no UI",
+   "source": "tiles",
+   "notes": "RAW 1024x1024, full-bleed no cutout; parent crops/scales to 48"
+  },
+  {
+   "id": "tile_void_floor",
+   "file": "assets/tiles/void/tile_void_floor.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "tile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D dungeon floor tile, dark purple void stone floor with arcane cracks, dark fantasy, flat color, seamless tileable pattern, NO grid lines, NOT a tileset atlas, no text, no UI",
+   "source": "tiles",
+   "notes": "RAW 1024x1024, full-bleed no cutout; parent crops/scales to 48"
+  },
+  {
+   "id": "tile_void_hazard",
+   "file": "assets/tiles/void/tile_void_hazard.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "tile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D dungeon hazard tile, glowing void rift tearing reality, undead purple #8E44AD energy, dark fantasy, flat color, seamless tileable pattern, NO grid lines, NOT a tileset atlas, no text, no UI",
+   "source": "tiles",
+   "notes": "RAW 1024x1024, full-bleed no cutout; parent crops/scales to 48"
+  },
+  {
+   "id": "tile_void_wall",
+   "file": "assets/tiles/void/tile_void_wall.png",
+   "size": [
+    48,
+    48
+   ],
+   "kind": "tile",
+   "direction": null,
+   "action": null,
+   "frame": null,
+   "prompt": "top-down 2D dungeon wall tile, dark purple void stone wall with glowing rune carvings, dark fantasy, flat color, seamless tileable pattern, NO grid lines, NOT a tileset atlas, no text, no UI",
+   "source": "tiles",
+   "notes": "RAW 1024x1024, full-bleed no cutout; parent crops/scales to 48"
+  },
+  {
+   "id": "char_aila_up_walk_00",
+   "file": "assets/sprites/characters/aila/char_aila_up_walk_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "up",
+   "action": "walk",
+   "frame": 0,
+   "prompt": "img2img from char_aila_up_idle_00.png: seen from behind, walking away upward, left leg stepping forward, right leg back, dynamic stride pose, keep identical outfit and identity",
+   "source": "aila_walk_extra",
+   "notes": "img2img（ref=char_aila_up_idle_00.png）；up/left 共享 union bbox；right=镜像 left。"
+  },
+  {
+   "id": "char_aila_up_walk_01",
+   "file": "assets/sprites/characters/aila/char_aila_up_walk_01.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "up",
+   "action": "walk",
+   "frame": 1,
+   "prompt": "img2img from char_aila_up_idle_00.png: seen from behind, walking away upward, legs passing each other mid-step, slight body bounce, keep identical outfit and identity",
+   "source": "aila_walk_extra",
+   "notes": "img2img（ref=char_aila_up_idle_00.png）；up/left 共享 union bbox；right=镜像 left。"
+  },
+  {
+   "id": "char_aila_up_walk_02",
+   "file": "assets/sprites/characters/aila/char_aila_up_walk_02.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "up",
+   "action": "walk",
+   "frame": 2,
+   "prompt": "img2img from char_aila_up_idle_00.png: seen from behind, walking away upward, right leg stepping forward, left leg back, dynamic stride pose, keep identical outfit and identity",
+   "source": "aila_walk_extra",
+   "notes": "img2img（ref=char_aila_up_idle_00.png）；up/left 共享 union bbox；right=镜像 left。"
+  },
+  {
+   "id": "char_aila_up_walk_03",
+   "file": "assets/sprites/characters/aila/char_aila_up_walk_03.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "up",
+   "action": "walk",
+   "frame": 3,
+   "prompt": "img2img from char_aila_up_idle_00.png: seen from behind, walking away upward, legs passing each other mid-step, opposite phase, slight body bounce, keep identical outfit and identity",
+   "source": "aila_walk_extra",
+   "notes": "img2img（ref=char_aila_up_idle_00.png）；up/left 共享 union bbox；right=镜像 left。"
+  },
+  {
+   "id": "char_aila_left_walk_00",
+   "file": "assets/sprites/characters/aila/char_aila_left_walk_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "left",
+   "action": "walk",
+   "frame": 0,
+   "prompt": "img2img from char_aila_left_idle_00.png: left side profile view, walking toward the left, left leg stepping forward, right leg back, dynamic stride pose, keep identical outfit and identity",
+   "source": "aila_walk_extra",
+   "notes": "img2img（ref=char_aila_left_idle_00.png）；up/left 共享 union bbox；right=镜像 left。"
+  },
+  {
+   "id": "char_aila_left_walk_01",
+   "file": "assets/sprites/characters/aila/char_aila_left_walk_01.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "left",
+   "action": "walk",
+   "frame": 1,
+   "prompt": "img2img from char_aila_left_idle_00.png: left side profile view, walking toward the left, legs passing each other mid-step, slight body bounce, keep identical outfit and identity",
+   "source": "aila_walk_extra",
+   "notes": "img2img（ref=char_aila_left_idle_00.png）；up/left 共享 union bbox；right=镜像 left。"
+  },
+  {
+   "id": "char_aila_left_walk_02",
+   "file": "assets/sprites/characters/aila/char_aila_left_walk_02.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "left",
+   "action": "walk",
+   "frame": 2,
+   "prompt": "img2img from char_aila_left_idle_00.png: left side profile view, walking toward the left, right leg stepping forward, left leg back, dynamic stride pose, keep identical outfit and identity",
+   "source": "aila_walk_extra",
+   "notes": "img2img（ref=char_aila_left_idle_00.png）；up/left 共享 union bbox；right=镜像 left。"
+  },
+  {
+   "id": "char_aila_left_walk_03",
+   "file": "assets/sprites/characters/aila/char_aila_left_walk_03.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "left",
+   "action": "walk",
+   "frame": 3,
+   "prompt": "img2img from char_aila_left_idle_00.png: left side profile view, walking toward the left, legs passing each other mid-step, opposite phase, slight body bounce, keep identical outfit and identity",
+   "source": "aila_walk_extra",
+   "notes": "img2img（ref=char_aila_left_idle_00.png）；up/left 共享 union bbox；right=镜像 left。"
+  },
+  {
+   "id": "char_aila_right_walk_00",
+   "file": "assets/sprites/characters/aila/char_aila_right_walk_00.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "right",
+   "action": "walk",
+   "frame": 0,
+   "prompt": "horizontal mirror of char_aila_left_walk_00.png",
+   "source": "aila_walk_extra",
+   "notes": "右=镜像左，一致性完美。"
+  },
+  {
+   "id": "char_aila_right_walk_01",
+   "file": "assets/sprites/characters/aila/char_aila_right_walk_01.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "right",
+   "action": "walk",
+   "frame": 1,
+   "prompt": "horizontal mirror of char_aila_left_walk_01.png",
+   "source": "aila_walk_extra",
+   "notes": "右=镜像左，一致性完美。"
+  },
+  {
+   "id": "char_aila_right_walk_02",
+   "file": "assets/sprites/characters/aila/char_aila_right_walk_02.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "right",
+   "action": "walk",
+   "frame": 2,
+   "prompt": "horizontal mirror of char_aila_left_walk_02.png",
+   "source": "aila_walk_extra",
+   "notes": "右=镜像左，一致性完美。"
+  },
+  {
+   "id": "char_aila_right_walk_03",
+   "file": "assets/sprites/characters/aila/char_aila_right_walk_03.png",
+   "size": [
+    128,
+    128
+   ],
+   "kind": "character",
+   "direction": "right",
+   "action": "walk",
+   "frame": 3,
+   "prompt": "horizontal mirror of char_aila_left_walk_03.png",
+   "source": "aila_walk_extra",
+   "notes": "右=镜像左，一致性完美。"
+  }
+ ],
+ "notes": "2026-10-01 v02polish: 角色尺寸归一化 (issue #1)。batong/mofei 全 20 帧 RAW 重算统一 union bbox + 按 idle 高度归一化；aila walk_extra 8 RAW 校准到 pilot 尺度 + down_idle 放大 1.26x；全部 128x128。"
+}
