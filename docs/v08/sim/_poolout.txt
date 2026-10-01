@@ -1,0 +1,14 @@
+=== v0.8 权重池 · 34 次升级 · 12 个种子 ===
+ seed= 0 超武1把 ['super_bow']                  被动={'magnet': 1, 'aspeed': 5, 'xp': 1, 'attack': 1, 'area': 4, 'speed': 1}
+ seed= 1 超武0把 []                             被动={'armor': 3, 'critdmg': 1, 'speed': 1, 'xp': 1, 'hp': 1}
+ seed= 2 超武1把 ['super_bow']                  被动={'aspeed': 5, 'hp': 1, 'attack': 1, 'crit': 2, 'speed': 1, 'magnet': 1}
+ seed= 3 超武0把 []                             被动={'attack': 4, 'xp': 1, 'crit': 1, 'critdmg': 1}
+ seed= 4 超武1把 ['super_bow']                  被动={'duration': 3, 'magnet': 1, 'armor': 1, 'aspeed': 5}
+ seed= 5 超武1把 ['super_bow']                  被动={'xp': 1, 'duration': 2, 'aspeed': 5, 'attack': 1}
+ seed= 6 超武1把 ['super_bow']                  被动={'aspeed': 5, 'attack': 1, 'crit': 1, 'hp': 2, 'speed': 1}
+ seed= 7 超武1把 ['super_bow']                  被动={'aspeed': 5, 'attack': 1, 'crit': 1, 'hp': 1, 'speed': 1}
+ seed= 8 超武1把 ['super_bow']                  被动={'aspeed': 5, 'attack': 1}
+ seed= 9 超武1把 ['super_bow']                  被动={'aspeed': 5}
+ seed=10 超武1把 ['super_bow']                  被动={'aspeed': 5, 'attack': 2, 'crit': 1}
+ seed=11 超武1把 ['super_bow']                  被动={'aspeed': 5}
+平均 0.8 把/局（最少0 最多1）；被动槽占比 41%~59%
