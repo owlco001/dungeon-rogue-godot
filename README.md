@@ -2,6 +2,8 @@
 
 一款俯视角随机地牢 Roguelike：自动攻击割草生存，靠走位与构筑顶住怪潮。
 
+中文 | **[English](README.en.md)**
+
 ![Godot](https://img.shields.io/badge/Godot-4.7.2-478CBF?logo=godotengine&logoColor=white)
 ![Platform](https://img.shields.io/badge/平台-Web%20%2F%20移动端-2ea44f)
 
