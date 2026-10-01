@@ -1,0 +1,362 @@
+class_name Lang
+extends RefCounted
+
+## zh/en bilingual: default zh, lobby top bar toggles (EN/zh), saved to user://lang.cfg.
+## Web: ?lang=en opens English directly (shareable English link).
+## t(): exact match -> substring replace (long keys first) -> regex fallback.
+
+static var _lang := ""
+static var _sorted_keys: Array = []
+static var _re_floor: RegEx = null
+static var _re_round: RegEx = null
+
+
+static func current() -> String:
+	if _lang == "":
+		_load()
+	return _lang
+
+
+static func is_en() -> bool:
+	return current() == "en"
+
+
+static func _load() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load("user://lang.cfg") == OK:
+		var saved := String(cfg.get_value("lang", "code", ""))
+		if saved == "zh" or saved == "en":
+			_lang = saved
+			return
+	if OS.has_feature("web"):
+		var r = JavaScriptBridge.eval("new URLSearchParams(location.search).get('lang') || ''")
+		if String(r) == "en":
+			_lang = "en"
+			return
+	_lang = "zh"
+
+
+static func set_lang(code: String) -> void:
+	_lang = code
+	var cfg := ConfigFile.new()
+	cfg.set_value("lang", "code", code)
+	cfg.save("user://lang.cfg")
+
+
+static func t(s: String) -> String:
+	if s == "" or current() != "en":
+		return s
+	if _DICT.has(s):
+		return String(_DICT[s])
+	var out := s
+	if _sorted_keys.is_empty():
+		_sorted_keys = _DICT.keys()
+		_sorted_keys.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
+	for k in _sorted_keys:
+		var key := String(k)
+		if key.length() >= 2 and out.find(key) >= 0:
+			out = out.replace(key, String(_DICT[key]))
+	if _re_floor == null:
+		_re_floor = RegEx.new()
+		_re_floor.compile("第([0-9]+)层")
+		_re_round = RegEx.new()
+		_re_round.compile("·([0-9]+)轮")
+	var m := _re_floor.search(out)
+	while m != null:
+		out = out.substr(0, m.get_start()) + "Floor " + m.get_string(1) + out.substr(m.get_end())
+		m = _re_floor.search(out)
+	m = _re_round.search(out)
+	while m != null:
+		out = out.substr(0, m.get_start()) + " R" + m.get_string(1) + out.substr(m.get_end())
+		m = _re_round.search(out)
+	return out
+
+
+const _DICT := {
+	" · 无尽 %d 层(%d分)": " · Endless Fl.%d (%d min)",
+	"%d点": "%d pts",
+	"%d金": "%d G",
+	"%d金解锁": "%d G to Unlock",
+	"%s · 第%d层 · Lv.%d": "%s · Floor %d · Lv.%d",
+	"%s,自动攻击": "%s, auto-attack",
+	"+%d天赋点": "+%d Talent Pts",
+	"19武器全获得": "All 19 Weapons",
+	"Lv.%d→%d,伤害提升": "Lv.%d→%d, DMG up",
+	"MAX · 不再升级": "MAX · Maxed Out",
+	"[无尽] ": "[Endless] ",
+	"\n你听到第几声?": "\nHow many sounds did you hear?",
+	"·%d轮": " R%d",
+	"": "[Super] ",
+	"万怪斩": "10K Slayer",
+	"万箭齐发": "Arrow Barrage",
+	"三选一新武器候选": "In Draft Pool",
+	"上楼!": "Next Floor!",
+	"不动壁垒": "Immovable Bulwark",
+	"不朽军团": "Immortal Legion",
+	"不死意志": "Undying Will",
+	"亡者国度": "Realm of the Dead",
+	"传说": "Legendary",
+	"伤害 %.0f · 冷却 %.1fs": "DMG %.0f · CD %.1fs",
+	"伤害 %.0f · 冷却 %.2fs": "DMG %.0f · CD %.2fs",
+	"伤害 %.0f · 链式 %d": "DMG %.0f · Chain %d",
+	"体魄": "Vitality",
+	"你死了": "You Died",
+	"全场怪物减速50%，持续3秒": "Slow all monsters by 50% for 3s",
+	"全屏自动拾取": "Auto-Pickup: Whole Screen",
+	"兽群狂潮": "Beast Stampede",
+	"再来一局": "Play Again",
+	"再生": "Regeneration",
+	"冷却": "Cooldown",
+	"凤凰之心": "Phoenix Heart",
+	"出战": "Battle",
+	"击杀 %d": "Kills %d",
+	"击杀 0": "Kills 0",
+	"击杀1000只怪物": "Kill 1,000 monsters",
+	"击杀5000只怪物": "Kill 5,000 monsters",
+	"击败10层Boss": "Defeat the Floor 10 Boss",
+	"击败15层Boss": "Defeat the Floor 15 Boss",
+	"击败20层Boss": "Defeat the Floor 20 Boss",
+	"击败25层Boss": "Defeat the Floor 25 Boss",
+	"击败30层大Boss": "Defeat the Floor 30 Final Boss",
+	"击败5层Boss": "Defeat the Floor 5 Boss",
+	"初始解锁": "Unlocked by Default",
+	"初杀双生亡语者": "First Kill: Twin Deathwhisper",
+	"初杀噬影蝠王": "First Kill: Shadow Bat King",
+	"初杀深渊主宰": "First Kill: Abyss Lord",
+	"初杀熔渣铸造者": "First Kill: Slag Caster",
+	"初杀石颅巨像": "First Kill: Stone Skull Colossus",
+	"初杀荆棘暴君": "First Kill: Thorn Tyrant",
+	"初通深渊": "First Abyss Clear",
+	"剩余 %d": "Left %d",
+	"剩余 0": "Left 0",
+	"加特林": "Gatling",
+	"千刃轮舞": "Thousand-Blade Waltz",
+	"千怪斩": "1K Slayer",
+	"升级!三选一": "Level Up! Pick 1 of 3",
+	"双枪": "Dual Pistols",
+	"双生亡语者": "Twin Deathwhisper",
+	"受伤 -%d%%": "DMG Taken -%d%%",
+	"召唤流": "Summoning",
+	"史莱姆": "Slime",
+	"合成:%s+%s": "Fuse: %s + %s",
+	"合成超武:%s": "Super Weapon: %s",
+	"合成超武x1": "Fuse 1 Super Weapon",
+	"合成超武x5": "Fuse 5 Super Weapons",
+	"向最密集怪群降箭5秒": "Rain arrows on the densest pack for 5s",
+	"向移动方向位移260px，无敌0.5秒": "Dash 260px toward move dir, invincible 0.5s",
+	"哨兵炮塔": "Sentry Turret",
+	"噬影蝠王": "Shadow Bat King",
+	"圣盾": "Holy Aegis",
+	"地牢回廊": "Dungeon Corridor",
+	"地牢肉鸽": "Dungeon Rogue",
+	"坚韧": "Toughness",
+	"墨菲": "Murphy",
+	"声音关": "Sound Off",
+	"声音开": "Sound On",
+	"多才多艺": "Versatile",
+	"天赋": "Talents",
+	"天赋点:%d": "Talent Pts: %d",
+	"天赋点:通关/Boss/收集获得": "Talent Pts: from clears / bosses / collection",
+	"好学": "Studious",
+	"存档": "Save",
+	"审判之眼": "Eye of Judgment",
+	"寂灭轰鸣": "Roar of Annihilation",
+	"寒冰洞窟": "Frost Cavern",
+	"尸潮墓园": "Corpse Tide Graveyard",
+	"尸爆": "Corpse Explosion",
+	"层数 %d · 击杀 %d · 用时 %d分%02d秒\n金币 +%d 已入库": "Floors %d · Kills %d · Time %dm %02ds\nGold +%d banked",
+	"已解锁": "Unlocked",
+	"已解锁: ": "Unlocked: ",
+	"已读取存档：第%d层": "Save loaded: Floor %d",
+	"巴顿": "Barton",
+	"开始": "Start",
+	"开山裂地": "Mountain Splitter",
+	"弱点洞悉": "Weakness Insight",
+	"弹射 %d": "Bounce %d",
+	"强化": "Upgrades",
+	"强壮": "Strong",
+	"当前无法存档": "Can't save right now",
+	"战吼": "War Cry",
+	"战斗大师": "Combat Master",
+	"战斗系": "Combat",
+	"战斗系天赋全满": "Max out all Combat talents",
+	"战神咆哮": "Wargod's Roar",
+	"手": "Manual",
+	"技能升级:%s": "Skill Up: %s",
+	"护甲": "Armor",
+	"护甲 +%d": "Armor +%d",
+	"拾取范围 +%d%%": "Pickup Range +%d%%",
+	"拾取范围翻倍": "Pickup Range Doubled",
+	"持续时间": "Duration",
+	"搜刮": "Scavenge",
+	"播了2次:1=游戏(叮叮) 2=浏览器(哔)\n": "Played 2 sounds: 1=Game (ding) 2=Browser (beep)\n",
+	"播放中:%d 总线静音:%s 输出:%dHz": "Playing:%d BusMuted:%s Out:%dHz",
+	"播放测试音效": "Play Test Sound",
+	"收集": "Collection",
+	"攻击": "ATK",
+	"攻击 +%d%%": "ATK +%d%%",
+	"攻速": "ATK SPD",
+	"攻速 +%d%%": "ATK SPD +%d%%",
+	"攻速+25%": "ATK SPD +25%",
+	"数量 %d": "Count %d",
+	"斧刃 %d · 半径 %.0f": "Blades %d · Radius %.0f",
+	"新技能:%s": "New Skill: %s",
+	"新武器:%s": "New Weapon: %s",
+	"新被动:%s": "New Passive: %s",
+	"旋风斧": "Whirlwind Axe",
+	"旋风斧头": "Whirlwind Axe",
+	"旋风斧头:周期性范围旋风斩": "Whirlwind Axe: periodic AoE spin attack",
+	"无尽35层": "Endless 35",
+	"无尽40层": "Endless 40",
+	"无尽50层": "Endless 50",
+	"无尽Boss:": "Endless Boss: ",
+	"无尽终焉 · 第 %d 层": "Endless End · Floor %d",
+	"时间凝滞": "Time Stasis",
+	"普通": "Common",
+	"暴伤": "CRIT DMG",
+	"暴击伤害 +%d%%": "CRIT DMG +%d%%",
+	"暴击率": "CRIT Rate",
+	"暴击率 +%d%%": "CRIT Rate +%d%%",
+	"最高 %d 层 · 通关 %d 次": "Best Floor %d · %d Clears",
+	"未解锁": "Locked",
+	"未解锁武器不会出现在升级三选一": "Locked weapons won't appear in level-up drafts",
+	"术士·爆发": "Warlock · Burst",
+	"枪械流": "Guns",
+	"武器": "Weapons",
+	"武器伤害 +%d%%": "Weapon DMG +%d%%",
+	"武器全收": "Full Arsenal",
+	"武器升级:%s": "Weapon Up: %s",
+	"武器大师": "Weapon Master",
+	"武器槽 +1": "Weapon Slot +1",
+	"死亡复活一次(50%血)": "Revive once on death (50% HP)",
+	"死亡绽放": "Death Blossom",
+	"死灵流": "Necromancy",
+	"歼灭矩阵": "Annihilation Matrix",
+	"毁灭风暴": "Storm of Ruin",
+	"每局复活一次(50%血)": "Revive once per run (50% HP)",
+	"每秒 %.0f · 范围 %.0f": "%.0f/s · Range %.0f",
+	"每秒回血 +%.1f": "Regen +%.1f/s",
+	"每级 +%d%%，当前 +%d%%": "+%d%% per Lv · Now +%d%%",
+	"永久增益": "Permanent Bonus",
+	"永久属性": "Permanent Stats",
+	"永恒凋零": "Eternal Withering",
+	"深入无尽35层": "Reach Endless Floor 35",
+	"深入无尽40层": "Reach Endless Floor 40",
+	"深入无尽50层": "Reach Endless Floor 50",
+	"深渊主宰·墨骸": "Abyss Lord Morkhai",
+	"深渊主宰·墨骸 已被击败": "Abyss Lord Morkhai has been defeated!",
+	"游侠·均衡": "Ranger · Balanced",
+	"湮灭奇点": "Oblivion Singularity",
+	"满级": "MAX",
+	"灵手": "Nimble Hands",
+	"灵魂收割": "Soul Reap",
+	"灵魂虹吸": "Soul Siphon",
+	"熔渣熔炉": "Slag Forge",
+	"熔渣铸造者": "Slag Caster",
+	"爆炸 %.0f": "Blast %.0f",
+	"爆炸 %.0f · 范围 %.0f": "Blast %.0f · Range %.0f",
+	"狂暴战鼓": "Frenzied War Drum",
+	"狙击枪": "Sniper Rifle",
+	"猎犬": "War Hound",
+	"生命": "HP",
+	"生命吸取": "Life Drain",
+	"生存大师": "Survival Master",
+	"生存系": "Survival",
+	"生存系天赋全满": "Max out all Survival talents",
+	"疾风": "Swift Wind",
+	"瘟疫风暴": "Plague Storm",
+	"白骨王座": "Bone Throne",
+	"盾击": "Shield Bash",
+	"睿智": "Wisdom",
+	"石颅巨像": "Stone Skull Colossus",
+	"磁石体质": "Magnetic Body",
+	"磁铁": "Magnet",
+	"磁铁核心": "Magnet Core",
+	"神速": "Godspeed",
+	"移速": "Move SPD",
+	"移速 +%d%%": "Move SPD +%d%%",
+	"稀有": "Rare",
+	"穿透 %d": "Pierce %d",
+	"第%d层·%s": "Floor %d · %s",
+	"第1声(游戏引擎,叮叮声)已播放...\n[音频上下文:": "Sound 1 (game engine, ding) played...\n[Audio Ctx: ",
+	"第1层·地牢回廊": "Floor 1 · Dungeon Corridor",
+	"第1次通关30层": "First Floor-30 Clear",
+	"箭雨": "Arrow Rain",
+	"经验": "XP",
+	"经验 +%d%%": "XP +%d%%",
+	"继续": "Continue",
+	"继续冒险": "Continue Adventure",
+	"维持 %d 只 · 冷却 %.1fs": "Summons %d · CD %.1fs",
+	"自": "Auto",
+	"艾拉": "Ella",
+	"范围": "Range",
+	"范围 %.0f · 冷却 %.1fs": "Range %.0f · CD %.1fs",
+	"范围击退+眩晕2秒": "AoE knockback + 2s stun",
+	"范围吸血，血越少伤害越高，回血30%": "AoE drain: less HP = more DMG, heal 30%",
+	"荆棘密林": "Thorn Thicket",
+	"荆棘暴君": "Thorn Tyrant",
+	"获得吸收盾，持续6秒": "Gain an absorb shield for 6s",
+	"虚空祭坛": "Void Altar",
+	"蛮兽": "Brute",
+	"蜂群": "Swarm",
+	"蝙蝠": "Bat",
+	"血量": "HP",
+	"血量上限 +%d": "Max HP +%d",
+	"被动升级:%s": "Passive Up: %s",
+	"角色": "Characters",
+	"解锁": "Unlock",
+	"解锁:%s(+%d天赋点)": "Unlocked: %s (+%d Talent Pts)",
+	"解锁收集获得天赋点": "Unlock collection entries to earn Talent Pts",
+	"评分 %d\n金币 +%d 已入库（×1.5）": "Score %d\nGold +%d banked (x1.5)",
+	"诅咒光环": "Curse Aura",
+	"试音": "Test",
+	"贪婪大师": "Greed Master",
+	"贪婪系": "Greed",
+	"贪婪系天赋全满": "Max out all Greed talents",
+	"贪婪金杯": "Goblet of Greed",
+	"贪金": "Greedy",
+	"超武初成": "First Super Weapon",
+	"超武多成": "Super Collector",
+	"超武大成": "Super Grandmaster",
+	"践踏": "Trample",
+	"近战流": "Melee",
+	"进入无尽（31层起）": "Enter Endless (Floor 31+)",
+	"进度已保存": "Progress Saved",
+	"连射弓箭": "Rapid Bow",
+	"连射弓箭:自动射出箭矢": "Rapid Bow: auto-fires arrows",
+	"退回%d金币,发放%d天赋点": "Refunded %d Gold, granted %d Talent Pts",
+	"选择角色": "Select Character",
+	"选择角色出战": "Choose Your Fighter",
+	"通关 %d 层 / %d 金币": "Cleared Fl.%d / %d Gold",
+	"通关!": "Victory!",
+	"重新开始": "Restart",
+	"重装·肉盾": "Heavy · Tank",
+	"金属风暴": "Metal Storm",
+	"金币 %d": "Gold %d",
+	"金币 +%d 已入库": "Gold +%d banked",
+	"金币 +%d%%": "Gold +%d%%",
+	"金币 0": "Gold 0",
+	"金币+30%": "Gold +30%",
+	"金币:%d": "Gold: %d",
+	"金币升级，开局生效，可叠加天赋": "Gold upgrades: active from run start, stack with talents",
+	"铁壁": "Iron Wall",
+	"锋利": "Sharpness",
+	"闪现": "Blink",
+	"附近200px有怪": "Enemies within 200px",
+	"陨石术": "Meteor",
+	"随机落点8颗陨石轰炸": "8 meteors bombard random spots",
+	"集齐19超武": "Collect all 19 Super Weapons",
+	"霰弹枪": "Shotgun",
+	"静音开关": "Mute Toggle",
+	"飞斧": "Flying Axe",
+	"骷髅兵": "Skeleton",
+	"骷髅大军": "Skeleton Army",
+	"骷髅战士": "Skeleton Warrior",
+	"魔法法球": "Magic Orb",
+	"魔法法球:弹射法球连锁打击": "Magic Orb: bouncing orbs, chain hits",
+	"鸿运": "Fortune",
+	"【超武】": "[Super] ",
+	"每级 4-8% 别超模": "4-8% per level",
+	"合成": "Fuse",
+	"开始战斗": "Start",
+}

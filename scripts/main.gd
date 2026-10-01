@@ -514,7 +514,7 @@ func continue_run(save_data: Dictionary) -> void:
 	hud.set_passives(player.passives)
 	hud.bind_player(player)
 	hud.set_skills(player.skills)
-	hud.show_toast("已读取存档：第%d层" % floor_num)
+	hud.show_toast(Lang.t("已读取存档：第%d层") % floor_num)
 	# floor_num 已是当前层，next_floor 会 +1，所以先 -1
 	floor_num -= 1
 	next_floor()

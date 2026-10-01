@@ -1000,8 +1000,8 @@ func build_levelup_options() -> Array:
 				continue
 			var nm: String = GameData.WEAPONS[wid]["name"]
 			synth.append({"type": "synthesize", "id": wid, "super_id": swid,
-				"title": "合成超武:%s" % String(sw["name"]),
-				"desc": "%s Lv8 + %s Lv5" % [nm, GameData.PASSIVES[need_p]["name"]]})
+				"title": Lang.t("合成超武:%s") % Lang.t(String(sw["name"])),
+				"desc": "%s Lv8 + %s Lv5" % [Lang.t(nm), Lang.t(String(GameData.PASSIVES[need_p]["name"]))]})
 	for w in weapons:
 		var wid := String(w["id"])
 		var lv := int(w["lv"])
@@ -1010,7 +1010,7 @@ func build_levelup_options() -> Array:
 			if GameData.is_super(wid):
 				nm = String(GameData.SUPERWEAPONS[wid]["name"])
 			wups.append({"type": "weapon_up", "id": wid,
-				"title": "武器升级:%s" % nm, "desc": "Lv.%d→%d,伤害提升" % [lv, lv + 1]})
+				"title": Lang.t("武器升级:%s") % Lang.t(nm), "desc": Lang.t("Lv.%d→%d,伤害提升") % [lv, lv + 1]})
 	if weapons.size() < GameData.WEAPON_SLOTS + Meta.extra_weapon_slots():
 		for wid in GameData.WEAPON_POOL:
 			if not Meta.is_weapon_unlocked(wid):
@@ -1018,19 +1018,19 @@ func build_levelup_options() -> Array:
 			if _weapon_by_id(wid).is_empty():
 				var d: Dictionary = GameData.WEAPONS[wid]
 				wnews.append({"type": "new_weapon", "id": wid,
-					"title": "新武器:%s" % String(d["name"]),
-					"desc": "%s,自动攻击" % String(SCHOOL_NAMES.get(String(d.get("school", "")), ""))})
+					"title": Lang.t("新武器:%s") % Lang.t(String(d["name"])),
+					"desc": Lang.t("%s,自动攻击") % Lang.t(String(SCHOOL_NAMES.get(String(d.get("school", "")), "")))})
 	for pid in passives.keys():
 		var lv := int(passives[pid])
 		if lv < GameData.PASSIVE_MAX_LV:
 			pups.append({"type": "passive_up", "id": String(pid),
-				"title": "被动升级:%s" % GameData.PASSIVES[pid]["name"],
+				"title": Lang.t("被动升级:%s") % Lang.t(String(GameData.PASSIVES[pid]["name"])),
 				"desc": "Lv.%d→%d" % [lv, lv + 1]})
 	if passives.size() < GameData.PASSIVE_SLOTS:
 		for pid in GameData.PASSIVE_ORDER:
 			if not passives.has(pid):
 				pnews.append({"type": "new_passive", "id": String(pid),
-					"title": "新被动:%s" % GameData.PASSIVES[pid]["name"], "desc": "永久增益"})
+					"title": Lang.t("新被动:%s") % Lang.t(String(GameData.PASSIVES[pid]["name"])), "desc": Lang.t("永久增益")})
 	# 技能：通用槽只有一个
 	var has_utility := false
 	for sk in skills:
@@ -1041,13 +1041,13 @@ func build_levelup_options() -> Array:
 			has_utility = true
 			if lv < GameData.SKILL_MAX_LV:
 				sups.append({"type": "skill_up", "id": sid,
-					"title": "技能升级:%s" % String(sd["name"]),
+					"title": Lang.t("技能升级:%s") % Lang.t(String(sd["name"])),
 					"desc": "Lv.%d→%d" % [lv, lv + 1]})
 	if not has_utility:
 		for sid in GameData.SKILL_ORDER:
 			var sd: Dictionary = GameData.SKILLS[sid]
 			snew.append({"type": "new_skill", "id": sid,
-				"title": "新技能:%s" % String(sd["name"]), "desc": String(sd["desc"])})
+				"title": Lang.t("新技能:%s") % Lang.t(String(sd["name"])), "desc": Lang.t(String(sd["desc"]))})
 	# 交错排列，合成置顶
 	var pools := [synth, wnews, wups, snew, sups, pnews, pups]
 	for p in pools:

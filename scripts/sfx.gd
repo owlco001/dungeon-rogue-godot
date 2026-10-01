@@ -94,7 +94,7 @@ func debug_state() -> String:
 		if p.playing:
 			playing += 1
 	var bus_mute := AudioServer.is_bus_mute(0)
-	return "播放中:%d 总线静音:%s 输出:%dHz" % [playing, str(bus_mute), int(AudioServer.get_mix_rate())]
+	return Lang.t("播放中:%d 总线静音:%s 输出:%dHz") % [playing, str(bus_mute), int(AudioServer.get_mix_rate())]
 
 
 # ---------- 合成原语（16-bit PCM） ----------

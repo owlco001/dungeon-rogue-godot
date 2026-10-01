@@ -53,4 +53,4 @@ static func summary() -> String:
 		cname = str(GameData.CHARACTERS[cname]["name"])
 	var fl := int(d.get("floor_num", 1))
 	var lv := int(d.get("level", 1))
-	return "%s · 第%d层 · Lv.%d" % [cname, fl, lv]
+	return Lang.t("%s · 第%d层 · Lv.%d") % [Lang.t(cname), fl, lv]

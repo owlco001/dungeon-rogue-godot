@@ -47,7 +47,7 @@ static func unlock(aid: String) -> bool:
 	var d: Dictionary = DEFS[aid]
 	Meta.grant_achievement(aid, int(d["points"]))
 	# 音效在 toast 显示时播放（hud/lobby.show_toast），此处不直接引用 Sfx autoload
-	queue_toast("解锁:%s(+%d天赋点)" % [String(d["name"]), int(d["points"])])
+	queue_toast(Lang.t("解锁:%s(+%d天赋点)") % [Lang.t(String(d["name"])), int(d["points"])])
 	return true
 
 

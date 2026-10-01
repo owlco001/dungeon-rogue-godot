@@ -300,8 +300,20 @@ window._gameBgm = (function () {
 		embers.appendChild(e);
 	}
 
-	// 小贴士轮播
-	const tips = [
+	// 小贴士轮播（?lang=en 或英文浏览器显示英文）
+	const _en = new URLSearchParams(location.search).get('lang') === 'en' || (navigator.language || '').toLowerCase().indexOf('en') === 0;
+	if (_en) {
+		document.title = 'Dungeon Rogue';
+		var _gt = document.getElementById('game-title'); if (_gt) _gt.textContent = 'DUNGEON ROGUE';
+		var _lm = document.getElementById('load-msg'); if (_lm) _lm.innerHTML = 'Descending into the dungeon<span class="dots"></span>';
+	}
+	const tips = _en ? [
+		'<b>Tip</b>: Max out a weapon and its paired passive to evolve a Super Weapon',
+		'<b>Tip</b>: Relics drop from elites and chests, and never take upgrade slots',
+		'<b>Tip</b>: Press and drag anywhere on the left half — the joystick follows your thumb',
+		'<b>Tip</b>: A boss arrives every 5 minutes; survive 30 minutes to win',
+		'<b>Tip</b>: Gold upgrades your stats and unlocks new heroes',
+	] : [
 		'<b>小贴士</b>：武器升满级后，配齐对应被动可进化为超武',
 		'<b>小贴士</b>：遗物不占升级位，精英怪和宝箱才会掉落',
 		'<b>小贴士</b>：左半屏任意位置按住拖动，摇杆跟手出现',
@@ -399,7 +411,7 @@ window._gameBgm = (function () {
 					barFill.style.width = pct + '%';
 					loadPct.textContent = pct + '%';
 				} else {
-					loadPct.textContent = '准备中';
+					loadPct.textContent = (new URLSearchParams(location.search).get('lang') === 'en') ? 'Preparing' : '准备中';
 				}
 			},
 		}).then(() => {

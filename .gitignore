@@ -17,3 +17,6 @@ Thumbs.db
 __pycache__/
 *.pyc
 .venv/
+
+# Staging/raw intermediates
+assets/.staging/

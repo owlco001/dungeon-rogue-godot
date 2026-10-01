@@ -112,7 +112,7 @@ func _ready() -> void:
 
 func _mk_label(text: String, size: int) -> Label:
 	var l := Label.new()
-	l.text = text
+	l.text = Lang.t(text)
 	l.add_theme_font_override("font", _font)
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", Color.WHITE)
@@ -161,8 +161,10 @@ func _build_bars() -> void:
 func _build_labels() -> void:
 	var box := VBoxContainer.new()
 	box.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	box.position = Vector2(-210, 12)
-	box.custom_minimum_size = Vector2(194, 100)
+	box.offset_left = -330
+	box.offset_right = -16
+	box.offset_top = 12
+	box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	box.add_theme_constant_override("separation", 2)
 	add_child(box)
 	_floor_label = _mk_label("第1层·地牢回廊", 17)
@@ -180,7 +182,7 @@ func _build_labels() -> void:
 	box.add_child(_enemy_label)
 	# 静音开关（暂停菜单入口：升级三选一/结算时可点）
 	_mute_btn = Button.new()
-	_mute_btn.text = "声音开"
+	_mute_btn.text = Lang.t("声音开")
 	_mute_btn.add_theme_font_override("font", _font)
 	_mute_btn.add_theme_font_size_override("font_size", 18)
 	_mute_btn.custom_minimum_size = Vector2(48, 36)
@@ -191,7 +193,7 @@ func _build_labels() -> void:
 	_update_mute_btn()
 	# 存档按钮：保存当前进度并回大厅
 	var save_btn := Button.new()
-	save_btn.text = "存档"
+	save_btn.text = Lang.t("存档")
 	save_btn.add_theme_font_override("font", _font)
 	save_btn.add_theme_font_size_override("font_size", 18)
 	save_btn.custom_minimum_size = Vector2(48, 36)
@@ -218,7 +220,7 @@ func _on_mute_toggle() -> void:
 
 func _update_mute_btn() -> void:
 	if is_instance_valid(_mute_btn):
-		_mute_btn.text = "声音关" if Meta.is_muted() else "声音开"
+		_mute_btn.text = Lang.t("声音关") if Meta.is_muted() else Lang.t("声音开")
 
 
 # ---------- v0.6 成就 toast（屏幕顶部，1.5 秒） ----------
@@ -254,7 +256,7 @@ func show_toast(text: String) -> void:
 	if not is_instance_valid(_toast_panel):
 		return
 	Sfx.play("achievement")
-	_toast_label.text = text
+	_toast_label.text = Lang.t(text)
 	_toast_panel.visible = true
 	_toast_panel.modulate.a = 1.0
 	if _toast_tween != null and _toast_tween.is_valid():
@@ -482,7 +484,7 @@ func _show_detail(kind: String, idx: int, btn: Button) -> void:
 		title = String(d["name"])
 		lv_text = "Lv.%d / %d" % [lv, GameData.PASSIVE_MAX_LV]
 		var per := float(d["per"]) * 100.0
-		desc = "每级 +%d%%，当前 +%d%%" % [int(per), int(per * lv)]
+		desc = Lang.t("每级 +%d%%，当前 +%d%%") % [int(per), int(per * lv)]
 	elif kind == "relic":
 		if idx < 0 or idx >= _relics_data.size():
 			return
@@ -496,9 +498,9 @@ func _show_detail(kind: String, idx: int, btn: Button) -> void:
 	else:
 		return
 	_detail_icon.texture = icon_tex
-	_detail_name.text = title
-	_detail_lv.text = lv_text
-	_detail_desc.text = desc
+	_detail_name.text = Lang.t(title)
+	_detail_lv.text = Lang.t(lv_text)
+	_detail_desc.text = Lang.t(desc)
 	_detail_layer.visible = true
 	_position_detail_panel.call_deferred(btn)
 
@@ -530,30 +532,30 @@ func _weapon_desc(wid: String, lv: int, d: Dictionary) -> String:
 	var el := GameData.WEAPON_MAX_LV if is_super else lv  # 超武按 Lv8 词条全解锁显示
 	match kind:
 		"aoe", "shock", "arc":
-			lines.append("范围 %.0f · 冷却 %.1fs" % [float(d.get("radius", 0)), float(d["cd"])])
+			lines.append(Lang.t("范围 %.0f · 冷却 %.1fs") % [float(d.get("radius", 0)), float(d["cd"])])
 		"summon":
-			lines.append("维持 %d 只 · 冷却 %.1fs" % [int(d.get("count", 1)), float(d["cd"])])
+			lines.append(Lang.t("维持 %d 只 · 冷却 %.1fs") % [int(d.get("count", 1)), float(d["cd"])])
 		"corpse":
-			lines.append("爆炸 %.0f · 范围 %.0f" % [float(d["dmg"]), float(d.get("radius", 0))])
+			lines.append(Lang.t("爆炸 %.0f · 范围 %.0f") % [float(d["dmg"]), float(d.get("radius", 0))])
 		"drain":
-			lines.append("伤害 %.0f · 链式 %d" % [float(d["dmg"]), int(d.get("chain", 0))])
+			lines.append(Lang.t("伤害 %.0f · 链式 %d") % [float(d["dmg"]), int(d.get("chain", 0))])
 		"aura":
-			lines.append("每秒 %.0f · 范围 %.0f" % [float(d["dmg"]), float(d.get("radius", 0))])
+			lines.append(Lang.t("每秒 %.0f · 范围 %.0f") % [float(d["dmg"]), float(d.get("radius", 0))])
 		"orbit":
-			lines.append("斧刃 %d · 半径 %.0f" % [int(d.get("count", 1)), float(d.get("radius", 0))])
+			lines.append(Lang.t("斧刃 %d · 半径 %.0f") % [int(d.get("count", 1)), float(d.get("radius", 0))])
 		"boomerang":
-			lines.append("伤害 %.0f · 冷却 %.1fs" % [float(d["dmg"]), float(d["cd"])])
+			lines.append(Lang.t("伤害 %.0f · 冷却 %.1fs") % [float(d["dmg"]), float(d["cd"])])
 		_:
-			lines.append("伤害 %.0f · 冷却 %.2fs" % [float(d["dmg"]), float(d["cd"])])
+			lines.append(Lang.t("伤害 %.0f · 冷却 %.2fs") % [float(d["dmg"]), float(d["cd"])])
 	var extras: Array = []
 	if int(d.get("count", 1)) > 1 and kind != "summon" and kind != "orbit":
-		extras.append("数量 %d" % int(d["count"]))
+		extras.append(Lang.t("数量 %d") % int(d["count"]))
 	if int(d.get("pierce", 0)) > 0:
-		extras.append("穿透 %d" % int(d["pierce"]))
+		extras.append(Lang.t("穿透 %d") % int(d["pierce"]))
 	if int(d.get("chain", 0)) > 0:
-		extras.append("弹射 %d" % int(d["chain"]))
+		extras.append(Lang.t("弹射 %d") % int(d["chain"]))
 	if float(d.get("explosive", 0.0)) > 0.0:
-		extras.append("爆炸 %.0f" % float(d["explosive"]))
+		extras.append(Lang.t("爆炸 %.0f") % float(d["explosive"]))
 	if not extras.is_empty():
 		lines.append(" · ".join(extras))
 	# 已解锁 signature
@@ -563,10 +565,10 @@ func _weapon_desc(wid: String, lv: int, d: Dictionary) -> String:
 		if el >= int(slv):
 			unlocked.append("Lv%d" % int(slv))
 	if not unlocked.is_empty():
-		lines.append("已解锁: " + " ".join(unlocked))
+		lines.append(Lang.t("已解锁: ") + " ".join(unlocked))
 	if is_super:
 		var sw: Dictionary = GameData.SUPERWEAPONS[wid]
-		lines.append("合成:%s+%s" % [String(GameData.WEAPONS[String(sw["weapon"])]["name"]),
+		lines.append(Lang.t("合成:%s+%s") % [String(GameData.WEAPONS[String(sw["weapon"])]["name"]),
 			String(GameData.PASSIVES[String(sw["passive"])]["name"])])
 	return "\n".join(lines)
 
@@ -686,7 +688,7 @@ func set_skills(skills: Array) -> void:
 			(slot["icon"] as TextureRect).texture = load(String(sd["icon"])) as Texture2D
 			(slot["btn"] as Button).visible = true
 			(slot["auto"] as Button).visible = true
-			(slot["auto"] as Button).text = "自" if bool(sk["auto"]) else "手"
+			(slot["auto"] as Button).text = Lang.t("自") if bool(sk["auto"]) else Lang.t("手")
 		else:
 			(slot["btn"] as Button).visible = false
 			(slot["auto"] as Button).visible = false
@@ -709,12 +711,12 @@ func _process(_delta: float) -> void:
 		var cd_t := float(sk["cd_t"])
 		(slot["cd"] as Label).text = "%d" % int(ceil(cd_t)) if cd_t > 0.0 else ""
 		(slot["btn"] as Button).disabled = cd_t > 0.0
-		(slot["auto"] as Button).text = "自" if bool(sk["auto"]) else "手"
+		(slot["auto"] as Button).text = Lang.t("自") if bool(sk["auto"]) else Lang.t("手")
 
 
 # ---------- runtime updates ----------
 func set_hp(hp: float, max_hp: float, char_name: String) -> void:
-	_name_label.text = char_name
+	_name_label.text = Lang.t(char_name)
 	_hp_bar.max_value = max_hp
 	_hp_bar.value = hp
 
@@ -726,23 +728,23 @@ func set_xp(xp: int, xp_need: int, level: int) -> void:
 
 
 func set_gold(g: int) -> void:
-	_gold_label.text = "金币 %d" % g
+	_gold_label.text = Lang.t("金币 %d") % g
 
 
 func set_kills(k: int) -> void:
-	_kill_label.text = "击杀 %d" % k
+	_kill_label.text = Lang.t("击杀 %d") % k
 
 
 func set_enemies(n: int) -> void:
-	_enemy_label.text = "剩余 %d" % n if n > 0 else "上楼!"
+	_enemy_label.text = Lang.t("剩余 %d") % n if n > 0 else Lang.t("上楼!")
 
 
 func set_floor(floor_num: int, floor_name: String) -> void:
-	_floor_label.text = "第%d层·%s" % [floor_num, floor_name]
+	_floor_label.text = Lang.t("第%d层·%s") % [floor_num, Lang.t(floor_name)]
 
 
 func show_boss_bar(boss_name: String) -> void:
-	_boss_name.text = boss_name
+	_boss_name.text = Lang.t(boss_name)
 	_boss_box.visible = true
 
 
@@ -828,9 +830,9 @@ func _char_card(cid: String, compact: bool = false) -> Control:
 	vb.add_child(de)
 	var b := Button.new()
 	if Meta.is_char_unlocked(cid):
-		b.text = "开始"
+		b.text = Lang.t("开始")
 	else:
-		b.text = "未解锁"
+		b.text = Lang.t("未解锁")
 		b.disabled = true
 		var lk := _mk_label(Meta.char_unlock_desc(cid), 13)
 		lk.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -943,7 +945,7 @@ func _build_death_overlay() -> void:
 	_death_gold.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
 	vb.add_child(_death_gold)
 	var rb := Button.new()
-	rb.text = "重新开始"
+	rb.text = Lang.t("重新开始")
 	rb.add_theme_font_override("font", _font)
 	rb.add_theme_font_size_override("font_size", 22)
 	rb.custom_minimum_size = Vector2(200, 56)
@@ -952,7 +954,7 @@ func _build_death_overlay() -> void:
 
 
 func show_death(gold_earned: int) -> void:
-	_death_gold.text = "金币 +%d 已入库" % gold_earned
+	_death_gold.text = Lang.t("金币 +%d 已入库") % gold_earned
 	_death_overlay.visible = true
 
 
@@ -986,7 +988,7 @@ func _build_victory_overlay() -> void:
 	_victory_stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(_victory_stats)
 	var rb := Button.new()
-	rb.text = "再来一局"
+	rb.text = Lang.t("再来一局")
 	rb.add_theme_font_override("font", _font)
 	rb.add_theme_font_size_override("font_size", 22)
 	rb.custom_minimum_size = Vector2(200, 56)
@@ -996,7 +998,7 @@ func _build_victory_overlay() -> void:
 	vb.add_child(bc)
 	# 无尽模式入口
 	var eb := Button.new()
-	eb.text = "进入无尽（31层起）"
+	eb.text = Lang.t("进入无尽（31层起）")
 	eb.add_theme_font_override("font", _font)
 	eb.add_theme_font_size_override("font_size", 22)
 	eb.custom_minimum_size = Vector2(260, 56)
@@ -1018,13 +1020,13 @@ func hide_victory() -> void:
 
 # ---------- 无尽死亡结算 ----------
 func show_endless_death(floor_num: int, score: int, gold_earned: int) -> void:
-	_death_title.text = "无尽终焉 · 第 %d 层" % floor_num
-	_death_gold.text = "评分 %d\n金币 +%d 已入库（×1.5）" % [score, gold_earned]
+	_death_title.text = Lang.t("无尽终焉 · 第 %d 层") % floor_num
+	_death_gold.text = Lang.t("评分 %d\n金币 +%d 已入库（×1.5）") % [score, gold_earned]
 	_death_overlay.visible = true
 
 
 func show_victory(floor_num: int, kills: int, run_time: float, gold_earned: int) -> void:
 	var mm := int(run_time) / 60
 	var ss := int(run_time) % 60
-	_victory_stats.text = "层数 %d · 击杀 %d · 用时 %d分%02d秒\n金币 +%d 已入库" % [floor_num, kills, mm, ss, gold_earned]
+	_victory_stats.text = Lang.t("层数 %d · 击杀 %d · 用时 %d分%02d秒\n金币 +%d 已入库") % [floor_num, kills, mm, ss, gold_earned]
 	_victory_overlay.visible = true

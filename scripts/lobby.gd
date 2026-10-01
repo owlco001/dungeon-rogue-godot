@@ -50,7 +50,7 @@ func _process(_delta: float) -> void:
 
 func _mk_label(text: String, size: int) -> Label:
 	var l := Label.new()
-	l.text = text
+	l.text = Lang.t(text)
 	l.add_theme_font_override("font", _font)
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", Color(0.92, 0.90, 0.86))
@@ -59,7 +59,7 @@ func _mk_label(text: String, size: int) -> Label:
 
 func _mk_button(text: String, size: int = 18) -> Button:
 	var b := Button.new()
-	b.text = text
+	b.text = Lang.t(text)
 	b.add_theme_font_override("font", _font)
 	b.add_theme_font_size_override("font_size", size)
 	b.custom_minimum_size = Vector2(120, 52)
@@ -124,14 +124,19 @@ func _build() -> void:
 	top.add_child(btns)
 	_mute_btn = _mk_button("声音开", 18)
 	_mute_btn.custom_minimum_size = Vector2(88, 44)
-	_mute_btn.tooltip_text = "静音开关"
+	_mute_btn.tooltip_text = Lang.t("静音开关")
 	_mute_btn.pressed.connect(_on_mute_toggle)
 	btns.add_child(_mute_btn)
 	var test_btn := _mk_button("试音", 16)
 	test_btn.custom_minimum_size = Vector2(96, 44)
-	test_btn.tooltip_text = "播放测试音效"
+	test_btn.tooltip_text = Lang.t("播放测试音效")
 	test_btn.pressed.connect(_on_test_sound)
 	btns.add_child(test_btn)
+	var lang_btn := _mk_button("EN" if Lang.current() != "en" else "中文", 16)
+	lang_btn.custom_minimum_size = Vector2(72, 44)
+	lang_btn.tooltip_text = "Language / 语言"
+	lang_btn.pressed.connect(_on_lang_toggle)
+	btns.add_child(lang_btn)
 	_update_mute_btn()
 	# 中途存档：如果有存档，显示"继续冒险"按钮
 	if RunSave.has_save():
@@ -189,11 +194,11 @@ func _update_content_width() -> void:
 
 
 func _refresh_top() -> void:
-	_gold_label.text = "金币:%d" % Meta.gold()
-	_talent_label.text = "天赋点:%d" % Meta.talent_points()
-	var rec := "最高 %d 层 · 通关 %d 次" % [Meta.max_floor(), Meta.victories()]
+	_gold_label.text = Lang.t("金币:%d") % Meta.gold()
+	_talent_label.text = Lang.t("天赋点:%d") % Meta.talent_points()
+	var rec := Lang.t("最高 %d 层 · 通关 %d 次") % [Meta.max_floor(), Meta.victories()]
 	if Meta.endless_best_floor() > 0:
-		rec += " · 无尽 %d 层(%d分)" % [Meta.endless_best_floor(), Meta.endless_best_score()]
+		rec += Lang.t(" · 无尽 %d 层(%d分)") % [Meta.endless_best_floor(), Meta.endless_best_score()]
 	_record_label.text = rec
 
 
@@ -232,12 +237,12 @@ func _on_test_sound() -> void:
 	var actx := "?"
 	if OS.has_feature("web"):
 		actx = str(JavaScriptBridge.eval("window._getAudioState ? window._getAudioState() : 'no-hook'", true))
-	show_toast("第1声(游戏引擎,叮叮声)已播放...\n[音频上下文:" + actx + "]")
+	show_toast(Lang.t("第1声(游戏引擎,叮叮声)已播放...\n[音频上下文:") + actx + "]")
 	await get_tree().create_timer(1.8).timeout
 	# 第2声：浏览器原生(哔长音)，对照组
 	_web_beep()
 	await get_tree().create_timer(1.2).timeout
-	show_toast("播了2次:1=游戏(叮叮) 2=浏览器(哔)\n" + Sfx.debug_state() + "\n你听到第几声?")
+	show_toast(Lang.t("播了2次:1=游戏(叮叮) 2=浏览器(哔)\n") + Sfx.debug_state() + Lang.t("\n你听到第几声?"))
 
 
 ## 浏览器原生蜂鸣（绕过 Godot 音频管线）：用于定位无声是引擎问题还是设备问题
@@ -249,7 +254,12 @@ func _web_beep() -> void:
 
 func _update_mute_btn() -> void:
 	if is_instance_valid(_mute_btn):
-		_mute_btn.text = "声音关" if Meta.is_muted() else "声音开"
+		_mute_btn.text = Lang.t("声音关") if Meta.is_muted() else Lang.t("声音开")
+
+
+func _on_lang_toggle() -> void:
+	Lang.set_lang("en" if Lang.current() != "en" else "zh")
+	get_tree().reload_current_scene()
 
 
 func _on_tab(tid: String) -> void:
@@ -332,7 +342,7 @@ func _build_talent_tab() -> void:
 			var cost := Meta.talent_point_cost(tid)
 			_buy_row(vb, String(d["name"]), "Lv.%d/%d" % [lv, int(d["max"])],
 				Meta.talent_desc(tid),
-				"满级" if maxed else "%d点" % cost,
+				"满级" if maxed else Lang.t("%d点") % cost,
 				not maxed and Meta.talent_points() >= cost,
 				_on_buy_talent.bind(tid))
 
@@ -358,11 +368,11 @@ func _build_attr_tab() -> void:
 		var per: float = float(d["per"])
 		var desc := ""
 		if per < 1.0:
-			desc = String(d["desc"]) % int(round(per * 100.0 * lv))
+			desc = Lang.t(String(d["desc"])) % int(round(per * 100.0 * lv))
 		else:
-			desc = String(d["desc"]) % int(per * lv)
+			desc = Lang.t(String(d["desc"])) % int(per * lv)
 		_buy_row(vb, String(d["name"]), "Lv.%d/%d" % [lv, int(d["max"])], desc,
-			"满级" if maxed else "%d金" % cost,
+			"满级" if maxed else Lang.t("%d金") % cost,
 			not maxed and Meta.gold() >= cost,
 			_on_buy_attr.bind(aid))
 
@@ -383,7 +393,7 @@ func _build_unlock_tab() -> void:
 		var enabled := false
 		if not unlocked:
 			var cost := int(ud["gold"])
-			btn_text = "%d金解锁" % cost
+			btn_text = Lang.t("%d金解锁") % cost
 			enabled = Meta.gold() >= cost or Meta.max_floor() >= int(ud["floor"])
 		_buy_row(cv, String(d["name"]), String(d["title"]),
 			"已解锁" if unlocked else Meta.char_unlock_desc(cid),
@@ -399,7 +409,7 @@ func _build_unlock_tab() -> void:
 		var school: String = String(SCHOOL_NAMES.get(String(wd.get("school", "")), ""))
 		_buy_row(wv, String(wd["name"]), school,
 			"已解锁" if unlocked else "三选一新武器候选",
-			"已解锁" if unlocked else "%d金" % Meta.WEAPON_UNLOCK_COST,
+			"已解锁" if unlocked else Lang.t("%d金") % Meta.WEAPON_UNLOCK_COST,
 			not unlocked and Meta.gold() >= Meta.WEAPON_UNLOCK_COST,
 			_on_buy_weapon.bind(wid))
 
@@ -511,7 +521,7 @@ func show_toast(text: String) -> void:
 	if not is_instance_valid(_toast_panel):
 		return
 	Sfx.play("achievement")
-	_toast_label.text = text
+	_toast_label.text = Lang.t(text)
 	_toast_panel.visible = true
 	_toast_panel.modulate.a = 1.0
 	if _toast_tween != null and _toast_tween.is_valid():
@@ -571,7 +581,7 @@ func _fight_card(cid: String, compact: bool = false) -> Control:
 	var bc := CenterContainer.new()
 	vb.add_child(bc)
 	if Meta.is_char_unlocked(cid):
-		var b := _mk_button("出战", 20)
+		var b := _mk_button("开始战斗", 20)
 		b.pressed.connect(_on_fight.bind(cid))
 		bc.add_child(b)
 	else:

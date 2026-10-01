@@ -121,7 +121,7 @@ static func _ensure() -> void:
 		_migrated_v06 = true
 		save_data()
 		if int(res["gold"]) > 0 or int(res["points"]) > 0:
-			_migration_toast = "退回%d金币,发放%d天赋点" % [int(res["gold"]), int(res["points"])]
+			_migration_toast = Lang.t("退回%d金币,发放%d天赋点") % [int(res["gold"]), int(res["points"])]
 
 
 static func dict(v) -> Dictionary:
@@ -200,12 +200,12 @@ static func talent_desc(tid: String) -> String:
 	var d: Dictionary = TALENTS[tid]
 	var per: float = float(d["per"])
 	if int(d["max"]) == 1:
-		return String(d["desc"])
+		return Lang.t(String(d["desc"]))
 	if tid == "regen":
-		return String(d["desc"]) % (per * talent_lv(tid))
+		return Lang.t(String(d["desc"])) % (per * talent_lv(tid))
 	if per < 1.0:
-		return String(d["desc"]) % int(round(per * 100.0 * talent_lv(tid)))
-	return String(d["desc"]) % int(per * talent_lv(tid))
+		return Lang.t(String(d["desc"])) % int(round(per * 100.0 * talent_lv(tid)))
+	return Lang.t(String(d["desc"])) % int(per * talent_lv(tid))
 
 
 # ---------- 天赋点货币（v0.6：成就/Boss首杀/首次通关发放） ----------
@@ -341,8 +341,8 @@ static func is_char_unlocked(cid: String) -> bool:
 static func char_unlock_desc(cid: String) -> String:
 	var d: Dictionary = CHAR_UNLOCKS[cid]
 	if bool(d.get("free", false)):
-		return "初始解锁"
-	return "通关 %d 层 / %d 金币" % [int(d["floor"]), int(d["gold"])]
+		return Lang.t("初始解锁")
+	return Lang.t("通关 %d 层 / %d 金币") % [int(d["floor"]), int(d["gold"])]
 
 
 static func try_unlock_char(cid: String) -> bool:
