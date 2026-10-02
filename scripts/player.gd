@@ -1469,6 +1469,7 @@ func take_damage(amount: float, from_dir: Vector2, knock_mult: float = 1.0, from
 	_invuln_t = 0.7
 	velocity += from_dir * 280.0 * knock_mult
 	hp_changed.emit(hp, max_hp)
+	EventBus.player_damaged.emit(amount, from_dir, from)
 	if hp <= 0.0:
 		var can_phoenix := "phoenixheart" in relics and not _revive_used
 		var can_talent := Meta.has_revive() and not _revive_talent_used
@@ -1515,6 +1516,7 @@ func has_pending_levels() -> bool:
 func _die() -> void:
 	_dead = true
 	died.emit()
+	EventBus.player_died.emit()
 	var tw := create_tween()
 	tw.tween_property(visual, "rotation", deg_to_rad(80), 0.4).set_trans(Tween.TRANS_BACK)
 	tw.parallel().tween_property(sprite, "modulate:a", 0.25, 0.4)

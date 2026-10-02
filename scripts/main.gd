@@ -301,12 +301,12 @@ func spawn_explosion(pos: Vector2, radius: float, dmg: float,
 
 
 ## hazard that hurts the PLAYER (boss slam)
-func spawn_hazard(pos: Vector2, radius: float, dmg: float) -> void:
+func spawn_hazard(pos: Vector2, radius: float, dmg: float, source: Node2D = null) -> void:
 	_explosion_fx(pos, radius, Color(1.0, 0.3, 0.25))
 	if is_instance_valid(player):
 		var to: Vector2 = player.global_position - pos
 		if to.length() <= radius:
-			player.take_damage(dmg, to.normalized() if to.length() > 1.0 else Vector2.UP)
+			player.take_damage(dmg, to.normalized() if to.length() > 1.0 else Vector2.UP, 1.0, source)
 
 
 func _explosion_fx(pos: Vector2, radius: float, tint: Color) -> void:

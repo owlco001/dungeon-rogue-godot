@@ -1,0 +1,8 @@
+PASS V3 clear -> no save
+PASS V3 save_run ok
+PASS V3 has_save
+PASS V3 roundtrip floor
+PASS V3 roundtrip gold
+PASS V3 roundtrip char
+PASS V3 corrupt -> empty
+PASS V3 final clear

@@ -108,6 +108,12 @@ func _ready() -> void:
 	_build_victory_overlay()
 	_build_skill_bar()
 	_build_toast()
+	EventBus.toast_requested.connect(_on_toast_requested)
+
+
+func _on_toast_requested(text: String) -> void:
+	Achievements.drain_pending()  # 事件已携带文本，清空队列防 _process 残留重复
+	show_toast(text)
 
 
 func _mk_label(text: String, size: int) -> Label:
@@ -695,9 +701,7 @@ func set_skills(skills: Array) -> void:
 
 
 func _process(_delta: float) -> void:
-	# v0.6：成就 toast（任何场景状态都消费，避免堆积）
-	for t in Achievements.drain_pending():
-		show_toast(String(t))
+	# v0.8：成就 toast 改 EventBus 事件驱动（见 _on_toast_requested），不再每帧 drain
 	if _player_ref == null or not is_instance_valid(_player_ref):
 		return
 	var sks: Array = _player_ref.get("skills")

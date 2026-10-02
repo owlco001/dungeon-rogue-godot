@@ -68,6 +68,7 @@ static func check_talent_masters() -> void:
 
 static func queue_toast(text: String) -> void:
 	_pending.append(text)
+	EventBus.toast_requested.emit(text)
 
 
 ## 取出并清空待发 toast（HUD/大厅每帧调用）

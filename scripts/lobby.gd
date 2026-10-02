@@ -24,6 +24,7 @@ func _ready() -> void:
 	Meta._ensure()
 	_font = load("res://assets/fonts/hud-subset.ttf") as Font
 	_build()
+	EventBus.toast_requested.connect(_on_toast_requested)
 	var mt := Meta.pop_migration_toast()
 	if mt != "":
 		show_toast(mt)
@@ -43,9 +44,9 @@ func _autotest() -> void:
 	JavaScriptBridge.eval("document.title=" + JSON.stringify(info) + ";")
 
 
-func _process(_delta: float) -> void:
-	for t in Achievements.drain_pending():
-		show_toast(String(t))
+func _on_toast_requested(text: String) -> void:
+	Achievements.drain_pending()
+	show_toast(text)
 
 
 func _mk_label(text: String, size: int) -> Label:

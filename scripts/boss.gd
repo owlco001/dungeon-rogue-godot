@@ -144,7 +144,7 @@ func _physics_process(delta: float) -> void:
 		velocity = _charge_dir * 700.0
 		var to_p: Vector2 = _player.global_position - global_position
 		if to_p.length() < 110.0 and _touch_cd <= 0.0 and _player.has_method("take_damage"):
-			_player.take_damage(dmg * 1.2, to_p.normalized())
+			_player.take_damage(dmg * 1.2, to_p.normalized(), 1.0, self)
 			_touch_cd = 0.8
 	elif _telegraph_t > 0.0:
 		# charging up: stand still, flash
@@ -160,7 +160,7 @@ func _physics_process(delta: float) -> void:
 		velocity = to.normalized() * spd if dist > 90.0 else Vector2.ZERO
 		_sprite.flip_h = to.x < 0.0
 		if dist < 110.0 and _touch_cd <= 0.0 and _player.has_method("take_damage"):
-			_player.take_damage(dmg, to.normalized())
+			_player.take_damage(dmg, to.normalized(), 1.0, self)
 			_touch_cd = 0.8
 		_tick_skills(delta * (0.5 if _slow_t > 0.0 else 1.0))
 	if _slow_t > 0.0:
@@ -203,7 +203,7 @@ func _do_slam_at(at: Vector2) -> void:
 	if dead:
 		return
 	if _game != null and _game.has_method("spawn_hazard"):
-		_game.spawn_hazard(at, 150.0, dmg * 1.6)
+		_game.spawn_hazard(at, 150.0, dmg * 1.6, self)
 
 
 func _do_slam() -> void:

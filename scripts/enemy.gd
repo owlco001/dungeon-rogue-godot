@@ -214,6 +214,7 @@ func _die() -> void:
 	if game != null and game.has_method("spawn_corpse"):
 		game.spawn_corpse(global_position, elite)
 	died.emit(self)
+	EventBus.enemy_died.emit(self)
 	var tw := create_tween()
 	tw.set_parallel(true)
 	tw.tween_property(sprite, "scale", Vector2(base_scale * 1.3, base_scale * 0.3), 0.16).set_trans(Tween.TRANS_QUAD)
