@@ -84,16 +84,31 @@ static var _migrated_v06 := false
 static var _migration_toast := ""
 
 
+## SaveService 经 root 节点动态访问：静态类编译期不能引用 autoload 标识符
+## （--script 门禁的早期编译图里 autoload 尚未注册，会报 Identifier not found）。
+static func _ss() -> Node:
+	var ml := Engine.get_main_loop()
+	if ml is SceneTree:
+		return (ml as SceneTree).root.get_node_or_null("SaveService")
+	return null
+
+
+static func _save_version() -> int:
+	var n := _ss()
+	return int(n.call("version")) if n != null else 3
+
+
 static func _ensure() -> void:
 	if _loaded:
 		return
 	_loaded = true
 	_unlocked_weapons = WEAPON_DEFAULT_UNLOCKED.duplicate()
-	var cfg := ConfigFile.new()
-	var had_save := cfg.load(SAVE_PATH) == OK
-	if not had_save:
+	var lres: Dictionary = _ss().call("load_cfg", SAVE_PATH)
+	var cfg: ConfigFile = lres.get("cfg") as ConfigFile
+	if cfg == null:
 		_migrated_v06 = true
 		return
+	var save_version := int(cfg.get_value("meta", "version", 1))
 	_gold = int(cfg.get_value("meta", "gold", 0))
 	_talent_points = int(cfg.get_value("meta", "talent_points", 0))
 	_achievements = dict(cfg.get_value("meta", "achievements", {}))
@@ -119,16 +134,30 @@ static func _ensure() -> void:
 	if not _migrated_v06:
 		var res := _do_migration()
 		_migrated_v06 = true
-		save_data()
+		save_data_now()
 		if int(res["gold"]) > 0 or int(res["points"]) > 0:
 			_migration_toast = Lang.t("退回%d金币,发放%d天赋点") % [int(res["gold"]), int(res["points"])]
+	elif save_version < _save_version():
+		save_data_now()
+	if int(lres.get("source", 0)) == 2 and _migration_toast == "":
+		_migration_toast = Lang.t("存档已从备份恢复")
 
 
 static func dict(v) -> Dictionary:
 	return v if v is Dictionary else {}
 
 
+## v0.8：save_data 改节流写（SaveService 0.5s 合并落盘）；关键节点用 save_data_now()。
 static func save_data() -> void:
+	_ensure()
+	var n := _ss()
+	if n != null:
+		n.call("register_flush", Callable(Meta, "save_data_now"))
+		n.call("mark_dirty")
+
+
+## 立即落盘（原子写 + 版本号）：购买/解锁/结算/迁移等关键节点调用。
+static func save_data_now() -> void:
 	_ensure()
 	var cfg := ConfigFile.new()
 	cfg.set_value("meta", "gold", _gold)
@@ -148,7 +177,13 @@ static func save_data() -> void:
 	cfg.set_value("records", "weapon_codex", _weapon_codex)
 	cfg.set_value("records", "super_codex", _super_codex)
 	cfg.set_value("meta", "muted", _muted)
-	cfg.save(SAVE_PATH)
+	cfg.set_value("meta", "version", _save_version())
+	var n := _ss()
+	if n != null:
+		n.call("atomic_save_cfg", cfg, SAVE_PATH)
+		n.call("clear_dirty")
+	else:
+		cfg.save(SAVE_PATH)
 
 
 # ---------- 金币 ----------
@@ -192,7 +227,7 @@ static func buy_talent(tid: String) -> bool:
 	if not spend_talent_points(talent_point_cost(tid)):
 		return false
 	_talents[tid] = talent_lv(tid) + 1
-	save_data()
+	save_data_now()
 	return true
 
 
@@ -246,7 +281,7 @@ static func grant_achievement(aid: String, points: int) -> void:
 		return
 	_achievements[aid] = int(Time.get_unix_time_from_system())
 	_talent_points = maxi(0, _talent_points + points)
-	save_data()
+	save_data_now()
 
 
 # ---------- 累计击杀 / 武器图鉴 / 超武图鉴（v0.6） ----------
@@ -328,7 +363,7 @@ static func buy_attr(aid: String) -> bool:
 	if not spend(attr_cost(aid)):
 		return false
 	_attrs[aid] = attr_lv(aid) + 1
-	save_data()
+	save_data_now()
 	return true
 
 
@@ -352,11 +387,11 @@ static func try_unlock_char(cid: String) -> bool:
 	var d: Dictionary = CHAR_UNLOCKS[cid]
 	if _max_floor >= int(d["floor"]):
 		_unlocked_chars.append(cid)
-		save_data()
+		save_data_now()
 		return true
 	if spend(int(d["gold"])):
 		_unlocked_chars.append(cid)
-		save_data()
+		save_data_now()
 		return true
 	return false
 
@@ -373,7 +408,7 @@ static func buy_weapon(wid: String) -> bool:
 	if not spend(WEAPON_UNLOCK_COST):
 		return false
 	_unlocked_weapons.append(wid)
-	save_data()
+	save_data_now()
 	return true
 
 
@@ -393,14 +428,14 @@ static func record_run(floor: int, victory: bool) -> void:
 	_max_floor = maxi(_max_floor, floor)
 	if victory:
 		_victories += 1
-	save_data()
+	save_data_now()
 
 
 static func record_boss_kill(floor: int) -> void:
 	_ensure()
 	if not _bosses.has(floor):
 		_bosses.append(floor)
-		save_data()
+		save_data_now()
 
 
 # ---------- 开局加成（player.gd 调用） ----------
@@ -494,7 +529,7 @@ static func record_endless(floor: int, score: int) -> void:
 	_ensure()
 	_endless_best_floor = maxi(_endless_best_floor, floor)
 	_endless_best_score = maxi(_endless_best_score, score)
-	save_data()
+	save_data_now()
 
 
 # ---------- 静音 ----------

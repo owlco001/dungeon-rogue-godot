@@ -427,7 +427,7 @@ func _bank_run_gold(victory: bool) -> void:
 	if _last_banked > 0:
 		Meta.add_gold(_last_banked)
 	Meta.record_run(floor_num, victory)
-	Meta.save_data()
+	Meta.save_data_now()
 
 
 ## ========== 中途存档 ==========

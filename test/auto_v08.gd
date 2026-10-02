@@ -48,6 +48,10 @@ func _run(mode: String) -> void:
 	match mode:
 		"v3":
 			await _v3()
+		"v3setup":
+			_v3setup()
+		"v3check":
+			_v3check()
 		"v2":
 			await _v2()
 		_:
@@ -98,7 +102,7 @@ func _v2() -> void:
 	await _wait(1.0)
 	_check("V2 battle stable 1s", get_first_node_in_group("game") != null)
 
-# ---- V3：中途存档往返 + 损坏不崩溃 ----
+# ---- V3：中途存档往返 + 损坏不崩溃 + .bak 恢复 + 版本门 + Meta 节流/版本 ----
 func _v3() -> void:
 	RunSave.clear()
 	_check("V3 clear -> no save", not RunSave.has_save())
@@ -109,13 +113,66 @@ func _v3() -> void:
 	_check("V3 roundtrip floor", int(back.get("floor_num", 0)) == 3)
 	_check("V3 roundtrip gold", int(back.get("gold", 0)) == 123)
 	_check("V3 roundtrip char", String(back.get("char_id", "")) == "aila")
+	# 再存一次（.bak = 上一版 floor 3），写坏主档 → 应从 .bak 恢复 floor 3
+	var data2 := {"char_id": "aila", "floor_num": 5, "hp": 10.0, "gold": 999, "kills": 60}
+	RunSave.save_run(data2)
+	_corrupt_file(OS.get_user_data_dir() + "/run_save.cfg")
+	var rec := RunSave.load_run()
+	_check("V3 corrupt main -> bak recovery", int(rec.get("floor_num", 0)) == 3, "got floor=%s" % str(rec.get("floor_num")))
+	# 无 version 的旧格式档 → 版本门拒绝（bak 已随 clear 清掉）
+	RunSave.clear()
+	var legacy := ConfigFile.new()
+	legacy.set_value("run", "floor_num", 9)
+	legacy.save(RunSave.SAVE_PATH)
+	_check("V3 no-version -> rejected", RunSave.load_run().is_empty())
 	# 写坏文件 → load 返回空、不崩溃
-	var path := OS.get_user_data_dir() + "/run_save.cfg"
+	_corrupt_file(OS.get_user_data_dir() + "/run_save.cfg")
+	_check("V3 corrupt -> empty", RunSave.load_run().is_empty())
+	RunSave.clear()
+	_check("V3 final clear", not RunSave.has_save())
+	# Meta：节流写（add_gold 只标脏，0.5s 后 SaveService 合并落盘）
+	var g0 := Meta.gold()
+	Meta.add_gold(5)
+	await _wait(0.8)
+	var disk := ConfigFile.new()
+	_check("V3 meta throttled flush", disk.load(Meta.SAVE_PATH) == OK and int(disk.get_value("meta", "gold", -1)) == g0 + 5,
+		"disk gold=%s want=%d" % [str(disk.get_value("meta", "gold", -1)), g0 + 5])
+	_check("V3 meta version stamped", int(disk.get_value("meta", "version", 0)) == 3)
+	Meta.save_data_now()
+	_check("V3 meta bak exists", FileAccess.file_exists(Meta.SAVE_PATH + ".bak"))
+	Meta.add_gold(-5)
+	Meta.save_data_now()
+
+func _corrupt_file(path: String) -> void:
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	if f != null:
 		f.store_string("###corrupt###\nnot-a-config[[[%%%")
 		f.close()
-	var bad := RunSave.load_run()
-	_check("V3 corrupt -> empty", bad.is_empty())
-	RunSave.clear()
-	_check("V3 final clear", not RunSave.has_save())
+
+# ---- V3 跨进程：setup 写好 main+bak 后写坏主档；check 在新进程验证从 .bak 恢复 ----
+func _v3setup() -> void:
+	var dir := OS.get_user_data_dir()
+	for suffix in ["", ".bak"]:
+		var p: String = dir + "/savegame.cfg" + suffix
+		if FileAccess.file_exists(p):
+			DirAccess.rename_absolute(p, p + ".v3bak")
+	Meta.add_gold(777)
+	Meta.save_data_now()
+	Meta.save_data_now()
+	_corrupt_file(dir + "/savegame.cfg")
+	_check("V3SETUP files ready", FileAccess.file_exists(dir + "/savegame.cfg.bak"))
+
+func _v3check() -> void:
+	var g := Meta.gold()
+	_check("V3 meta bak recovery gold", g == 777, "gold=%d" % g)
+	_check("V3 meta recovery toast", Meta.pop_migration_toast() != "")
+	# 清理并恢复原存档
+	var dir := OS.get_user_data_dir()
+	for suffix in ["", ".bak", ".corrupt", ".tmp"]:
+		var p: String = dir + "/savegame.cfg" + suffix
+		if FileAccess.file_exists(p):
+			DirAccess.remove_absolute(p)
+	for suffix in ["", ".bak"]:
+		var p: String = dir + "/savegame.cfg" + suffix + ".v3bak"
+		if FileAccess.file_exists(p):
+			DirAccess.rename_absolute(p, dir + "/savegame.cfg" + suffix)
