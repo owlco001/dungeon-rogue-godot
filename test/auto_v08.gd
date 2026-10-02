@@ -52,6 +52,8 @@ func _run(mode: String) -> void:
 			_v3setup()
 		"v3check":
 			_v3check()
+		"v5h":
+			await _v5h()
 		"v2":
 			await _v2()
 		_:
@@ -65,6 +67,13 @@ func _v2() -> void:
 	var inst: Node = load("res://scenes/lobby.tscn").instantiate()
 	root.add_child(inst)
 	await _wait(1.2)
+	var cdb := root.get_node_or_null("ContentDB")
+	var wsum := 0
+	if cdb != null:
+		var w: Dictionary = cdb.call("table", "levelup").get("weights", {})
+		for k in w.keys():
+			wsum += int(w[k])
+	_check("B1 ContentDB levelup weights", cdb != null and wsum == 100, "sum=%d" % wsum)
 	var tab := _find_btn(inst, ["出战", "Battle"])
 	_check("V2 lobby fight tab", tab != null)
 	if tab == null:
@@ -142,6 +151,28 @@ func _v3() -> void:
 	_check("V3 meta bak exists", FileAccess.file_exists(Meta.SAVE_PATH + ".bak"))
 	Meta.add_gold(-5)
 	Meta.save_data_now()
+
+# ---- V5 局部（B1）：hitstop 双通道契约 ----
+func _v5h() -> void:
+	Engine.time_scale = 1.0
+	var fx = load("res://scripts/fx.gd")  # 运行时加载：fx.gd 引用 Sfx autoload，不能进驱动的早期编译图
+	fx.hitstop(self, 0.05)
+	_check("V5H A micro-freeze 0.35", absf(Engine.time_scale - 0.35) < 0.01, "ts=%s" % str(Engine.time_scale))
+	await _wait(0.25)
+	_check("V5H A restored >=0.95", Engine.time_scale >= 0.95, "ts=%s" % str(Engine.time_scale))
+	# 冷却：0.15s 窗口内第二次触发被丢弃 → 总冻结时长不叠加
+	fx.hitstop(self, 0.05)
+	await _wait(0.02)
+	fx.hitstop(self, 0.05)
+	await _wait(0.12)
+	_check("V5H A cooldown no-stack", Engine.time_scale >= 0.95, "ts=%s" % str(Engine.time_scale))
+	# 演出通道：独占 0.05，期间打击通道静默，结束后恢复
+	fx.hitstop(self, 0.3, true)
+	_check("V5H B cine 0.05", absf(Engine.time_scale - 0.05) < 0.01, "ts=%s" % str(Engine.time_scale))
+	fx.hitstop(self, 0.05)
+	_check("V5H A silent during B", absf(Engine.time_scale - 0.05) < 0.01, "ts=%s" % str(Engine.time_scale))
+	await _wait(0.5)
+	_check("V5H B restored >=0.95", Engine.time_scale >= 0.95, "ts=%s" % str(Engine.time_scale))
 
 func _corrupt_file(path: String) -> void:
 	var f := FileAccess.open(path, FileAccess.WRITE)

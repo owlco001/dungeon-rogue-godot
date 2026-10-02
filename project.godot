@@ -19,6 +19,7 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 
 EventBus="*res://autoload/event_bus.gd"
 SaveService="*res://autoload/save_service.gd"
+ContentDB="*res://autoload/content_db.gd"
 Sfx="*res://scripts/sfx.gd"
 
 [display]

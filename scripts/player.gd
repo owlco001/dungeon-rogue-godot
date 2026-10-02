@@ -1102,7 +1102,7 @@ func apply_levelup_option(opt: Dictionary) -> void:
 				FX.glow(get_parent(), global_position, 300.0, Color(1.0, 0.85, 0.3, 0.95), 0.8, 6)
 				FX.glow_ring(get_parent(), global_position, 170.0, Color(1.0, 0.85, 0.3, 0.9), 0.6, 6)
 				FX.shake(get_parent(), 14.0)
-				FX.hitstop(get_tree(), 0.12)
+				FX.hitstop(get_tree(), 0.12, true)
 				Sfx.play("superfuse")
 		"new_skill":
 			add_skill(oid)
@@ -1470,6 +1470,7 @@ func take_damage(amount: float, from_dir: Vector2, knock_mult: float = 1.0, from
 	velocity += from_dir * 280.0 * knock_mult
 	hp_changed.emit(hp, max_hp)
 	EventBus.player_damaged.emit(amount, from_dir, from)
+	FX.shake(get_parent(), 6.0)
 	if hp <= 0.0:
 		var can_phoenix := "phoenixheart" in relics and not _revive_used
 		var can_talent := Meta.has_revive() and not _revive_talent_used

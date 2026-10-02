@@ -240,17 +240,35 @@ static func shake(parent: Node, strength: float = 8.0) -> void:
 	tw.tween_property(cam, "offset", base, 0.06)
 
 
-static var _hitstop_count := 0
+# ---- hitstop 双通道（v0.8 A1 / 05 §7.2 / 04 §3.1）----
+# 通道A 打击：暴击/技能命中微顿（time_scale 0.35），全局冷却 0.15s，演出期间静默。
+# 通道B 演出（cine=true）：合成/Boss 转换/精英击杀等独占全屏 time_scale 0.05。
+static var _hs_gen := 0
+static var _hs_cine_until_ms := 0
+static var _hs_a_last_ms := 0
 
-static func hitstop(tree: SceneTree, duration: float = 0.03) -> void:
-	# brief freeze-frame on hit (0.03s). Reference-counted: overlapping
-	# hitstops must not restore time_scale to a stale slowed value.
-	_hitstop_count += 1
-	Engine.time_scale = 0.05
+
+static func hitstop(tree: SceneTree, duration: float = 0.03, cine: bool = false) -> void:
+	var now := Time.get_ticks_msec()
+	if cine:
+		_hs_gen += 1
+		var gen := _hs_gen
+		_hs_cine_until_ms = now + int(duration * 1000.0)
+		Engine.time_scale = 0.05
+		await tree.create_timer(duration, true, false, true).timeout
+		if gen == _hs_gen:
+			Engine.time_scale = 1.0
+		return
+	if now < _hs_cine_until_ms:
+		return  # 演出独占期间，打击通道静默
+	if now - _hs_a_last_ms < 150:
+		return  # 0.15s 全局冷却：窗口内重复触发直接丢弃
+	_hs_a_last_ms = now
+	_hs_gen += 1
+	var agen := _hs_gen
+	Engine.time_scale = 0.35
 	await tree.create_timer(duration, true, false, true).timeout
-	_hitstop_count -= 1
-	if _hitstop_count <= 0:
-		_hitstop_count = 0
+	if agen == _hs_gen and Time.get_ticks_msec() >= _hs_cine_until_ms:
 		Engine.time_scale = 1.0
 
 

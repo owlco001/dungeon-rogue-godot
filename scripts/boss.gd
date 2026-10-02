@@ -231,6 +231,7 @@ func _die() -> void:
 	collision_layer = 0
 	collision_mask = 0
 	_dust.emitting = false
+	FX.hitstop(get_tree(), 0.10, true)
 	# Boss 也留尸体（尸爆盛宴）
 	if _game != null and _game.has_method("spawn_corpse"):
 		_game.spawn_corpse(global_position, true)

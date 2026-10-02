@@ -115,8 +115,8 @@ func _physics_process(delta: float) -> void:
 				if is_crit:
 					FX.shake(_game, 10.0)
 					FX.glow(_game, global_position, 110.0, Color(1.0, 0.85, 0.25, 0.85), 0.3, 6)
-				else:
-					FX.hitstop(_game.get_tree(), 0.03)
+					FX.hitstop(_game.get_tree(), 0.05)
+				# v0.8：普通命中不再全局顿帧（白名单制），反馈由白闪+击退+形变承担
 			if explosive_radius > 0.0:
 				_explode()
 				queue_free()

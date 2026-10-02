@@ -34,6 +34,7 @@ var _player: Node2D = null
 var _knock := Vector2.ZERO
 var _knock_t := 0.0
 var _flash_t := 0.0
+var _punch := 1.0
 var _wobble := 0.0
 var _elite_t := 0.0
 
@@ -73,6 +74,7 @@ func _physics_process(delta: float) -> void:
 		touch_cd -= delta
 	if _flash_t > 0.0:
 		_flash_t -= delta
+	_punch = move_toward(_punch, 1.0, delta * 1.2)
 	# v0.3 dot 计时
 	_tick_dots(delta)
 	# elite gold pulse (combined with hit flash)
@@ -80,12 +82,12 @@ func _physics_process(delta: float) -> void:
 		_elite_t += delta
 		var pulse := 0.5 + 0.5 * sin(_elite_t * 6.0)
 		if _flash_t > 0.0:
-			var k := clampf(_flash_t / 0.1, 0.0, 1.0)
+			var k := clampf(_flash_t / 0.08, 0.0, 1.0)
 			sprite.modulate = Color(1.0 + 2.5 * k, 1.0 + 2.5 * k, 0.6 + 1.6 * pulse)
 		else:
 			sprite.modulate = Color(1.0 + 0.45 * pulse, 1.0 + 0.35 * pulse, 0.55)
 	elif _flash_t > 0.0:
-		var k := clampf(_flash_t / 0.1, 0.0, 1.0)
+		var k := clampf(_flash_t / 0.08, 0.0, 1.0)
 		sprite.modulate = Color(1.0 + 2.5 * k, 1.0 + 2.5 * k, 1.0 + 2.5 * k)
 	else:
 		sprite.modulate = Color.WHITE
@@ -129,12 +131,12 @@ func _physics_process(delta: float) -> void:
 	if fly:
 		# bat hover: gentle sine bob, no ground hop
 		sprite.position.y = -18.0 + sin(_wobble * 2.2) * 6.0
-		sprite.scale = Vector2.ONE * base_scale * (1.0 + 0.04 * sin(_wobble * 4.0))
+		sprite.scale = Vector2.ONE * base_scale * (1.0 + 0.04 * sin(_wobble * 4.0)) * _punch
 	else:
 		# ground hop: squash & stretch so it reads as moving, not sliding
 		var hop := absf(sin(_wobble * 2.0))
 		sprite.position.y = -10.0 - hop * 7.0
-		sprite.scale = Vector2(base_scale * (1.0 - 0.06 * hop), base_scale * (1.0 + 0.09 * hop))
+		sprite.scale = Vector2(base_scale * (1.0 - 0.06 * hop), base_scale * (1.0 + 0.09 * hop)) * _punch
 
 	if dist < 54.0 and touch_cd <= 0.0 and target.has_method("take_damage"):
 		var hit_dmg := dmg * (0.7 if weaken_t > 0.0 else 1.0)
@@ -196,9 +198,10 @@ func take_damage(amount: float, from_dir: Vector2, knock_mult: float = 1.0, stun
 	if dead:
 		return
 	hp -= amount
-	_flash_t = 0.1
+	_flash_t = 0.08
+	_punch = 1.12
 	_knock = from_dir * 320.0 * knock_mult
-	_knock_t = 0.16
+	_knock_t = 0.12
 	if stun > 0.0:
 		stun_t = maxf(stun_t, stun)
 	if hp <= 0.0:
@@ -215,6 +218,11 @@ func _die() -> void:
 		game.spawn_corpse(global_position, elite)
 	died.emit(self)
 	EventBus.enemy_died.emit(self)
+	# 击杀顿帧（白名单）：普通怪走打击通道，精英走演出通道
+	if elite:
+		FX.hitstop(get_tree(), 0.08, true)
+	else:
+		FX.hitstop(get_tree(), 0.04)
 	var tw := create_tween()
 	tw.set_parallel(true)
 	tw.tween_property(sprite, "scale", Vector2(base_scale * 1.3, base_scale * 0.3), 0.16).set_trans(Tween.TRANS_QUAD)

@@ -30,9 +30,9 @@ run_driver() {
 
 case "$MODE" in
   v1) run_v1 ;;
-  v2|v3) run_driver "$MODE" ;;
+  v2|v3|v5h) run_driver "$MODE" ;;
   v3x) run_driver v3; run_driver v3setup; run_driver v3check ;;
-  all) run_v1; run_driver v2; run_driver v3; run_driver v3setup; run_driver v3check ;;
+  all) run_v1; run_driver v2; run_driver v3; run_driver v3setup; run_driver v3check; run_driver v5h ;;
   *) echo "unknown mode $MODE"; exit 2 ;;
 esac
 echo "GATES RESULT: $([ $rc -eq 0 ] && echo PASS || echo FAIL)"

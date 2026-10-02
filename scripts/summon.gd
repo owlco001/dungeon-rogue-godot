@@ -199,7 +199,6 @@ func _try_melee(target: Node2D, s: Dictionary, flags: Dictionary, rng: float) ->
 		target.apply_poison(dmg * 0.5, 3.0)
 	FX.hit_spark(_game, target.global_position)
 	FX.damage_number(_game, target.global_position, dmg, is_crit)
-	FX.hitstop(get_tree(), 0.02)
 	# 嗜血：击杀后攻速+30%
 	if was_alive and bool(target.get("dead")) and flags.has("bloodlust"):
 		_bl_t = 5.0
