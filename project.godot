@@ -11,6 +11,8 @@ config_version=5
 [application]
 
 config/name="Dungeon Rogue Godot Demo"
+; 黑屏修复：启动清屏色与 Web 壳底色 #060509 对齐，消除淡出后残余色差闪烁（Web 端引擎绘制前不显示 canvas，此项主要兜底其他平台/边缘时序）
+boot_splash/bg_color=Color(0.0235, 0.0196, 0.0353, 1)
 config/description="2D top-down dungeon demo: Ella with 4-direction idle/walk, slimes, melee attack."
 run/main_scene="res://scenes/lobby.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")

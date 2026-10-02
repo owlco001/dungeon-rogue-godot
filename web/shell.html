@@ -24,7 +24,8 @@ body {
 #status {
 	position: absolute; left: 0; right: 0; top: 0; bottom: 0;
 	display: flex; flex-direction: column; justify-content: center; align-items: center;
-	visibility: hidden; overflow: hidden;
+	/* 黑屏修复：默认可见（纯 CSS 首帧即呈现），JS 只负责进度与淡出，不再负责“点亮” */
+	overflow: hidden; transition: opacity .45s ease;
 	background:
 		radial-gradient(ellipse 90% 60% at 50% 110%, rgba(255,122,26,0.10), transparent 60%),
 		radial-gradient(ellipse 70% 50% at 50% -10%, rgba(88,40,140,0.16), transparent 60%),
@@ -65,7 +66,10 @@ body {
 	background: linear-gradient(90deg, #b3541e, #f5c453, #ffe9a8);
 	box-shadow: 0 0 14px rgba(245,196,83,.7);
 	transition: width .25s ease-out; position: relative;
+	/* 黑屏修复：JS 就绪前的纯 CSS 缓进动画（引擎启动后由 JS 以 animation:none 接管） */
+	animation: loadcreep 3.2s ease-out forwards;
 }
+@keyframes loadcreep { from { width: 0%; } to { width: 16%; } }
 #bar-fill::after {
 	content: ''; position: absolute; inset: 0;
 	background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%);
@@ -110,11 +114,12 @@ body {
 			<div id="status-notice"></div>
 		</div>
 
-		<script src="$GODOT_URL"></script>
+		<script async src="$GODOT_URL" onload="window.__godotReady&&window.__godotReady()" onerror="window.__godotFailed&&window.__godotFailed()"></script>
 		<script>
 const GODOT_CONFIG = $GODOT_CONFIG;
 const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
-const engine = new Engine(GODOT_CONFIG);
+// 黑屏修复：引擎脚本改为 async，不再阻塞页面首帧；engine 在 bootEngine() 内待 Engine 就绪后创建
+let engine = null;
 
 // 浏览器原生音效管理器：复刻 Sfx 的 13 种程序化音效（Web Audio API）。
 // Godot 4.7 Web 音频在桌面端唤醒不可靠，这里走原生通道，GDScript 经 JavaScriptBridge 调用。
@@ -358,7 +363,9 @@ window._gameBgm = (function () {
 		}
 		if (mode === 'hidden') {
 			clearInterval(tipTimer);
-			statusOverlay.remove();
+			// 黑屏修复：淡出而非瞬间移除，避免覆盖层消失与首帧之间的闪烁
+			statusOverlay.style.opacity = '0';
+			setTimeout(() => statusOverlay.remove(), 480);
 			initializing = false;
 			return;
 		}
@@ -391,11 +398,21 @@ window._gameBgm = (function () {
 		initializing = false;
 	}
 
-	const missing = Engine.getMissingFeatures({
-		threads: GODOT_THREADS_ENABLED,
-	});
+	// 黑屏修复：引擎脚本 async 加载，本函数在 Engine 就绪后才执行引擎相关逻辑；
+	// 加载屏的呈现与动画（标题/缓进条/贴士）不依赖引擎，已在页面首帧自行运行。
+	let bootStarted = false;
+	function bootEngine() {
+		if (bootStarted) {
+			return;
+		}
+		bootStarted = true;
+		barFill.style.animation = 'none'; // 进度条改由 onProgress 的真实进度接管
+		engine = new Engine(GODOT_CONFIG);
+		const missing = Engine.getMissingFeatures({
+			threads: GODOT_THREADS_ENABLED,
+		});
 
-	if (missing.length !== 0) {
+		if (missing.length !== 0) {
 		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
 			let serviceWorkerRegistrationPromise;
 			try {
@@ -437,9 +454,25 @@ window._gameBgm = (function () {
 		}).then(() => {
 			barFill.style.width = '100%';
 			loadPct.textContent = '100%';
-			setTimeout(() => setStatusMode('hidden'), 350);
+			// 等游戏首帧真正呈现后再淡出加载屏（双 rAF 保险，替代固定延时）
+			requestAnimationFrame(() => requestAnimationFrame(() => setStatusMode('hidden')));
 		}, displayFailureNotice);
 	}
+	}
+
+	// 引擎脚本 onload/onerror 回调（async）：若脚本先于本段代码执行完毕，
+	// 回调注册时引擎可能已就绪，故末尾再主动试一次；bootStarted 保证只启动一次。
+	window.__godotReady = function () {
+		if (typeof Engine !== 'undefined') {
+			bootEngine();
+		}
+	};
+	window.__godotFailed = function () {
+		displayFailureNotice(_en
+			? 'Failed to load the game engine script. Check your connection and refresh.'
+			: '引擎脚本加载失败，请检查网络后刷新页面。');
+	};
+	window.__godotReady();
 }());
 		</script>
 	</body>
