@@ -322,6 +322,37 @@ func show_toast(text: String) -> void:
 	_toast_tween.tween_callback(func() -> void: _toast_panel.visible = false)
 
 
+# ---------- v0.8.7 地形提示：纯文字（无面板/无边框/无音效），展示 3.5 秒 ----------
+var _terrain_label: Label = null
+var _terrain_tween: Tween = null
+
+
+func show_terrain_hint(text: String) -> void:
+	if _terrain_label == null:
+		_terrain_label = Label.new()
+		_terrain_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
+		_terrain_label.offset_top = 84
+		_terrain_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_terrain_label.add_theme_font_override("font", _font)
+		_terrain_label.add_theme_font_size_override("font_size", 26)
+		_terrain_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.60))
+		_terrain_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.9))
+		_terrain_label.add_theme_constant_override("shadow_offset_x", 2)
+		_terrain_label.add_theme_constant_override("shadow_offset_y", 2)
+		_terrain_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_terrain_label)
+	_terrain_label.text = Lang.t(text)
+	_terrain_label.visible = true
+	_terrain_label.modulate.a = 1.0
+	if _terrain_tween != null and _terrain_tween.is_valid():
+		_terrain_tween.kill()
+	_terrain_tween = create_tween()
+	_terrain_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_terrain_tween.tween_interval(3.5)
+	_terrain_tween.tween_property(_terrain_label, "modulate:a", 0.0, 0.6)
+	_terrain_tween.tween_callback(func() -> void: _terrain_label.visible = false)
+
+
 # ---------- 装备栏（武器/被动/遗物，可点击看详情） ----------
 func _slot_button() -> Button:
 	var b := Button.new()

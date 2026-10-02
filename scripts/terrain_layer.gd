@@ -8,6 +8,15 @@ var _time := 0.0
 var _pulse_t := 0.0
 
 const CELL := 50.0
+const TEX_SPAN := 120.0  # 贴图覆盖 2.4 格的世界跨度（UV 按世界坐标取样，跨格无缝）
+var _textures := {}
+
+
+func _ready() -> void:
+	# v0.8.7：Agnes 地形贴图（draw_polygon 带 UV 采样，需开启纹理重复）
+	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	for kind in ["rubble", "lava", "ice", "mire", "bramble", "rift"]:
+		_textures[kind] = load("res://assets/tiles/terrain/tex_%s.webp" % kind) as Texture2D
 
 const COLORS := {
 	"rubble": [Color(0.32, 0.27, 0.22, 0.62), Color(0.55, 0.48, 0.38, 0.80), Color(0.62, 0.55, 0.45, 0.9)],
@@ -73,6 +82,18 @@ func _draw() -> void:
 			var center := Vector2((float(cell.x) + 0.5) * CELL, (float(cell.y) + 0.5) * CELL)
 			var blob := _blob_points(center, cell, kind, 3.0)
 			draw_colored_polygon(blob, fill)
+			# Agnes 贴图层：UV 按世界坐标取样，相邻格图案连续
+			var tex: Texture2D = _textures.get(kind, null)
+			if tex != null:
+				var a := 0.96
+				if kind == "lava" or kind == "rift":
+					a *= 0.90 + 0.10 * sin(_time * 2.6)
+				var pcols := PackedColorArray()
+				var uvs := PackedVector2Array()
+				for p in blob:
+					pcols.append(Color(1, 1, 1, a))
+					uvs.append(p / TEX_SPAN)
+				draw_polygon(blob, pcols, uvs, tex)
 			var outline := blob.duplicate()
 			outline.append(blob[0])
 			draw_polyline(outline, edge, 2.0, true)

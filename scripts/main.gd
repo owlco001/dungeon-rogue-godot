@@ -606,7 +606,7 @@ func _tick_terrain(delta: float) -> void:
 		var tid := String(p_patch.get("id", ""))
 		if not _terrain_hints_shown.has(tid):
 			_terrain_hints_shown[tid] = true
-			hud.show_toast(Lang.t(String(p_patch.get("hint", ""))))
+			hud.show_terrain_hint(String(p_patch.get("hint", "")))
 	var enemy_patches := {}
 	for e in get_tree().get_nodes_in_group("enemies"):
 		if not is_instance_valid(e) or bool(e.get("is_boss")) or bool(e.get("dead")):
