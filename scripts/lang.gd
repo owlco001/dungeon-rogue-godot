@@ -359,4 +359,11 @@ const _DICT := {
 	"每级 4-8% 别超模": "4-8% per level",
 	"合成": "Fuse",
 	"开始战斗": "Start",
+	"走位躲怪，武器自动开火，升级选构筑": "Dodge monsters — weapons fire automatically — pick your build on level-up",
+	"拖动屏幕左半边 = 移动": "Drag the left half of the screen to move",
+	"武器会自动攻击最近的目标": "Weapons auto-attack the nearest enemy",
+	"技能默认自动释放，可切手动": "Skills cast automatically by default — tap to switch to manual",
+	"精英会掉落遗物": "Elites drop relics",
+	"无尽模式：开": "Endless Mode: ON",
+	"无尽模式：关": "Endless Mode: OFF",
 }

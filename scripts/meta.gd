@@ -74,6 +74,7 @@ static var _endless_best_floor := 0
 static var _endless_best_score := 0
 static var _muted := false
 static var selected_char := ""
+static var start_endless := false  # v0.8 D8：大厅无尽直连（通关解锁）
 # v0.6：天赋点货币 / 成就 / 累计击杀 / 武器·超武图鉴 / 旧存档迁移标记
 static var _talent_points := 0
 static var _achievements := {}

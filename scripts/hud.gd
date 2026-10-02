@@ -27,6 +27,11 @@ var _death_title: Label
 var _victory_overlay: ColorRect
 var _victory_stats: Label
 var _relic_slots: Array = []
+# v0.8 D4 新手引导
+var _skill_hint_shown := false
+var _hint_center: CenterContainer = null
+var _hint_label: Label = null
+var _hint_tween: Tween = null
 var _weapon_slots: Array = []
 var _passive_slots: Array = []
 var _weapons_data: Array = []
@@ -256,6 +261,49 @@ func _build_toast() -> void:
 	_toast_panel.add_child(_toast_label)
 	_toast_panel.visible = false
 	wrap.add_child(_toast_panel)
+
+
+# ---------- v0.8 D4 新手引导（首局中央提示） ----------
+func start_first_run_hints() -> void:
+	if Meta.victories() > 0 or Meta.max_floor() > 0:
+		return
+	_first_run_hint_seq()
+
+
+func _first_run_hint_seq() -> void:
+	await get_tree().create_timer(15.0, false).timeout
+	if not is_inside_tree():
+		return
+	_show_center_hint(Lang.t("拖动屏幕左半边 = 移动"), 2.0)
+	await get_tree().create_timer(10.0, false).timeout
+	if not is_inside_tree():
+		return
+	_show_center_hint(Lang.t("武器会自动攻击最近的目标"), 2.0)
+
+
+func _show_center_hint(text: String, dur: float) -> void:
+	if _hint_center == null:
+		_hint_center = CenterContainer.new()
+		_hint_center.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_hint_center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_hint_label = Label.new()
+		_hint_label.add_theme_font_override("font", _font)
+		_hint_label.add_theme_font_size_override("font_size", 30)
+		_hint_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.55))
+		_hint_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.85))
+		_hint_label.add_theme_constant_override("shadow_offset_x", 2)
+		_hint_label.add_theme_constant_override("shadow_offset_y", 2)
+		_hint_center.add_child(_hint_label)
+		add_child(_hint_center)
+	_hint_label.text = text
+	_hint_center.visible = true
+	_hint_center.modulate.a = 1.0
+	if _hint_tween != null and _hint_tween.is_valid():
+		_hint_tween.kill()
+	_hint_tween = create_tween()
+	_hint_tween.tween_interval(dur)
+	_hint_tween.tween_property(_hint_center, "modulate:a", 0.0, 0.6)
+	_hint_tween.tween_callback(func() -> void: _hint_center.visible = false)
 
 
 func show_toast(text: String) -> void:
@@ -685,6 +733,10 @@ func _on_skill_auto(idx: int) -> void:
 
 func set_skills(skills: Array) -> void:
 	_skills_data = skills
+	# v0.8 D4：技能栏首次凑满 2 个技能时提示自动/手动（每局一次）
+	if skills.size() >= 2 and not _skill_hint_shown:
+		_skill_hint_shown = true
+		show_toast(Lang.t("技能默认自动释放，可切手动"))
 	for i in range(_skill_slots.size()):
 		var slot: Dictionary = _skill_slots[i]
 		if i < skills.size():
@@ -801,7 +853,7 @@ func _char_card(cid: String, compact: bool = false) -> Control:
 	var d: Dictionary = GameData.CHARACTERS[cid]
 	var panel := PanelContainer.new()
 	var card_w: float = 180.0 if compact else 220.0
-	var card_h: float = 260.0 if compact else 300.0
+	var card_h: float = 286.0 if compact else 326.0
 	panel.custom_minimum_size = Vector2(card_w, card_h)
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0.10, 0.09, 0.14, 0.95)
@@ -832,6 +884,11 @@ func _char_card(cid: String, compact: bool = false) -> Control:
 	de.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	de.custom_minimum_size = Vector2(160, 40) if compact else Vector2(200, 40)
 	vb.add_child(de)
+	# v0.8 D4：卡片底部玩法一句话（新手 3 分钟 T+0）
+	var hint := _mk_label("走位躲怪，武器自动开火，升级选构筑", 12)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_color_override("font_color", Color(0.85, 0.85, 0.75))
+	vb.add_child(hint)
 	var b := Button.new()
 	if Meta.is_char_unlocked(cid):
 		b.text = Lang.t("开始")

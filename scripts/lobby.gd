@@ -18,6 +18,9 @@ var _bg_tex: Texture2D
 var _toast_panel: PanelContainer
 var _toast_label: Label
 var _toast_tween: Tween = null
+# v0.8 D8 无尽直连
+var _endless_pick := false
+var _endless_btn: Button = null
 
 
 func _ready() -> void:
@@ -536,6 +539,13 @@ func show_toast(text: String) -> void:
 # ---------- 出战页 ----------
 func _build_fight_tab() -> void:
 	var vb := _section("选择角色出战", Color(1.0, 0.85, 0.4))
+	# v0.8 D8：无尽直连（通关过 1 次才显示）
+	if Meta.victories() >= 1:
+		var cc := CenterContainer.new()
+		_endless_btn = _mk_button("无尽模式：关", 18)
+		_endless_btn.pressed.connect(_on_toggle_endless)
+		cc.add_child(_endless_btn)
+		vb.add_child(cc)
 	# 竖屏（手机）时卡片竖排全量展示，否则横排
 	var vp: Vector2 = get_viewport_rect().size
 	if vp.y > vp.x:
@@ -559,7 +569,7 @@ func _build_fight_tab() -> void:
 func _fight_card(cid: String, compact: bool = false) -> Control:
 	var d: Dictionary = GameData.CHARACTERS[cid]
 	var p := _panel()
-	p.custom_minimum_size = Vector2(200, 300) if compact else Vector2(220, 320)
+	p.custom_minimum_size = Vector2(200, 326) if compact else Vector2(220, 346)
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
 	p.add_child(vb)
@@ -579,6 +589,11 @@ func _fight_card(cid: String, compact: bool = false) -> Control:
 	ti.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ti.add_theme_color_override("font_color", Color(1.0, 0.85, 0.5))
 	vb.add_child(ti)
+	# v0.8 D4：卡片底部玩法一句话（新手 3 分钟 T+0）
+	var hint := _mk_label("走位躲怪，武器自动开火，升级选构筑", 12)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_color_override("font_color", Color(0.85, 0.85, 0.75))
+	vb.add_child(hint)
 	var bc := CenterContainer.new()
 	vb.add_child(bc)
 	if Meta.is_char_unlocked(cid):
@@ -596,7 +611,14 @@ func _fight_card(cid: String, compact: bool = false) -> Control:
 func _on_fight(cid: String) -> void:
 	Sfx.play("stairs")
 	Meta.selected_char = cid
+	Meta.start_endless = _endless_pick
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
+
+
+func _on_toggle_endless() -> void:
+	_endless_pick = not _endless_pick
+	if _endless_btn != null:
+		_endless_btn.text = Lang.t("无尽模式：开") if _endless_pick else Lang.t("无尽模式：关")
 
 
 ## 继续冒险：从中途存档恢复

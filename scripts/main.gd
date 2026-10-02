@@ -59,8 +59,13 @@ func _on_character_chosen(char_id: String) -> void:
 	if not Meta.is_char_unlocked(char_id):
 		return
 	_started = true
+	# v0.8 D8：大厅无尽直连入口（通关 1 次解锁）
+	if Meta.start_endless:
+		endless = true
+		Meta.start_endless = false
 	RunSave.clear()  # 新开局，清除旧的中途存档
 	hud.hide_select()
+	hud.start_first_run_hints()  # v0.8 D4 新手引导（仅首局）
 	player = PlayerScene.instantiate()
 	player.character_id = char_id
 	player.name = "Player"
