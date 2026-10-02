@@ -1,0 +1,37 @@
+{
+ "passives": {
+  "area": "res://assets/icons/passives/icon_passive_range.png",
+  "armor": "res://assets/icons/passives/icon_passive_armor.png",
+  "aspeed": "res://assets/icons/passives/icon_passive_atkspeed.png",
+  "attack": "res://assets/icons/passives/icon_passive_attack.png",
+  "cooldown": "res://assets/icons/passives/icon_passive_cooldown.png",
+  "crit": "res://assets/icons/passives/icon_passive_crit.png",
+  "critdmg": "res://assets/icons/passives/icon_passive_critdmg.png",
+  "duration": "res://assets/icons/passives/icon_passive_duration.png",
+  "hp": "res://assets/icons/passives/icon_passive_hp.png",
+  "magnet": "res://assets/icons/passives/icon_passive_magnet.png",
+  "speed": "res://assets/icons/passives/icon_passive_movespeed.png",
+  "xp": "res://assets/icons/passives/icon_passive_exp.png"
+ },
+ "weapons": {
+  "bow": "res://assets/sprites/fx/projectiles/proj_arrow.png",
+  "corpse_blast": "res://assets/sprites/fx/fx_corpse_explosion.png",
+  "curse_aura": "res://assets/sprites/fx/fx_time_ripple.png",
+  "dual": "res://assets/sprites/fx/projectiles/proj_bullet.png",
+  "flying_axe": "res://assets/sprites/fx/projectiles/proj_axe.png",
+  "gatling": "res://assets/sprites/fx/projectiles/proj_mg.png",
+  "hound": "res://assets/sprites/summons/summon_hound_idle_00.png",
+  "life_drain": "res://assets/sprites/fx/fx_soul_orb.png",
+  "melee_axe": "res://assets/sprites/fx/projectiles/proj_axe.png",
+  "orb": "res://assets/sprites/fx/projectiles/proj_orb.png",
+  "sentry": "res://assets/sprites/summons/summon_turret_idle_00.png",
+  "shield_bash": "res://assets/sprites/fx/fx_shield_slam.png",
+  "shotgun": "res://assets/sprites/fx/projectiles/proj_pellet.png",
+  "skel_army": "res://assets/sprites/summons/summon_skeleton_warrior_idle_00.png",
+  "skel_warrior": "res://assets/sprites/summons/summon_skeleton_warrior_idle_00.png",
+  "sniper": "res://assets/sprites/fx/projectiles/proj_sniper.png",
+  "swarm": "res://assets/sprites/summons/summon_bee_idle_00.png",
+  "warcry": "res://assets/sprites/fx/fx_warcry.png",
+  "whirlwind": "res://assets/sprites/fx/fx_whirlwind.png"
+ }
+}

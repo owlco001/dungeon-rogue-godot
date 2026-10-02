@@ -45,41 +45,8 @@ var _detail_name: Label
 var _detail_lv: Label
 var _detail_desc: Label
 
-const WEAPON_ICONS := {
-	"bow": "res://assets/sprites/fx/projectiles/proj_arrow.png",
-	"dual": "res://assets/sprites/fx/projectiles/proj_bullet.png",
-	"shotgun": "res://assets/sprites/fx/projectiles/proj_pellet.png",
-	"sniper": "res://assets/sprites/fx/projectiles/proj_sniper.png",
-	"gatling": "res://assets/sprites/fx/projectiles/proj_mg.png",
-	"whirlwind": "res://assets/sprites/fx/fx_whirlwind.png",
-	"orb": "res://assets/sprites/fx/projectiles/proj_orb.png",
-	"sentry": "res://assets/sprites/summons/summon_turret_idle_00.png",
-	"hound": "res://assets/sprites/summons/summon_hound_idle_00.png",
-	"skel_warrior": "res://assets/sprites/summons/summon_skeleton_warrior_idle_00.png",
-	"swarm": "res://assets/sprites/summons/summon_bee_idle_00.png",
-	"skel_army": "res://assets/sprites/summons/summon_skeleton_warrior_idle_00.png",
-	"corpse_blast": "res://assets/sprites/fx/fx_corpse_explosion.png",
-	"life_drain": "res://assets/sprites/fx/fx_soul_orb.png",
-	"curse_aura": "res://assets/sprites/fx/fx_time_ripple.png",
-	"melee_axe": "res://assets/sprites/fx/projectiles/proj_axe.png",
-	"shield_bash": "res://assets/sprites/fx/fx_shield_slam.png",
-	"warcry": "res://assets/sprites/fx/fx_warcry.png",
-	"flying_axe": "res://assets/sprites/fx/projectiles/proj_axe.png",
-}
-const PASSIVE_ICONS := {
-	"attack": "res://assets/icons/passives/icon_passive_attack.png",
-	"aspeed": "res://assets/icons/passives/icon_passive_atkspeed.png",
-	"crit": "res://assets/icons/passives/icon_passive_crit.png",
-	"hp": "res://assets/icons/passives/icon_passive_hp.png",
-	"speed": "res://assets/icons/passives/icon_passive_movespeed.png",
-	"magnet": "res://assets/icons/passives/icon_passive_magnet.png",
-	"cooldown": "res://assets/icons/passives/icon_passive_cooldown.png",
-	"area": "res://assets/icons/passives/icon_passive_range.png",
-	"critdmg": "res://assets/icons/passives/icon_passive_critdmg.png",
-	"armor": "res://assets/icons/passives/icon_passive_armor.png",
-	"duration": "res://assets/icons/passives/icon_passive_duration.png",
-	"xp": "res://assets/icons/passives/icon_passive_exp.png",
-}
+var WEAPON_ICONS: Dictionary = {}  # v0.8: data/icons.json（ContentDB）
+var PASSIVE_ICONS: Dictionary = {}  # v0.8: data/icons.json（ContentDB）
 # 骷髅大军图标染色（尸毒主题绿紫，区别于骷髅战士）
 const SUMMON_TINT := {
 	"skel_army": Color(0.62, 1.0, 0.72),
@@ -100,6 +67,9 @@ var _toast_tween: Tween = null
 
 
 func _ready() -> void:
+	var icons: Dictionary = ContentDB.table("icons")
+	WEAPON_ICONS = icons.get("weapons", {})
+	PASSIVE_ICONS = icons.get("passives", {})
 	_font = load("res://assets/fonts/hud-subset.ttf") as Font
 	_build_bars()
 	_build_labels()
@@ -439,10 +409,24 @@ func set_relics(relics: Array) -> void:
 	_relics_data = relics
 	for i in range(_relic_slots.size()):
 		var tr: TextureRect = _relic_slots[i]["icon"]
+		var b: Button = _relic_slots[i]["btn"]
 		if i < relics.size():
 			tr.texture = load(String(GameData.RELICS[relics[i]]["icon"])) as Texture2D
+			# v0.8 稀有度描边（StatBlock 口径：普通蓝/稀有紫/传说金）
+			var sb := StyleBoxFlat.new()
+			sb.bg_color = Color(0.08, 0.08, 0.12, 0.65)
+			sb.set_corner_radius_all(8)
+			sb.set_border_width_all(2)
+			sb.border_color = StatBlock.rarity_color(String(GameData.RELICS[relics[i]]["rarity"]))
+			b.add_theme_stylebox_override("normal", sb)
 		else:
 			tr.texture = null
+			var sb := StyleBoxFlat.new()
+			sb.bg_color = Color(0.08, 0.08, 0.12, 0.65)
+			sb.set_corner_radius_all(8)
+			sb.set_border_width_all(1)
+			sb.border_color = Color(0.5, 0.5, 0.55)
+			b.add_theme_stylebox_override("normal", sb)
 
 
 # ---------- 装备详情弹窗 ----------

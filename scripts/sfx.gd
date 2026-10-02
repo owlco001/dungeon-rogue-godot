@@ -1,27 +1,13 @@
 extends Node
-## Sfx v0.5: 程序化合成音效（AudioStreamWAV），无外部音频资产。
-## autoload 单例：Sfx.play("shoot")。10 路 Player 池 + 按音色节流，音量 -4dB。
+## Sfx v0.8: 程序化合成音效（AudioStreamWAV），无外部音频资产。
+## autoload 单例：Sfx.play("shoot") / Sfx.play_at("spit", pos)（Web 声像）。
+## 音色唯一事实源 = data/audio_manifest.json（tools/check_audio.py 三方校验）。
 
 const RATE := 22050
 const POOL := 10
 const VOL_DB := -4.0
 
-# name -> {gen 参数}; throttle: 最小间隔秒
-const DEFS := {
-	"shoot": {"dur": 0.07, "throttle": 0.07},
-	"hit": {"dur": 0.08, "throttle": 0.05},
-	"explosion": {"dur": 0.45, "throttle": 0.10},
-	"gem": {"dur": 0.12, "throttle": 0.05},
-	"coin": {"dur": 0.16, "throttle": 0.06},
-	"levelup": {"dur": 0.45, "throttle": 0.30},
-	"hurt": {"dur": 0.22, "throttle": 0.15},
-	"stairs": {"dur": 0.35, "throttle": 0.30},
-	"click": {"dur": 0.06, "throttle": 0.05},
-	"boss_roar": {"dur": 0.90, "throttle": 0.80},
-	"superfuse": {"dur": 0.70, "throttle": 0.50},
-	"relic": {"dur": 0.40, "throttle": 0.30},
-	"achievement": {"dur": 0.55, "throttle": 0.30},
-}
+var _manifest := {}  # data/audio_manifest.json 的 sounds 表
 
 var _streams := {}
 var _pool: Array[AudioStreamPlayer] = []
@@ -37,23 +23,48 @@ func _ready() -> void:
 		p.bus = "Master"
 		add_child(p)
 		_pool.append(p)
+	_load_manifest()
 	_gen_all()
+	# v0.8 事件音（B5 新增内容的声音接线）
+	EventBus.enemy_fired.connect(func(pos: Vector2) -> void: play_at("spit", pos))
+	EventBus.exploder_fuse_start.connect(func(pos: Vector2) -> void: play_at("fuse", pos))
+	EventBus.chest_opened.connect(func(pos: Vector2) -> void: play_at("chest", pos))
+	EventBus.boss_phase_changed.connect(func(_id: String, _p: int) -> void: play("boss_phase"))
+
+
+func _load_manifest() -> void:
+	var path := "res://data/audio_manifest.json"
+	if not FileAccess.file_exists(path):
+		push_error("Sfx: audio_manifest.json missing")
+		return
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if parsed is Dictionary:
+		_manifest = parsed.get("sounds", {})
 
 
 func _gen_all() -> void:
-	_streams["shoot"] = _tone(880.0, 440.0, 0.07, 0.5, 0)       # 方波下扫
-	_streams["hit"] = _noise(0.08, 0.45)                          # 噪声碎击
-	_streams["explosion"] = _boom(0.45, 0.8)                       # 低频轰爆
-	_streams["gem"] = _tone(1320.0, 1760.0, 0.12, 0.4, 2)          # 正弦上扬
-	_streams["coin"] = _two_tone(990.0, 1320.0, 0.16, 0.4)         # 双音金币
-	_streams["levelup"] = _arp([523.0, 659.0, 784.0, 1046.0], 0.45, 0.45)
-	_streams["hurt"] = _tone(220.0, 110.0, 0.22, 0.5, 1)           # 锯齿下沉
-	_streams["stairs"] = _tone(784.0, 1568.0, 0.35, 0.35, 2)       # 上行风铃
-	_streams["click"] = _tone(660.0, 660.0, 0.06, 0.35, 0)
-	_streams["boss_roar"] = _roar(0.9, 0.7)
-	_streams["superfuse"] = _sweep(200.0, 2000.0, 0.7, 0.5)
-	_streams["relic"] = _arp([392.0, 523.0, 659.0, 784.0, 1046.0], 0.4, 0.4)
-	_streams["achievement"] = _arp([659.0, 784.0, 1046.0, 1318.0, 1568.0], 0.55, 0.45)
+	for sname in _manifest.keys():
+		_streams[sname] = _gen_one(_manifest[sname])
+
+
+func _gen_one(d: Dictionary) -> AudioStreamWAV:
+	match String(d.get("gen", "")):
+		"tone":
+			return _tone(float(d["f0"]), float(d["f1"]), float(d["dur"]),
+				float(d["vol"]), int(d.get("wave", 2)))
+		"noise":
+			return _noise(float(d["dur"]), float(d["vol"]))
+		"boom":
+			return _boom(float(d["dur"]), float(d["vol"]))
+		"two_tone":
+			return _two_tone(float(d["f0"]), float(d["f1"]), float(d["dur"]), float(d["vol"]))
+		"arp":
+			return _arp(d["notes"], float(d["dur"]), float(d["vol"]))
+		"sweep":
+			return _sweep(float(d["f0"]), float(d["f1"]), float(d["dur"]), float(d["vol"]))
+		"roar":
+			return _roar(float(d["dur"]), float(d["vol"]))
+	return _noise(0.05, 0.2)
 
 
 func play(sname: String) -> void:
@@ -62,7 +73,7 @@ func play(sname: String) -> void:
 	if not _streams.has(sname):
 		return
 	var now := Time.get_ticks_msec() / 1000.0
-	var th: float = float(DEFS[sname]["throttle"])
+	var th: float = float(_manifest.get(sname, {}).get("throttle", 0.05))
 	if now - float(_last.get(sname, -99.0)) < th:
 		return
 	_last[sname] = now
@@ -74,6 +85,25 @@ func play(sname: String) -> void:
 	_idx = (_idx + 1) % POOL
 	p.stream = _streams[sname]
 	p.play()
+
+
+## 带声像的播放：Web 端按相对玩家横向位置算 pan（-1..1）；原生端降级为 play
+func play_at(sname: String, pos: Vector2) -> void:
+	if not OS.has_feature("web"):
+		play(sname)
+		return
+	if Meta.is_muted() or not _streams.has(sname):
+		return
+	var now := Time.get_ticks_msec() / 1000.0
+	var th: float = float(_manifest.get(sname, {}).get("throttle", 0.05))
+	if now - float(_last.get(sname, -99.0)) < th:
+		return
+	_last[sname] = now
+	var pan := 0.0
+	var pl := get_tree().get_first_node_in_group("player") as Node2D
+	if pl != null:
+		pan = clampf((pos.x - pl.global_position.x) / 600.0, -0.8, 0.8)
+	JavaScriptBridge.eval("window._gameSfx&&window._gameSfx.play('%s',%.2f)" % [sname, pan], true)
 
 
 func set_muted(m: bool) -> void:

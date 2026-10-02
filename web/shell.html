@@ -139,6 +139,7 @@ window._gameSfx = (function () {
 		}
 		return noiseBuf;
 	}
+	// === GEN AUDIO BEGIN (tools/gen_shell_audio.py — do not edit) ===
 	function tone(f0, f1, dur, vol, type, delay) {
 		var c = ac(), t = c.currentTime + (delay || 0);
 		var o = c.createOscillator(), g = c.createGain();
@@ -168,26 +169,41 @@ window._gameSfx = (function () {
 		noise(dur, vol * 0.3);
 	}
 	var PLAYERS = {
-		shoot: function () { tone(880, 440, 0.07, 0.5 * 0.6, 'square'); },
-		hit: function () { noise(0.08, 0.45); },
-		explosion: function () { boom(0.45, 0.8); },
-		gem: function () { tone(1320, 1760, 0.12, 0.4, 'sine'); },
-		coin: function () { tone(990, 990, 0.08, 0.4, 'sine'); tone(1320, 1320, 0.08, 0.4, 'sine', 0.08); },
-		levelup: function () { var f = [523, 659, 784, 1046]; for (var i = 0; i < f.length; i++) { tone(f[i], f[i], 0.11, 0.45, 'sine', i * 0.11); } },
-		hurt: function () { tone(220, 110, 0.22, 0.5, 'sawtooth'); },
-		stairs: function () { tone(784, 1568, 0.35, 0.35, 'sine'); },
-		click: function () { tone(660, 660, 0.06, 0.35 * 0.6, 'square'); },
+		achievement: function () { var f = [659, 784, 1046, 1318, 1568]; for (var i = 0; i < f.length; i++) { tone(f[i], f[i], 0.11, 0.45, 'sine', i * 0.11); }; },
+		boss_phase: function () { roar(0.7, 0.7); },
 		boss_roar: function () { roar(0.9, 0.7); },
-		superfuse: function () { tone(200, 2000, 0.7, 0.5 * 0.7, 'sine'); },
-		relic: function () { var f = [392, 523, 659, 784, 1046]; for (var i = 0; i < f.length; i++) { tone(f[i], f[i], 0.08, 0.4, 'sine', i * 0.08); } },
-		achievement: function () { var f = [659, 784, 1046, 1318, 1568]; for (var i = 0; i < f.length; i++) { tone(f[i], f[i], 0.11, 0.45, 'sine', i * 0.11); } }
+		chest: function () { var f = [784, 1046, 1318]; for (var i = 0; i < f.length; i++) { tone(f[i], f[i], 0.116667, 0.4, 'sine', i * 0.116667); }; },
+		click: function () { tone(660, 660, 0.06, 0.21, 'square'); },
+		coin: function () { tone(990, 990, 0.08, 0.4, 'sine'); tone(1320, 1320, 0.08, 0.4, 'sine', 0.08); },
+		explosion: function () { boom(0.45, 0.8); },
+		fuse: function () { tone(400, 900, 0.9, 0.3, 'sine'); },
+		gem: function () { tone(1320, 1760, 0.12, 0.4, 'sine'); },
+		hit: function () { noise(0.08, 0.45); },
+		hurt: function () { tone(220, 110, 0.22, 0.5, 'sawtooth'); },
+		levelup: function () { var f = [523, 659, 784, 1046]; for (var i = 0; i < f.length; i++) { tone(f[i], f[i], 0.1125, 0.45, 'sine', i * 0.1125); }; },
+		relic: function () { var f = [392, 523, 659, 784, 1046]; for (var i = 0; i < f.length; i++) { tone(f[i], f[i], 0.08, 0.4, 'sine', i * 0.08); }; },
+		shoot: function () { tone(880, 440, 0.07, 0.3, 'square'); },
+		spit: function () { tone(700, 300, 0.12, 0.35, 'sawtooth'); },
+		stairs: function () { tone(784, 1568, 0.35, 0.35, 'sine'); },
+		superburst: function () { boom(0.6, 0.9); },
+		supercharge: function () { tone(150, 600, 0.5, 0.5, 'sine'); },
+		superfuse: function () { tone(200, 2000, 0.7, 0.35, 'sine'); },
+		superring: function () { var f = [523, 659, 784, 1046, 1318]; for (var i = 0; i < f.length; i++) { tone(f[i], f[i], 0.12, 0.45, 'sine', i * 0.12); }; }
 	};
+	// === GEN AUDIO END ===
 	return {
-		play: function (name) {
+		play: function (name, pan) {
 			if (muted) { return; }
 			try {
 				ac(); // 确保 resume（真实手势下来调才有效）
-				if (PLAYERS[name]) { PLAYERS[name](); }
+				if (!PLAYERS[name]) { return; }
+				if (pan && ctx.createStereoPanner) {
+					var pn = ctx.createStereoPanner(); pn.pan.value = pan;
+					master.disconnect(); master.connect(pn); pn.connect(ctx.destination);
+					PLAYERS[name]();
+					master.disconnect(); master.connect(ctx.destination);
+					try { pn.disconnect(); } catch (e) {}
+				} else { PLAYERS[name](); }
 			} catch (e) {}
 		},
 		setMuted: function (m) { muted = !!m; },
