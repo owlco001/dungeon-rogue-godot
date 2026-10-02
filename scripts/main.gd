@@ -142,6 +142,7 @@ func _on_character_chosen(char_id: String) -> void:
 	player.name = "Player"
 	player.position = Vector2(ARENA_W * 0.5, ARENA_H * 0.5)
 	add_child(player)
+	player.z_index = 3  # v0.8.20：实体盖过房间墙（墙 z=2），修北墙边被盖住的图层错误
 	player.hp_changed.connect(_on_player_hp)
 	player.xp_changed.connect(_on_player_xp)
 	player.gold_changed.connect(hud.set_gold)
@@ -325,6 +326,7 @@ func _spawn_enemy(eid: String, hp_m: float, dmg_m: float, is_elite: bool) -> voi
 	e.position = _spawn_pos()
 	e.died.connect(_on_enemy_died)
 	add_child(e)
+	e.z_index = 3
 	if e.has_meta("pooled_reuse"):
 		e.remove_meta("pooled_reuse")
 		e.spawn_init()
@@ -856,6 +858,7 @@ func continue_run(save_data: Dictionary) -> void:
 	player.name = "Player"
 	player.position = Vector2(ARENA_W * 0.5, ARENA_H * 0.5)
 	add_child(player)
+	player.z_index = 3  # v0.8.20：实体盖过房间墙（墙 z=2），修北墙边被盖住的图层错误
 	player.hp_changed.connect(_on_player_hp)
 	player.xp_changed.connect(_on_player_xp)
 	player.gold_changed.connect(hud.set_gold)
