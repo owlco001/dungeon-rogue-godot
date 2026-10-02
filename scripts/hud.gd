@@ -76,6 +76,7 @@ func _ready() -> void:
 	_font = load("res://assets/fonts/hud-subset.ttf") as Font
 	_build_bars()
 	_build_labels()
+	_build_timer_bar()
 	_build_equip_bars()
 	_build_detail_panel()
 	_build_boss_bar()

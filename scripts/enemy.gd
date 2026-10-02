@@ -45,6 +45,17 @@ var _shoot_t := 0.0
 var _fuse_t := -1.0
 var _blast_dmg := 0.0
 var _dir_smooth := Vector2.ZERO
+# L4 寻路（注：无头驱动编译图认不出新 class_name，全部走 preload/字面量）
+const PathfindScript := preload("res://systems/pathfind.gd")
+var pf_grid := PackedByteArray()
+var pf_gw := 32
+var pf_gh := 24
+var pf_cell := 50.0
+var _path := PackedVector2Array()
+var _path_i := 0
+var _repath_t := 0.0
+var _los_clear := true
+var _los_t := 0.0
 
 # v0.3 状态：眩晕 / 减速 / 中毒 / 虚弱 / 诅咒
 var stun_t := 0.0
@@ -106,6 +117,11 @@ func spawn_init() -> void:
 	_fuse_t = -1.0
 	_blast_dmg = 28.0 * dmg_mult
 	_dir_smooth = Vector2.ZERO
+	_path = PackedVector2Array()
+	_path_i = 0
+	_repath_t = 0.0
+	_los_clear = true
+	_los_t = randf() * 0.25
 	sprite.frames = _shared_frames(enemy_id)
 	sprite.scale = Vector2.ONE * base_scale
 	sprite.modulate = Color.WHITE
@@ -170,6 +186,11 @@ func _physics_process(delta: float) -> void:
 		dist = to.length()
 		dir = to.normalized() if dist > 1.0 else Vector2.ZERO
 
+	# L4：视线检测（0.25s 一次，被墙挡住则走 A*
+	_los_t -= delta
+	if _los_t <= 0.0:
+		_los_t = 0.25
+		_los_clear = _ray_clear(target.global_position) if target != null else true
 	if stun_t > 0.0:
 		# 眩晕：原地发抖，不移动不攻击
 		stun_t -= delta
@@ -189,7 +210,7 @@ func _physics_process(delta: float) -> void:
 	var behavior_hold := false
 	if kind == "ranged":
 		_shoot_t -= delta
-		if dist <= 520.0 and _shoot_t <= 0.0 and target != null:
+		if dist <= 520.0 and _shoot_t <= 0.0 and target != null and _los_clear:
 			_shoot_t = 2.2
 			_fire_acid(target)
 		if dist < 300.0:
@@ -218,7 +239,11 @@ func _physics_process(delta: float) -> void:
 		velocity = _knock
 	elif not behavior_hold:
 		# L3 转向插值：方向 slerp 平滑，避免瞬时掉头抖动
-		var desired: Vector2 = (dir + side).normalized()
+		var desired: Vector2
+		if not pf_grid.is_empty() and not _los_clear and target != null:
+			desired = _path_desired(delta, target)
+		else:
+			desired = (dir + side).normalized()
 		if _dir_smooth == Vector2.ZERO:
 			_dir_smooth = desired
 		else:
@@ -282,6 +307,32 @@ func _explode() -> void:
 		var d: Vector2 = (_player.global_position - global_position).normalized()
 		_player.take_damage(_blast_dmg, d, 1.0, self)
 	_die()
+
+
+## L4：视线射线（只撞墙体 layer 4）
+func _ray_clear(to: Vector2) -> bool:
+	var params := PhysicsRayQueryParameters2D.create(global_position, to, 4, [get_rid()])
+	var hit := get_world_2d().direct_space_state.intersect_ray(params)
+	return hit.is_empty()
+
+
+## L4：A* 路径点跟随（0.5s 重规划）
+func _path_desired(delta: float, target: Node2D) -> Vector2:
+	_repath_t -= delta
+	if _repath_t <= 0.0 or _path_i >= _path.size():
+		_repath_t = 0.5
+		_path = PathfindScript.find_path(pf_grid, pf_gw, pf_gh,
+			global_position, target.global_position, pf_cell)
+		_path_i = 1  # index 0 ≈ 自身位置
+	if _path_i < _path.size():
+		while _path_i < _path.size() \
+				and global_position.distance_to(_path[_path_i]) < 30.0:
+			_path_i += 1
+	if _path_i >= _path.size():
+		var to: Vector2 = target.global_position - global_position
+		return to.normalized() if to.length() > 1.0 else Vector2.ZERO
+	var wp: Vector2 = _path[_path_i] - global_position
+	return wp.normalized() if wp.length() > 1.0 else Vector2.ZERO
 
 
 ## 嘲讽目标选择：范围内嘲讽召唤物 > 玩家

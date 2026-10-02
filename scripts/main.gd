@@ -7,6 +7,7 @@ const EnemyScene := preload("res://scenes/enemy.tscn")
 const BossScript := preload("res://scripts/boss.gd")
 const ChestScript := preload("res://scripts/chest.gd")
 const WaveDirectorScript := preload("res://systems/wave_director.gd")
+const RoomGenScript := preload("res://systems/room_gen.gd")
 
 
 class BrambleZone extends Node2D:
@@ -67,6 +68,8 @@ var _cine_mod: CanvasModulate = null
 var _cine_tween: Tween = null
 var _director: WaveDirector = null
 var _floor_has_waves := false
+var _wave_ui_t := 0.0
+var _room = null  # RoomGen 实例（无类型：无头驱动编译图认不出新 class_name）
 var _wave_hp_m := 1.0
 var _wave_dmg_m := 1.0
 var _last_advance_msec := -99999
@@ -145,6 +148,12 @@ func _on_character_chosen(char_id: String) -> void:
 func _physics_process(_delta: float) -> void:
 	# v0.8 B4：每物理帧首行重建空间网格（EntityRegistry）
 	Registry.begin_frame()
+	# B6/B7：波次计时条 + 生存评分 0.25s 节流刷新
+	_wave_ui_t += _delta
+	if _wave_ui_t >= 0.25:
+		_wave_ui_t = 0.0
+		if _started:
+			_refresh_wave_hud()
 
 
 func _process(delta: float) -> void:
@@ -182,6 +191,16 @@ func next_floor() -> void:
 	if _director != null:
 		_director.stop()
 	_floor_has_waves = false
+	# L4：Boss 层开放竞技场；普通层按 seed 生成房间布局
+	if GameData.is_boss_floor(floor_num):
+		_room = null
+		arena.clear_room_walls()
+	else:
+		var fdef: Dictionary = GameData.floor_def(floor_num)
+		var rseed := absi(hash(String(fdef.get("theme", "dungeon")) + ":" + str(floor_num)))
+		_room = RoomGenScript.new()
+		_room.generate(rseed)
+		arena.build_room_walls(_room.merged_wall_rects())
 	hud.hide_boss_bar()
 	var fdef: Dictionary = GameData.floor_def(floor_num)
 	arena.set_theme(String(fdef["theme"]))
@@ -283,6 +302,7 @@ func _spawn_enemy(eid: String, hp_m: float, dmg_m: float, is_elite: bool) -> voi
 	e.hp_mult = hp_m
 	e.dmg_mult = dmg_m
 	e.elite = is_elite
+	e.pf_grid = _room.grid if _room != null else PackedByteArray()
 	e.position = _spawn_pos()
 	e.died.connect(_on_enemy_died)
 	add_child(e)
@@ -314,6 +334,8 @@ func spawn_boss_minions(at: Vector2, count: int) -> void:
 
 
 func _spawn_pos() -> Vector2:
+	if _room != null and is_instance_valid(player):
+		return _room.random_floor_cell_far(player.global_position, 340.0)
 	for attempt in range(40):
 		var p := Vector2(randf_range(90.0, ARENA_W - 90.0), randf_range(90.0, ARENA_H - 90.0))
 		if p.distance_to(player.global_position) > 340.0:
@@ -400,11 +422,12 @@ func _maybe_spawn_chest() -> void:
 	if GameData.is_boss_floor(floor_num) or randf() >= 0.15:
 		return
 	var center := Vector2(ARENA_W * 0.5, ARENA_H * 0.5)
-	var pos := _spawn_pos()
-	for i in range(8):
-		if pos.distance_to(center) > 300.0:
-			break
-		pos = _spawn_pos()
+	var pos: Vector2 = _room.farthest_room_center(center, true) if _room != null else _spawn_pos()
+	if _room == null:
+		for i in range(8):
+			if pos.distance_to(center) > 300.0:
+				break
+			pos = _spawn_pos()
 	var chest := Node2D.new()
 	chest.set_script(ChestScript)
 	chest.position = pos
@@ -436,8 +459,15 @@ func _spawn_gem(pos: Vector2, kind: String, value: int, relic_id: String) -> voi
 		g.spawn_init()
 
 
-func _spawn_stairs() -> void:
+func _spawn_stairs(force_pos: Vector2 = Vector2(-1, -1)) -> void:
 	if _stairs != null or not _started:
+		return
+	if force_pos.x >= 0.0:
+		_stairs = Area2D.new()
+		_stairs.set_script(StairsScript)
+		_stairs.position = force_pos
+		add_child(_stairs)
+		hud.set_enemies(0)
 		return
 	_stairs = Area2D.new()
 	_stairs.set_script(StairsScript)
@@ -472,7 +502,7 @@ func _on_director_tick_warning(sec: int) -> void:
 func _on_director_stairs() -> void:
 	# 计时 70s 到期：直接出楼梯（不要求清怪）
 	if _started and _stairs == null and not GameData.is_boss_floor(floor_num):
-		_spawn_stairs()
+		_spawn_stairs(_room_farthest_pos())
 
 
 func _refresh_wave_hud() -> void:
@@ -486,8 +516,8 @@ func _refresh_wave_hud() -> void:
 ## 生存评分（01 §5.1）：层数×100 + 击杀 + 精英×5 + Boss×50 + 剩余HP×0.5
 func _run_score() -> int:
 	var score := floor_num * 100 + kills + elite_kills * 5 + boss_kills * 50
-	if is_instance_valid(player) and not bool(player.get("dead")):
-		score += int(float(player.get("hp")) * 0.5)
+	if is_instance_valid(player):
+		score += int(maxf(0.0, float(player.get("hp"))) * 0.5)
 	return score
 
 
@@ -507,7 +537,13 @@ func _check_floor_clear() -> void:
 	if _floor_has_waves and _director != null and not _director.all_spawned():
 		return
 	if _enemies_alive() == 0 and _stairs == null and _started:
-		_spawn_stairs()
+		_spawn_stairs(_room_farthest_pos())
+
+
+func _room_farthest_pos() -> Vector2:
+	if _room != null and is_instance_valid(player):
+		return _room.farthest_room_center(player.global_position)
+	return Vector2(-1, -1)
 
 
 # ---------- shared combat visuals ----------

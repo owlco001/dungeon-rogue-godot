@@ -89,6 +89,51 @@ func _add_box(pos: Vector2, size: Vector2) -> void:
 	add_child(cs)
 
 
+class WallsVisual extends Node2D:
+	# L4 房间墙体视觉：全部矩形一次 _draw（1 个 canvas item，1 draw call）
+	var rects: Array = []
+	func _draw() -> void:
+		for r in rects:
+			var p: Vector2 = r["pos"]
+			var s: Vector2 = r["size"]
+			var top := Rect2(p - s * 0.5, s)
+			draw_rect(top, Color(0.16, 0.14, 0.18, 1.0))
+			draw_rect(Rect2(top.position, Vector2(s.x, 6.0)), Color(0.32, 0.28, 0.34, 1.0))
+
+
+var _room_wall_shapes: Array = []
+var _room_walls_visual: WallsVisual = null
+
+
+## L4：按房间生成结果建墙（碰撞挂本 StaticBody2D，layer 4 与边框一致）
+func build_room_walls(rects: Array) -> void:
+	clear_room_walls()
+	var visual_rects: Array = []
+	for r in rects:
+		var cs := CollisionShape2D.new()
+		var shape := RectangleShape2D.new()
+		shape.size = r["size"]
+		cs.shape = shape
+		cs.position = r["pos"]
+		add_child(cs)
+		_room_wall_shapes.append(cs)
+		visual_rects.append(r)
+	_room_walls_visual = WallsVisual.new()
+	_room_walls_visual.rects = visual_rects
+	_room_walls_visual.z_index = 2
+	add_child(_room_walls_visual)
+
+
+func clear_room_walls() -> void:
+	for cs in _room_wall_shapes:
+		if is_instance_valid(cs):
+			cs.queue_free()
+	_room_wall_shapes.clear()
+	if is_instance_valid(_room_walls_visual):
+		_room_walls_visual.queue_free()
+		_room_walls_visual = null
+
+
 func set_theme(t: String) -> void:
 	theme = t
 	_baked_applied = false
