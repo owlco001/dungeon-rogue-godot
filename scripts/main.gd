@@ -261,9 +261,13 @@ func _on_enemy_died(e: Node2D) -> void:
 
 
 func _drop_relic(pos: Vector2, guaranteed: bool) -> void:
-	if not guaranteed and randf() > 0.30:
+	# v0.8 权重掉落（loot.gd）：精英 45%，Boss 保底稀有+；排除已持有
+	if not guaranteed and randf() > 0.45:
 		return
-	var rid: String = GameData.RELIC_ORDER[randi() % GameData.RELIC_ORDER.size()]
+	var owned: Array = player.relics if is_instance_valid(player) else []
+	var rid := Loot.roll_relic(owned, "稀有" if guaranteed else "")
+	if rid == "":
+		return
 	_spawn_gem(pos, "relic", 0, rid)
 
 

@@ -35,6 +35,10 @@ var external_move := Vector2.ZERO
 var weapons: Array = []          # [{id, lv, cd_t}]
 var passives := {}               # id -> lv
 var relics: Array = []           # [relic_id]
+var _cross_until_ms := 0
+var _cross_aura: Node2D = null
+var _cross_aura_t := 0.0
+var _relic_tbl_cache: Dictionary = {}
 var MAGNET_RADIUS := BASE_MAGNET_RADIUS
 
 # v0.3 systems
@@ -78,6 +82,7 @@ func _ready() -> void:
 	hp = max_hp
 	add_weapon(String(char_def["weapon"]))
 	_build_sprite_frames()
+	RelicEffects.attach(self)
 	_setup_dust()
 	_play("idle_down")
 	hp_changed.emit(hp, max_hp)
@@ -137,6 +142,12 @@ func _setup_dust() -> void:
 func _physics_process(delta: float) -> void:
 	if _dead:
 		return
+	RelicEffects.tick(delta)
+	if _cross_aura_t > 0.0:
+		_cross_aura_t -= delta
+		if _cross_aura_t <= 0.0 and is_instance_valid(_cross_aura):
+			_cross_aura.queue_free()
+			_cross_aura = null
 	var input_vec := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	if external_move.length() > 0.08:
 		input_vec = external_move.limit_length(1.0)
@@ -214,8 +225,7 @@ func _cd_mult() -> float:
 	var m := (1.0 - 0.06 * float(passives.get("aspeed", 0)))
 	m *= (1.0 - 0.05 * float(passives.get("cooldown", 0)))
 	m *= Meta.bonus_aspeed_mult()
-	if "wardrum" in relics:
-		m *= 0.75
+	m *= StatBlock.relic_mult(relics, "cd_mult", _relic_tbl())
 	return maxf(m, 0.35)
 
 
@@ -236,7 +246,7 @@ func _duration_mult() -> float:
 
 
 func _xp_mult() -> float:
-	return (1.0 + 0.08 * float(passives.get("xp", 0))) * Meta.bonus_xp_mult()
+	return (1.0 + 0.08 * float(passives.get("xp", 0))) * Meta.bonus_xp_mult() * StatBlock.relic_mult(relics, "xp_mult", _relic_tbl())
 
 
 func _area_mult() -> float:
@@ -244,15 +254,13 @@ func _area_mult() -> float:
 
 
 func _gold_mult() -> float:
-	var m := 1.3 if "greedcup" in relics else 1.0
-	return m * Meta.bonus_gold_mult()
+	return StatBlock.relic_mult(relics, "gold_mult", _relic_tbl()) * Meta.bonus_gold_mult()
 
 
 func _recalc() -> void:
-	speed = base_speed * (1.0 + 0.06 * float(passives.get("speed", 0))) * Meta.bonus_speed_mult()
+	speed = base_speed * (1.0 + 0.06 * float(passives.get("speed", 0))) * Meta.bonus_speed_mult() * StatBlock.relic_mult(relics, "speed_mult", _relic_tbl())
 	MAGNET_RADIUS = BASE_MAGNET_RADIUS * (1.0 + 0.35 * float(passives.get("magnet", 0))) * Meta.bonus_magnet_mult()
-	if "magnetcore" in relics:
-		MAGNET_RADIUS *= 2.0
+	MAGNET_RADIUS *= StatBlock.relic_mult(relics, "magnet_mult", _relic_tbl())
 	if Meta.has_magnet_all():
 		MAGNET_RADIUS = 99999.0
 
@@ -473,6 +481,7 @@ func _fire_projectiles(target: Node2D, s: Dictionary, spread_deg: float) -> void
 			_crit_chance(), crit_mult,
 			float(s["range"]) + 80.0, float(s["knockback"])
 		)
+		p.home = self
 		get_parent().add_child(p)
 		p.add_to_group("projectiles")
 		if p.has_meta("pooled_reuse"):
@@ -567,6 +576,8 @@ func _deal_hit(e: Node2D, dmg: float, from_dir: Vector2, knock: float, s: Dictio
 	var crit_mult := _crit_mult() + float(s["critdmg_bonus"])
 	var is_crit := randf() < _crit_chance()
 	var d := dmg * crit_mult if is_crit else dmg
+	if "scythe" in relics and float(e.get("hp")) / maxf(1.0, float(e.get("max_hp"))) < 0.3:
+		d *= 1.5
 	var exec_hp := _exec_threshold(s)
 	if exec_hp > 0.0 and not bool(e.get("is_boss")) and not bool(e.get("elite")):
 		if float(e.get("hp")) / maxf(1.0, float(e.get("max_hp"))) < exec_hp:
@@ -1356,6 +1367,7 @@ func _tick_arrow_rain(delta: float) -> void:
 		p.setup("res://assets/sprites/fx/projectiles/proj_arrow.png",
 			aim + Vector2(randf_range(-30, 30), -320.0), Vector2.DOWN,
 			760.0, dmg, 0, 1, 0.0, _crit_chance(), _crit_mult(), 420.0, 0.6)
+		p.home = self
 		get_parent().add_child(p)
 		p.add_to_group("projectiles")
 		if p.has_meta("pooled_reuse"):
@@ -1544,6 +1556,12 @@ func _cast_time_stop() -> void:
 
 
 # ---------- relics ----------
+func _relic_tbl() -> Dictionary:
+	if _relic_tbl_cache.is_empty():
+		_relic_tbl_cache = ContentDB.table("relics")
+	return _relic_tbl_cache
+
+
 func gain_relic(rid: String) -> void:
 	if rid in relics or relics.size() >= GameData.RELIC_SLOTS:
 		gain_gold(50)
@@ -1551,6 +1569,9 @@ func gain_relic(rid: String) -> void:
 	relics.append(rid)
 	_recalc()
 	relics_changed.emit()
+	var rname := String(GameData.RELICS.get(rid, {}).get("rarity", "普通"))
+	EventBus.relic_gained.emit(rid, "l" if rname == "传说" else ("r" if rname == "稀有" else "c"))
+	EventBus.relic_picked.emit(rid)
 
 
 # ---------- damage / xp / gold ----------
@@ -1562,6 +1583,15 @@ func take_damage(amount: float, from_dir: Vector2, knock_mult: float = 1.0, from
 	var armor := minf(0.04 * (float(passives.get("armor", 0)) + Meta.bonus_armor()), 0.6)
 	amount *= 1.0 - armor
 	amount *= Meta.bonus_tough_mult()
+	# 圣十字：上次受击后 3 秒窗口内减伤 25%
+	if "cross" in relics:
+		var now_ms := Time.get_ticks_msec()
+		if now_ms < _cross_until_ms:
+			amount *= 0.75
+		elif not is_instance_valid(_cross_aura):
+			_cross_aura = FX.attach_aura(self, 120.0, Color(1, 1, 1, 0.5))
+		_cross_until_ms = now_ms + 3000
+		_cross_aura_t = 3.0
 	# 完美格挡：3 秒窗口内减伤 50% 并反弹
 	if _parry_t > 0.0:
 		_parried = true

@@ -303,28 +303,68 @@ static func exclusive_skill_of(char_id: String) -> String:
 # 遗物：独立 3 格
 const RELIC_SLOTS := 3
 const RELICS := {
-	"magnetcore": {
-		"name": "磁铁核心", "rarity": "稀有",
-		"icon": "res://assets/icons/relics/icon_relic_magnetcore.png",
-		"desc": "拾取范围翻倍",
-	},
 	"greedcup": {
 		"name": "贪婪金杯", "rarity": "普通",
 		"icon": "res://assets/icons/relics/icon_relic_greedcup.png",
 		"desc": "金币+30%",
+	},
+	"bloodgem": {
+		"name": "血珀", "rarity": "普通",
+		"icon": "res://assets/icons/relics/icon_relic_bloodgem.png",
+		"desc": "击杀回复2 HP（精英/Boss 8）",
+	},
+	"windboots": {
+		"name": "疾风之靴", "rarity": "普通",
+		"icon": "res://assets/icons/relics/icon_relic_windboots.png",
+		"desc": "移速+12%",
+	},
+	"sagestone": {
+		"name": "贤者之石", "rarity": "普通",
+		"icon": "res://assets/icons/relics/icon_relic_sagestone.png",
+		"desc": "经验+25%",
+	},
+	"magnetcore": {
+		"name": "磁铁核心", "rarity": "稀有",
+		"icon": "res://assets/icons/relics/icon_relic_magnetcore.png",
+		"desc": "拾取范围翻倍",
 	},
 	"wardrum": {
 		"name": "狂暴战鼓", "rarity": "稀有",
 		"icon": "res://assets/icons/relics/icon_relic_berserk.png",
 		"desc": "攻速+25%",
 	},
+	"hourglass": {
+		"name": "时之沙漏", "rarity": "稀有",
+		"icon": "res://assets/icons/relics/icon_relic_hourglass.png",
+		"desc": "技能冷却-20%",
+	},
+	"cross": {
+		"name": "圣十字", "rarity": "稀有",
+		"icon": "res://assets/icons/relics/icon_relic_cross.png",
+		"desc": "受击后3秒内减伤25%",
+	},
+	"scythe": {
+		"name": "收割镰刀", "rarity": "稀有",
+		"icon": "res://assets/icons/relics/icon_relic_scythe.png",
+		"desc": "对生命低于30%的敌人伤害+50%",
+	},
 	"phoenixheart": {
 		"name": "凤凰之心", "rarity": "传说",
 		"icon": "res://assets/icons/relics/icon_relic_phoenixheart.png",
 		"desc": "死亡复活一次(50%血)",
 	},
+	"thornmail": {
+		"name": "荆棘之甲", "rarity": "传说",
+		"icon": "res://assets/icons/relics/icon_relic_thornmail.png",
+		"desc": "受击反弹40%伤害",
+	},
+	"infinitefire": {
+		"name": "无尽之火", "rarity": "传说",
+		"icon": "res://assets/icons/relics/icon_relic_infinitefire.png",
+		"desc": "每10秒对最近5只敌人各造成40点伤害",
+	},
 }
-const RELIC_ORDER := ["magnetcore", "greedcup", "wardrum", "phoenixheart"]
+const RELIC_ORDER := ["greedcup", "bloodgem", "windboots", "sagestone", "magnetcore", "wardrum", "hourglass", "cross", "scythe", "phoenixheart", "thornmail", "infinitefire"]
 
 # Boss：每 5 层一只，30 层最终
 const BOSSES := {

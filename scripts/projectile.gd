@@ -135,6 +135,11 @@ func _physics_process(delta: float) -> void:
 			_hit_set[e.get_instance_id()] = true
 			var rolled: Array = _roll_dmg()
 			var final_dmg: float = rolled[0]
+			# 收割镰刀：发射者持有时对低血敌 +50%（01 §4.2 钩子）
+			if home != null and is_instance_valid(home) and "relics" in home \
+					and "scythe" in home.relics \
+					and e.hp / maxf(1.0, e.max_hp) < 0.3:
+				final_dmg *= 1.5
 			var is_crit: bool = rolled[1]
 			e.take_damage(final_dmg, dir, knock_mult)
 			if blackhole:
