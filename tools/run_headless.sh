@@ -36,13 +36,22 @@ run_v12() {
   if [ $e -ne 0 ]; then rc=1; fi
 }
 
+run_venemy() {
+  echo "== enemy anim gate =="
+  "$GODOT" --headless --path . --script res://test/check_enemy_anim.gd > /tmp/dr_venemy.log 2>&1
+  local e=$?
+  grep -E "^(PASS|FAIL)|RESULT" /tmp/dr_venemy.log || cat /tmp/dr_venemy.log
+  if [ $e -ne 0 ]; then rc=1; fi
+}
+
 case "$MODE" in
   v1) run_v1 ;;
   v12) run_v12 ;;
   v2|v3|v5h|v8|v9|v9d|v10|v11|v13|v14|v7|v5) run_driver "$MODE" ;;
+  venemy) run_venemy ;;
   v3x) run_driver v3; run_driver v3setup; run_driver v3check ;;
   v4) echo "== V4 content gate =="; "$GODOT" --headless --path . --script res://tools/check_content.gd 2>&1 | grep -E "V4|SCRIPT ERROR"; [ ${PIPESTATUS[0]} -ne 0 ] && rc=1; python3 tools/check_audio.py || rc=1 ;;
-  all) run_v1; "$GODOT" --headless --path . --script res://tools/check_content.gd > /tmp/dr_v4.log 2>&1 || rc=1; grep -E "V4 RESULT" /tmp/dr_v4.log; python3 tools/check_audio.py || rc=1; python3 tools/check_font.py || rc=1; run_driver v2; run_driver v3; run_driver v3setup; run_driver v3check; run_driver v5h; run_driver v5; run_driver v7; run_driver v8; run_driver v9; run_driver v9d; run_driver v10; run_driver v11; run_driver v13; run_driver v14; run_v12 ;;
+  all) run_v1; "$GODOT" --headless --path . --script res://tools/check_content.gd > /tmp/dr_v4.log 2>&1 || rc=1; grep -E "V4 RESULT" /tmp/dr_v4.log; python3 tools/check_audio.py || rc=1; python3 tools/check_font.py || rc=1; run_driver v2; run_driver v3; run_driver v3setup; run_driver v3check; run_driver v5h; run_driver v5; run_driver v7; run_driver v8; run_driver v9; run_driver v9d; run_driver v10; run_driver v11; run_driver v13; run_driver v14; run_venemy; run_v12 ;;
   *) echo "unknown mode $MODE"; exit 2 ;;
 esac
 echo "GATES RESULT: $([ $rc -eq 0 ] && echo PASS || echo FAIL)"

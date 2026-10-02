@@ -23,6 +23,15 @@ static func _shared_frames(eid: String) -> SpriteFrames:
 	for i in range(2):
 		var p := "res://assets/sprites/enemies/enemy_%s_idle_%02d.png" % [eid, i]
 		sf.add_frame("idle", load(p) as Texture2D)
+	# v0.8.17：移动帧（enemy_<eid>_move_00/01）；缺失则不建 move 动画，调用方回退 idle
+	if ResourceLoader.exists("res://assets/sprites/enemies/enemy_%s_move_00.png" % eid):
+		sf.add_animation("move")
+		sf.set_animation_speed("move", 7.0)
+		sf.set_animation_loop("move", true)
+		for i in range(2):
+			var mp := "res://assets/sprites/enemies/enemy_%s_move_%02d.png" % [eid, i]
+			if ResourceLoader.exists(mp):
+				sf.add_frame("move", load(mp) as Texture2D)
 	_frames_cache[eid] = sf
 	return sf
 
@@ -80,6 +89,13 @@ var _wobble := 0.0
 var _elite_t := 0.0
 
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
+
+
+## v0.8.17：按速度切换 move/idle（无 move 动画的怪保持 idle）
+func _update_move_anim() -> void:
+	var want_anim := "move" if velocity.length() > 25.0 else "idle"
+	if want_anim != sprite.animation and sprite.sprite_frames.has_animation(want_anim):
+		sprite.play(want_anim)
 
 
 func _ready() -> void:
@@ -214,6 +230,7 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		move_and_slide()
 		sprite.rotation = sin(_wobble * 30.0) * 0.15
+		_update_move_anim()
 		return
 	sprite.rotation = 0.0
 
@@ -278,6 +295,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 	sprite.flip_h = dir.x < 0.0
+	_update_move_anim()
 	if fly:
 		# bat hover: gentle sine bob, no ground hop
 		sprite.position.y = -18.0 + sin(_wobble * 2.2) * 6.0
