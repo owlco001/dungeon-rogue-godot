@@ -1026,7 +1026,7 @@ func build_levelup_options() -> Array:
 			if GameData.is_super(wid):
 				nm = String(GameData.SUPERWEAPONS[wid]["name"])
 			wups.append({"type": "weapon_up", "id": wid,
-				"title": Lang.t("武器升级:%s") % Lang.t(nm), "desc": Lang.t("Lv.%d→%d,伤害提升") % [lv, lv + 1]})
+				"title": (Lang.t("武器升级:%s") % Lang.t(nm)) + _affinity_mark(wid), "desc": Lang.t("Lv.%d→%d,伤害提升") % [lv, lv + 1]})
 	if weapons.size() < GameData.WEAPON_SLOTS + Meta.extra_weapon_slots():
 		for wid in GameData.WEAPON_POOL:
 			if not Meta.is_weapon_unlocked(wid):
@@ -1034,7 +1034,7 @@ func build_levelup_options() -> Array:
 			if _weapon_by_id(wid).is_empty():
 				var d: Dictionary = GameData.WEAPONS[wid]
 				wnews.append({"type": "new_weapon", "id": wid,
-					"title": Lang.t("新武器:%s") % Lang.t(String(d["name"])),
+					"title": (Lang.t("新武器:%s") % Lang.t(String(d["name"]))) + _affinity_mark(wid),
 					"desc": Lang.t("%s,自动攻击") % Lang.t(String(SCHOOL_NAMES.get(String(d.get("school", "")), "")))})
 	for pid in passives.keys():
 		var lv := int(passives[pid])
@@ -1202,6 +1202,16 @@ func _affinity_draft_mult(wid: String, cfg: Dictionary) -> float:
 	if aff.size() > 1:
 		return float(cfg.get("affinity_mult_dual", 2.0))
 	return float(cfg.get("affinity_mult", 2.5))
+
+
+## v0.8.14 选秀亲和标记：亲和流派武器标题后加"·亲和"
+func _affinity_mark(wid: String) -> String:
+	var d: Dictionary = GameData.WEAPONS.get(GameData.base_weapon_of(wid), {})
+	var school := String(d.get("school", ""))
+	var aff: Array = char_def.get("affinity", [])
+	if school != "" and school in aff:
+		return Lang.t("·亲和")
+	return ""
 
 
 ## 从池中取出第一个满足 pred 的选项（取出即移除）；无则返回空字典

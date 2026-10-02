@@ -826,6 +826,7 @@ func _v13_measure(player: Node, who: String, schools: Array, min_share: float) -
 	var skills0: Array = (player.get("skills") as Array).duplicate(true)
 	var aff_n := 0
 	var total := 0
+	var mark_seen := false
 	for run in range(20):
 		seed(9000 + run)
 		for step in range(20):
@@ -848,8 +849,11 @@ func _v13_measure(player: Node, who: String, schools: Array, min_share: float) -
 				var d: Dictionary = GameData.WEAPONS.get(GameData.base_weapon_of(wid), {})
 				if String(d.get("school", "")) in schools:
 					aff_n += 1
+					if String(o["title"]).contains("亲和"):
+						mark_seen = true
 	var share := 0.0
 	if total > 0:
 		share = float(aff_n) / float(total)
 	_check("V13 %s affinity draft share>=%.2f" % [who, min_share], share >= min_share,
 		"share=%.3f n=%d" % [share, total])
+	_check("V13 %s affinity mark shown" % who, mark_seen, "title has 亲和")

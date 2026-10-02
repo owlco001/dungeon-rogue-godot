@@ -430,6 +430,7 @@ func _build_equip_bars() -> void:
 
 func set_weapons(weapons: Array) -> void:
 	_weapons_data = weapons
+	var aff := _affinity_schools()
 	for i in range(_weapon_slots.size()):
 		var tr: TextureRect = _weapon_slots[i]["icon"]
 		if i < weapons.size():
@@ -438,11 +439,15 @@ func set_weapons(weapons: Array) -> void:
 			var path: String = WEAPON_ICONS.get(base, "")
 			tr.texture = load(path) as Texture2D if path != "" else null
 			tr.modulate = SUMMON_TINT.get(wid, Color.WHITE)
-			# 超武金色描边
+			# v0.8.14 亲和标识：超武金色描边优先；亲和流派青色描边；其余灰色
 			var b: Button = _weapon_slots[i]["btn"]
 			var sb := b.get_theme_stylebox("normal").duplicate() as StyleBoxFlat
+			var bschool := String((GameData.WEAPONS.get(base, {}) as Dictionary).get("school", ""))
 			if GameData.is_super(wid):
 				sb.border_color = Color(1.0, 0.82, 0.3)
+				sb.set_border_width_all(2)
+			elif bschool != "" and bschool in aff:
+				sb.border_color = Color(0.35, 0.95, 0.85)
 				sb.set_border_width_all(2)
 			else:
 				sb.border_color = Color(0.5, 0.5, 0.55)
@@ -451,6 +456,17 @@ func set_weapons(weapons: Array) -> void:
 		else:
 			tr.texture = null
 			tr.modulate = Color.WHITE
+
+
+## 当前角色的亲和流派（读 player.char_def；无 player 时返回空）
+func _affinity_schools() -> Array:
+	var p := get_tree().get_first_node_in_group("player")
+	if p == null:
+		return []
+	var cd := p.get("char_def") as Dictionary
+	if cd == null or cd.is_empty():
+		return []
+	return cd.get("affinity", [])
 
 
 func set_passives(passives: Dictionary) -> void:
