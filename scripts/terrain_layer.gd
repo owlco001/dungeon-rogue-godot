@@ -54,7 +54,9 @@ func _rand01(seed_text: String, salt: int) -> float:
 	return float(absi(hash(seed_text + ":" + str(salt))) % 1000) / 1000.0
 
 
+## 旧版圆形色块（v0.8.12 起地砖改用方形格），函数保留以备回滚。
 func _blob_points(center: Vector2, cell: Vector2i, kind: String, shrink: float) -> PackedVector2Array:
+
 	var pts := PackedVector2Array()
 	var half := CELL * 0.5 - shrink
 	var key := "%d:%d:%s" % [cell.x, cell.y, kind]
@@ -80,23 +82,25 @@ func _draw() -> void:
 		for cell_v in patch.get("cells", []):
 			var cell: Vector2i = cell_v
 			var center := Vector2((float(cell.x) + 0.5) * CELL, (float(cell.y) + 0.5) * CELL)
-			var blob := _blob_points(center, cell, kind, 0.5)
-			draw_colored_polygon(blob, fill)
-			# Agnes 贴图层：UV 按世界坐标取样，相邻格图案连续
+			# v0.8.12：用户指定用方形格（不再用圆形色块），相邻格边对边铺满成整片
+			var half := CELL * 0.5
+			var rect := Rect2(center - Vector2(half, half), Vector2(CELL, CELL))
+			draw_rect(rect, fill)
+			# Agnes 贴图层：UV 按世界坐标取样，相邻格图案连续（方形格无描边，自然连成整片）
 			var tex: Texture2D = _textures.get(kind, null)
 			if tex != null:
 				var a := 0.96
 				if kind == "lava" or kind == "rift":
 					a *= 0.90 + 0.10 * sin(_time * 2.6)
+				var corners := PackedVector2Array([rect.position,
+					rect.position + Vector2(CELL, 0), rect.end,
+					rect.position + Vector2(0, CELL)])
 				var pcols := PackedColorArray()
 				var uvs := PackedVector2Array()
-				for p in blob:
+				for p in corners:
 					pcols.append(Color(1, 1, 1, a))
 					uvs.append(p / TEX_SPAN)
-				draw_polygon(blob, pcols, uvs, tex)
-			var outline := blob.duplicate()
-			outline.append(blob[0])
-			draw_polyline(outline, Color(edge, edge.a * 0.38), 1.5, true)
+				draw_polygon(corners, pcols, uvs, tex)
 			_draw_details(kind, center, cell, edge, accent)
 
 
@@ -107,8 +111,8 @@ func _draw_details(kind: String, center: Vector2, cell: Vector2i, edge: Color, a
 			# v0.8.9：贴图本身已有碎石/荆棘细节，不再叠程序化圆点/线条（真机上像贴纸）
 			pass
 		"lava":
-			var inner := _blob_points(center, cell, kind, 16.0)
-			draw_colored_polygon(inner, Color(1.0, 0.45, 0.06, 0.38 + 0.17 * sin(_time * 2.6)))
+			var inner := Rect2(center - Vector2(9, 9), Vector2(18, 18))
+			draw_rect(inner, Color(1.0, 0.45, 0.06, 0.38 + 0.17 * sin(_time * 2.6)))
 			var p := center + Vector2(_rand01(key, 10) - 0.5, _rand01(key, 20) - 0.5) * 22.0
 			draw_circle(p, 2.2, accent)
 		"ice":
