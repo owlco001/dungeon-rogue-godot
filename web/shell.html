@@ -175,6 +175,7 @@ window._gameSfx = (function () {
 		chest: function () { var f = [784, 1046, 1318]; for (var i = 0; i < f.length; i++) { tone(f[i], f[i], 0.116667, 0.4, 'sine', i * 0.116667); }; },
 		click: function () { tone(660, 660, 0.06, 0.21, 'square'); },
 		coin: function () { tone(990, 990, 0.08, 0.4, 'sine'); tone(1320, 1320, 0.08, 0.4, 'sine', 0.08); },
+		elite_spawn: function () { tone(300, 900, 0.4, 0.4, 'sine'); },
 		explosion: function () { boom(0.45, 0.8); },
 		fuse: function () { tone(400, 900, 0.9, 0.3, 'sine'); },
 		gem: function () { tone(1320, 1760, 0.12, 0.4, 'sine'); },
@@ -188,7 +189,9 @@ window._gameSfx = (function () {
 		superburst: function () { boom(0.6, 0.9); },
 		supercharge: function () { tone(150, 600, 0.5, 0.5, 'sine'); },
 		superfuse: function () { tone(200, 2000, 0.7, 0.35, 'sine'); },
-		superring: function () { var f = [523, 659, 784, 1046, 1318]; for (var i = 0; i < f.length; i++) { tone(f[i], f[i], 0.12, 0.45, 'sine', i * 0.12); }; }
+		superring: function () { var f = [523, 659, 784, 1046, 1318]; for (var i = 0; i < f.length; i++) { tone(f[i], f[i], 0.12, 0.45, 'sine', i * 0.12); }; },
+		timer_warn: function () { tone(1200, 1200, 0.08, 0.3, 'square'); },
+		wave_start: function () { var f = [262, 330, 392]; for (var i = 0; i < f.length; i++) { tone(f[i], f[i], 0.133333, 0.35, 'sine', i * 0.133333); }; }
 	};
 	// === GEN AUDIO END ===
 	return {
@@ -207,6 +210,7 @@ window._gameSfx = (function () {
 			} catch (e) {}
 		},
 		setMuted: function (m) { muted = !!m; },
+		duck: function (on) { try { master.gain.setTargetAtTime(on ? 0.30 : 0.60, ctx.currentTime, 0.15); } catch (e) {} },
 		unlock: function () { try { ac(); } catch (e) {} } // 手势里调，确保 resume 生效
 	};
 })();

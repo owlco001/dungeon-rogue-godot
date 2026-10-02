@@ -1574,6 +1574,7 @@ func _synth_ceremony() -> void:
 	var gold := Color(1.0, 0.85, 0.3, 0.9)
 	# T0 蓄力：脚下金圈生长 + 全屏微暗聚焦 + supercharge 起
 	FX.glow(parent, global_position, 170.0, gold, 0.5, 5)
+	EventBus.bgm_duck.emit(true)
 	if parent.has_method("set_cine_dim"):
 		parent.set_cine_dim(0.85)
 	Sfx.play("supercharge")
@@ -1615,8 +1616,9 @@ func _synth_ceremony() -> void:
 	# T+900 超武金色常驻光环
 	if _synth_aura == null or not is_instance_valid(_synth_aura):
 		_synth_aura = FX.attach_aura(self, 100.0, Color(1.0, 0.85, 0.3, 0.45))
-	# T+1400 收幕：聚焦复原
+	# T+1400 收幕：聚焦复原 + BGM 回来
 	await get_tree().create_timer(0.5, true, false, true).timeout
+	EventBus.bgm_duck.emit(false)
 	if is_inside_tree() and is_instance_valid(parent) and parent.has_method("set_cine_dim"):
 		parent.set_cine_dim(1.0)
 

@@ -30,6 +30,11 @@ func _ready() -> void:
 	EventBus.exploder_fuse_start.connect(func(pos: Vector2) -> void: play_at("fuse", pos))
 	EventBus.chest_opened.connect(func(pos: Vector2) -> void: play_at("chest", pos))
 	EventBus.boss_phase_changed.connect(func(_id: String, _p: int) -> void: play("boss_phase"))
+	# v0.8 音频第二批（L3）：波次/倒计时/精英出场 + BGM ducking
+	EventBus.wave_started.connect(func(_n: int, _t: int) -> void: play("wave_start"))
+	EventBus.floor_timer_warning.connect(func(_s: int) -> void: play("timer_warn"))
+	EventBus.elite_spawned.connect(func(pos: Vector2) -> void: play_at("elite_spawn", pos))
+	EventBus.bgm_duck.connect(_on_bgm_duck)
 
 
 func _load_manifest() -> void:
@@ -104,6 +109,12 @@ func play_at(sname: String, pos: Vector2) -> void:
 	if pl != null:
 		pan = clampf((pos.x - pl.global_position.x) / 600.0, -0.8, 0.8)
 	JavaScriptBridge.eval("window._gameSfx&&window._gameSfx.play('%s',%.2f)" % [sname, pan], true)
+
+
+## BGM ducking（Boss 层 / 合成演出期间压低 BGM 到 0.30）
+func _on_bgm_duck(active: bool) -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window._gameBgm&&window._gameBgm.duck(%s)" % ("true" if active else "false"), true)
 
 
 func set_muted(m: bool) -> void:

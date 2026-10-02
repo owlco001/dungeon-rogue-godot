@@ -1,1 +1,213 @@
-{"sounds":{"achievement":{"dur":0.55,"gen":"arp","notes":[659,784,1046,1318,1568],"throttle":0.3,"vol":0.45},"boss_phase":{"dur":0.7,"gen":"roar","throttle":0.8,"vol":0.7},"boss_roar":{"dur":0.9,"gen":"roar","throttle":0.8,"vol":0.7},"chest":{"dur":0.35,"gen":"arp","notes":[784,1046,1318],"throttle":0.3,"vol":0.4},"click":{"dur":0.06,"f0":660,"f1":660,"gen":"tone","throttle":0.05,"vol":0.35,"vol_web":0.21,"wave":0},"coin":{"dur":0.16,"f0":990,"f1":1320,"gen":"two_tone","throttle":0.06,"vol":0.4},"explosion":{"dur":0.45,"gen":"boom","throttle":0.1,"vol":0.8},"fuse":{"dur":0.9,"f0":400,"f1":900,"gen":"sweep","throttle":0.9,"vol":0.3},"gem":{"dur":0.12,"f0":1320,"f1":1760,"gen":"tone","throttle":0.05,"vol":0.4,"wave":2},"hit":{"dur":0.08,"gen":"noise","throttle":0.05,"vol":0.45},"hurt":{"dur":0.22,"f0":220,"f1":110,"gen":"tone","throttle":0.15,"vol":0.5,"wave":1},"levelup":{"dur":0.45,"gen":"arp","notes":[523,659,784,1046],"throttle":0.3,"vol":0.45},"relic":{"dur":0.4,"gen":"arp","notes":[392,523,659,784,1046],"throttle":0.3,"vol":0.4},"shoot":{"dur":0.07,"f0":880,"f1":440,"gen":"tone","throttle":0.07,"vol":0.5,"vol_web":0.3,"wave":0},"spit":{"dur":0.12,"f0":700,"f1":300,"gen":"tone","throttle":0.1,"vol":0.35,"wave":1},"stairs":{"dur":0.35,"f0":784,"f1":1568,"gen":"tone","throttle":0.3,"vol":0.35,"wave":2},"superburst":{"dur":0.6,"gen":"boom","throttle":0.5,"vol":0.9},"supercharge":{"dur":0.5,"f0":150,"f1":600,"gen":"sweep","throttle":0.5,"vol":0.5},"superfuse":{"dur":0.7,"f0":200,"f1":2000,"gen":"sweep","throttle":0.5,"vol":0.5,"vol_web":0.35},"superring":{"dur":0.6,"gen":"arp","notes":[523,659,784,1046,1318],"throttle":0.5,"vol":0.45}}}
+{
+ "sounds": {
+  "achievement": {
+   "dur": 0.55,
+   "gen": "arp",
+   "notes": [
+    659,
+    784,
+    1046,
+    1318,
+    1568
+   ],
+   "throttle": 0.3,
+   "vol": 0.45
+  },
+  "boss_phase": {
+   "dur": 0.7,
+   "gen": "roar",
+   "throttle": 0.8,
+   "vol": 0.7
+  },
+  "boss_roar": {
+   "dur": 0.9,
+   "gen": "roar",
+   "throttle": 0.8,
+   "vol": 0.7
+  },
+  "chest": {
+   "dur": 0.35,
+   "gen": "arp",
+   "notes": [
+    784,
+    1046,
+    1318
+   ],
+   "throttle": 0.3,
+   "vol": 0.4
+  },
+  "click": {
+   "dur": 0.06,
+   "f0": 660,
+   "f1": 660,
+   "gen": "tone",
+   "throttle": 0.05,
+   "vol": 0.35,
+   "vol_web": 0.21,
+   "wave": 0
+  },
+  "coin": {
+   "dur": 0.16,
+   "f0": 990,
+   "f1": 1320,
+   "gen": "two_tone",
+   "throttle": 0.06,
+   "vol": 0.4
+  },
+  "elite_spawn": {
+   "dur": 0.4,
+   "f0": 300,
+   "f1": 900,
+   "gen": "sweep",
+   "throttle": 1.0,
+   "vol": 0.4
+  },
+  "explosion": {
+   "dur": 0.45,
+   "gen": "boom",
+   "throttle": 0.1,
+   "vol": 0.8
+  },
+  "fuse": {
+   "dur": 0.9,
+   "f0": 400,
+   "f1": 900,
+   "gen": "sweep",
+   "throttle": 0.9,
+   "vol": 0.3
+  },
+  "gem": {
+   "dur": 0.12,
+   "f0": 1320,
+   "f1": 1760,
+   "gen": "tone",
+   "throttle": 0.05,
+   "vol": 0.4,
+   "wave": 2
+  },
+  "hit": {
+   "dur": 0.08,
+   "gen": "noise",
+   "throttle": 0.05,
+   "vol": 0.45
+  },
+  "hurt": {
+   "dur": 0.22,
+   "f0": 220,
+   "f1": 110,
+   "gen": "tone",
+   "throttle": 0.15,
+   "vol": 0.5,
+   "wave": 1
+  },
+  "levelup": {
+   "dur": 0.45,
+   "gen": "arp",
+   "notes": [
+    523,
+    659,
+    784,
+    1046
+   ],
+   "throttle": 0.3,
+   "vol": 0.45
+  },
+  "relic": {
+   "dur": 0.4,
+   "gen": "arp",
+   "notes": [
+    392,
+    523,
+    659,
+    784,
+    1046
+   ],
+   "throttle": 0.3,
+   "vol": 0.4
+  },
+  "shoot": {
+   "dur": 0.07,
+   "f0": 880,
+   "f1": 440,
+   "gen": "tone",
+   "throttle": 0.07,
+   "vol": 0.5,
+   "vol_web": 0.3,
+   "wave": 0
+  },
+  "spit": {
+   "dur": 0.12,
+   "f0": 700,
+   "f1": 300,
+   "gen": "tone",
+   "throttle": 0.1,
+   "vol": 0.35,
+   "wave": 1
+  },
+  "stairs": {
+   "dur": 0.35,
+   "f0": 784,
+   "f1": 1568,
+   "gen": "tone",
+   "throttle": 0.3,
+   "vol": 0.35,
+   "wave": 2
+  },
+  "superburst": {
+   "dur": 0.6,
+   "gen": "boom",
+   "throttle": 0.5,
+   "vol": 0.9
+  },
+  "supercharge": {
+   "dur": 0.5,
+   "f0": 150,
+   "f1": 600,
+   "gen": "sweep",
+   "throttle": 0.5,
+   "vol": 0.5
+  },
+  "superfuse": {
+   "dur": 0.7,
+   "f0": 200,
+   "f1": 2000,
+   "gen": "sweep",
+   "throttle": 0.5,
+   "vol": 0.5,
+   "vol_web": 0.35
+  },
+  "superring": {
+   "dur": 0.6,
+   "gen": "arp",
+   "notes": [
+    523,
+    659,
+    784,
+    1046,
+    1318
+   ],
+   "throttle": 0.5,
+   "vol": 0.45
+  },
+  "timer_warn": {
+   "dur": 0.08,
+   "f0": 1200,
+   "f1": 1200,
+   "gen": "tone",
+   "throttle": 0.9,
+   "vol": 0.3,
+   "wave": 0
+  },
+  "wave_start": {
+   "dur": 0.4,
+   "gen": "arp",
+   "notes": [
+    262,
+    330,
+    392
+   ],
+   "throttle": 2.0,
+   "vol": 0.35
+  }
+ }
+}

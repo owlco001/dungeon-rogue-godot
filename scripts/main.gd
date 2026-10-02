@@ -193,6 +193,10 @@ func next_floor() -> void:
 	player.global_position = Vector2(ARENA_W * 0.5, ARENA_H * 0.5)
 	player.velocity = Vector2.ZERO
 	_spawn_floor_enemies()
+	if GameData.is_boss_floor(floor_num):
+		EventBus.bgm_duck.emit(true)
+	else:
+		EventBus.bgm_duck.emit(false)
 	_maybe_spawn_chest()
 	_update_enemy_label()
 
@@ -285,6 +289,8 @@ func _spawn_enemy(eid: String, hp_m: float, dmg_m: float, is_elite: bool) -> voi
 	if e.has_meta("pooled_reuse"):
 		e.remove_meta("pooled_reuse")
 		e.spawn_init()
+	if is_elite:
+		EventBus.elite_spawned.emit(e.position)
 
 
 ## boss summon helper
@@ -347,6 +353,7 @@ func _on_enemy_died(e: Node2D) -> void:
 			_on_victory()
 			return
 		_clear_minions()
+		EventBus.bgm_duck.emit(false)
 		_spawn_stairs()
 		return
 	_spawn_gem(e.global_position, "xp", int(e.get("xp_value")), "")
