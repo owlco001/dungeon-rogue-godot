@@ -88,11 +88,13 @@ func _ready() -> void:
 	arena.name = "Arena"
 	add_child(arena)
 
-	# v0.8.5 地形视觉层：压在地板之上、角色之下（z 1；角色按树序在其后绘制）
+	# v0.8.5 地形视觉层：压在地板之上、角色之下。
+	# 用 z 0 + 树序保证层级（arena 先加→最下；地形层第二；角色/怪/掉落都是开局后才加→最上）。
+	# 注意：z_index 会压倒树序，所以地形层绝不能用 z 1（曾经把它画到角色头上）。
 	_terrain_layer = Node2D.new()
 	_terrain_layer.set_script(TerrainLayerScript)
 	_terrain_layer.name = "TerrainLayer"
-	_terrain_layer.z_index = 1
+	_terrain_layer.z_index = 0
 	add_child(_terrain_layer)
 
 	_director = WaveDirectorScript.new()
