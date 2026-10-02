@@ -912,6 +912,28 @@ func show_levelup(options: Array) -> void:
 			gsbh.bg_color = Color(0.35, 0.25, 0.08, 0.95)
 			b.add_theme_stylebox_override("hover", gsbh)
 			b.add_theme_stylebox_override("pressed", gsbh)
+		elif bool(opt.get("recommended", false)):
+			# v0.8 推荐金框（复用合成金框样式）+ 右上角「推荐」小标签
+			var rsb := StyleBoxFlat.new()
+			rsb.bg_color = Color(0.16, 0.13, 0.05, 0.95)
+			rsb.set_corner_radius_all(8)
+			rsb.set_border_width_all(2)
+			rsb.border_color = Color(1.0, 0.82, 0.3)
+			b.add_theme_stylebox_override("normal", rsb)
+			var tag := Label.new()
+			tag.text = Lang.t("推荐")
+			tag.add_theme_font_override("font", _font)
+			tag.add_theme_font_size_override("font_size", 12)
+			tag.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+			tag.anchor_left = 1.0
+			tag.anchor_right = 1.0
+			tag.offset_left = -46
+			tag.offset_right = -6
+			tag.offset_top = 3
+			tag.offset_bottom = 19
+			tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			b.add_child(tag)
 		var idx := i
 		b.pressed.connect(func() -> void: _on_upgrade_btn(idx))
 		_levelup_vbox.add_child(b)
@@ -923,6 +945,11 @@ func _on_upgrade_btn(idx: int) -> void:
 		return
 	_levelup_overlay.visible = false
 	Sfx.play("click")
+	if String(_current_options[idx]["type"]) == "synthesize":
+		var pos := Vector2.ZERO
+		if _player_ref != null and is_instance_valid(_player_ref):
+			pos = _player_ref.global_position
+		EventBus.superweapon_synthesized.emit(String(_current_options[idx].get("super_id", "")), pos)
 	upgrade_chosen.emit(_current_options[idx])
 
 

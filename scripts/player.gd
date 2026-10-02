@@ -38,6 +38,10 @@ var MAGNET_RADIUS := BASE_MAGNET_RADIUS
 
 # v0.3 systems
 var skills: Array = []           # [{id, lv, cd_t, auto}]
+# v0.8 三选一选择器状态（07 §2.1）
+var _lvups_since_passive := 0    # RC-4 保底计数：连续多少次三选一没出现 passive_up
+var _funnel_weapon := ""         # RC-3 漏斗：刚满级的武器 base id（下一次升级消费）
+var _lvup_count := 0             # 本局第几次升级（新手强制规则用）
 var _shield_hp := 0.0            # 圣盾/虹吸护盾吸收量
 var _shield_t := 0.0             # 护盾剩余时间
 var _parry_t := 0.0              # 盾击完美格挡窗口
@@ -979,6 +983,7 @@ const SCHOOL_NAMES := {"gun": "枪械流", "summon": "召唤流", "necro": "死�
 
 
 func build_levelup_options() -> Array:
+	_lvup_count += 1
 	var synth: Array = []
 	var wups: Array = []
 	var wnews: Array = []
@@ -1048,22 +1053,136 @@ func build_levelup_options() -> Array:
 			var sd: Dictionary = GameData.SKILLS[sid]
 			snew.append({"type": "new_skill", "id": sid,
 				"title": Lang.t("新技能:%s") % Lang.t(String(sd["name"])), "desc": Lang.t(String(sd["desc"]))})
-	# 交错排列，合成置顶
-	var pools := [synth, wnews, wups, snew, sups, pnews, pups]
-	for p in pools:
+	# ---- v0.8 选择器（07 §2.1）：强制槽（合成/漏斗/保底/新手）+ 加权无放回抽取 ----
+	for p in [synth, wnews, wups, snew, sups, pnews, pups]:
 		p.shuffle()
-	var opts: Array = []
-	var i := 0
-	while opts.size() < 3:
-		var added := false
-		for p in pools:
-			if i < p.size() and opts.size() < 3:
-				opts.append(p[i])
-				added = true
-		if not added:
-			break
-		i += 1
+	var cfg := ContentDB.table("levelup")
+	var weights: Dictionary = cfg.get("weights", {})
+	var weapons_full := weapons.size() >= GameData.WEAPON_SLOTS + Meta.extra_weapon_slots()
+	var forced: Array = []
+	for o in synth:
+		forced.append(o)
+	# RC-3 漏斗：武器刚满级 → 下一次升级强制 1 槽给其合成所需被动
+	if _funnel_weapon != "" and forced.size() < 3:
+		var need_p := _funnel_passive_of(_funnel_weapon)
+		var f := _take_from_pool(pups, func(o: Dictionary) -> bool: return String(o["id"]) == need_p)
+		if f.is_empty():
+			f = _take_from_pool(pnews, func(o: Dictionary) -> bool: return String(o["id"]) == need_p)
+		if not f.is_empty():
+			f["recommended"] = true
+			forced.append(f)
+		_funnel_weapon = ""
+	# RC-4 保底：连续 2 次无 passive_up → 强制 1 个（优先已持有等级最高者）
+	if _lvups_since_passive >= int(cfg.get("bad_luck_limit", 2)) and forced.size() < 3:
+		var b := _take_best_passive_up(pups)
+		if b.is_empty():
+			b = _take_from_pool(pnews, func(_o: Dictionary) -> bool: return true)
+		if not b.is_empty():
+			forced.append(b)
+	# 新手引导：前 3 次升级强制 ≥1 个新被动
+	if _lvup_count <= int(cfg.get("newbie_force_lvups", 3)) and forced.size() < 3:
+		var has_np := false
+		for o in forced:
+			if String(o["type"]) == "new_passive":
+				has_np = true
+		if not has_np:
+			var n := _take_from_pool(pnews, func(_o: Dictionary) -> bool: return true)
+			if not n.is_empty():
+				n["recommended"] = true
+				forced.append(n)
+	var opts: Array = forced.slice(0, 3)
+	# 焦点武器（等级最高的未合成武器）：其升级与所需被动享漏斗权重加成（sim 验证口径，常量在 levelup.json）
+	var focus_wid := ""
+	var focus_lv := -1
+	for w in weapons:
+		var wid := String(w["id"])
+		if GameData.is_super(wid):
+			continue
+		if int(w["lv"]) > focus_lv:
+			focus_lv = int(w["lv"])
+			focus_wid = wid
+	var focus_needp := _funnel_passive_of(focus_wid) if focus_wid != "" else ""
+	# RC-1/RC-2：加权无放回抽取填满剩余槽（被动独立权重，不再只能竞争第 3 槽）
+	var weighted: Array = []
+	var cats: Array = [[wups, "weapon_up", 30], [wnews, "new_weapon", 22],
+		[pups, "passive_up", 22], [pnews, "new_passive", 18],
+		[snew, "skill", 8], [sups, "skill", 8]]
+	for pair in cats:
+		var w := float(weights.get(String(pair[1]), int(pair[2])))
+		if String(pair[1]) == "new_weapon" and weapons.size() >= 4:
+			w = float(cfg.get("new_weapon_dim", 8))
+		if String(pair[1]) == "new_passive" and passives.size() >= 4:
+			w = float(cfg.get("new_passive_dim", 6))
+		if String(pair[1]) == "passive_up" and weapons_full:
+			w = float(cfg.get("slots_full_passive_up", 30))
+		for o in pair[0]:
+			var ew := w
+			if String(pair[1]) == "weapon_up" and String(o["id"]) == focus_wid:
+				ew *= float(cfg.get("funnel_mult_weapon", 2.0))
+			if String(pair[1]) == "passive_up" and String(o["id"]) == focus_needp:
+				ew *= float(cfg.get("funnel_mult_passive", 3.0))
+			weighted.append({"opt": o, "w": ew})
+	while opts.size() < 3 and not weighted.is_empty():
+		var total := 0.0
+		for it in weighted:
+			total += float(it["w"])
+		var roll := randf() * total
+		var pick_idx := 0
+		for i2 in range(weighted.size()):
+			roll -= float(weighted[i2]["w"])
+			if roll <= 0.0:
+				pick_idx = i2
+				break
+		opts.append(weighted[pick_idx]["opt"])
+		weighted.remove_at(pick_idx)
+	# 保底计数更新：本次出现 passive_up 清零，否则 +1
+	var has_pups := false
+	for o in opts:
+		if String(o["type"]) == "passive_up":
+			has_pups = true
+	if has_pups:
+		_lvups_since_passive = 0
+	else:
+		_lvups_since_passive += 1
+	for o in opts:
+		if String(o["type"]) == "synthesize":
+			o["recommended"] = true
 	return opts
+
+
+## 某武器合成所需的被动 id（查 SUPERWEAPONS 反向映射）
+func _funnel_passive_of(wid: String) -> String:
+	for swid in GameData.SUPERWEAPONS.keys():
+		var sw: Dictionary = GameData.SUPERWEAPONS[swid]
+		if String(sw["weapon"]) == wid:
+			return String(sw["passive"])
+	return ""
+
+
+## 从池中取出第一个满足 pred 的选项（取出即移除）；无则返回空字典
+func _take_from_pool(pool: Array, pred: Callable) -> Dictionary:
+	for i in range(pool.size()):
+		if bool(pred.call(pool[i])):
+			var o: Dictionary = pool[i]
+			pool.remove_at(i)
+			return o
+	return {}
+
+
+## 保底用：取出已持有被动中等级最高者的升级项
+func _take_best_passive_up(pups: Array) -> Dictionary:
+	var best_i := -1
+	var best_lv := -1
+	for i in range(pups.size()):
+		var lv := int(passives.get(String(pups[i]["id"]), 0))
+		if lv > best_lv:
+			best_lv = lv
+			best_i = i
+	if best_i < 0:
+		return {}
+	var o: Dictionary = pups[best_i]
+	pups.remove_at(best_i)
+	return o
 
 
 func apply_levelup_option(opt: Dictionary) -> void:
@@ -1077,6 +1196,8 @@ func apply_levelup_option(opt: Dictionary) -> void:
 			var w := _weapon_by_id(oid)
 			if not w.is_empty():
 				w["lv"] = mini(GameData.WEAPON_MAX_LV, int(w["lv"]) + 1)
+				if int(w["lv"]) >= GameData.WEAPON_MAX_LV:
+					_funnel_weapon = GameData.base_weapon_of(oid)
 		"new_passive":
 			passives[oid] = 1
 			_on_passive_gained(oid)

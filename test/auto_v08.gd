@@ -54,6 +54,8 @@ func _run(mode: String) -> void:
 			_v3check()
 		"v5h":
 			await _v5h()
+		"v8":
+			await _v8()
 		"v2":
 			await _v2()
 		_:
@@ -173,6 +175,113 @@ func _v5h() -> void:
 	_check("V5H A silent during B", absf(Engine.time_scale - 0.05) < 0.01, "ts=%s" % str(Engine.time_scale))
 	await _wait(0.5)
 	_check("V5H B restored >=0.95", Engine.time_scale >= 0.95, "ts=%s" % str(Engine.time_scale))
+
+# ---- V8 合成判据（A-1/A-6）：固定 seed 10 局 × 33 次升级，定向策略跟随推荐/焦点武器 ----
+func _v8() -> void:
+	Lang.set_lang("zh")
+	var inst: Node = load("res://scenes/lobby.tscn").instantiate()
+	root.add_child(inst)
+	await _wait(1.0)
+	var tab := _find_btn(inst, ["出战", "Battle"])
+	if tab == null:
+		_check("V8 entry", false, "no fight tab")
+		return
+	tab.pressed.emit()
+	await _wait(0.5)
+	var btn := _find_btn(inst, ["开始战斗", "Start"])
+	if btn == null:
+		_check("V8 entry", false, "no start btn")
+		return
+	btn.pressed.emit()
+	var player: Node = null
+	for i in range(50):
+		await _wait(0.1)
+		player = get_first_node_in_group("player")
+		if player != null:
+			break
+	_check("V8 entry", player != null)
+	if player == null:
+		return
+	var skills0: Array = (player.get("skills") as Array).duplicate(true)
+	var synth_runs := 0
+	var offered := {}
+	var offered_total := 0
+	for run in range(10):
+		seed(4200 + run)
+		player.set("weapons", [{"id": "bow", "lv": 1, "cd_t": 0.0}])
+		player.set("passives", {})
+		player.set("skills", skills0.duplicate(true))
+		player.set("_lvup_count", 0)
+		player.set("_lvups_since_passive", 0)
+		player.set("_funnel_weapon", "")
+		player.call("_recalc")
+		var got_super := false
+		for step in range(33):
+			var opts: Array = player.call("build_levelup_options")
+			if opts.is_empty():
+				break
+			for o in opts:
+				var t := String(o["type"])
+				offered[t] = int(offered.get(t, 0)) + 1
+				offered_total += 1
+			var pick: Dictionary = _v8_pick(player, opts)
+			player.call("apply_levelup_option", pick)
+			for w in player.get("weapons"):
+				if GameData.is_super(String(w["id"])):
+					got_super = true
+			if got_super:
+				break
+		if got_super:
+			synth_runs += 1
+		var wtxt := ""
+		for w in player.get("weapons"):
+			wtxt += "%s:%d " % [String(w["id"]), int(w["lv"])]
+		print("V8 run %d super=%s weapons=[%s] passives=%s" % [run, str(got_super), wtxt, str(player.get("passives"))])
+	_check("V8 synth runs >=9/10", synth_runs >= 9, "synth_runs=%d" % synth_runs)
+	var pshare := 0.0
+	if offered_total > 0:
+		pshare = float(int(offered.get("new_passive", 0)) + int(offered.get("passive_up", 0))) / float(offered_total)
+	_check("V8 passive share 48-62.7%", pshare >= 0.48 and pshare <= 0.627,
+		"share=%.3f total=%d dist=%s" % [pshare, offered_total, str(offered)])
+
+## 定向策略（对齐 docs/v08/sim 的 ranking）：合成>焦点武器升级>所需被动>其他武器>新武器>新技能
+func _v8_pick(player: Node, opts: Array) -> Dictionary:
+	var weapons: Array = player.get("weapons")
+	var focus := ""
+	for w in weapons:
+		if not GameData.is_super(String(w["id"])) and int(w["lv"]) < GameData.WEAPON_MAX_LV:
+			focus = String(w["id"])
+			break
+	if focus == "":
+		for w in weapons:
+			if not GameData.is_super(String(w["id"])):
+				focus = String(w["id"])
+				break
+	var needp := String(player.call("_funnel_passive_of", focus))
+	var best: Dictionary = {}
+	var best_rank := 99
+	for o in opts:
+		var t := String(o["type"])
+		var oid := String(o["id"])
+		var r := 7
+		if t == "synthesize":
+			r = 0
+		elif t == "weapon_up" and oid == focus:
+			r = 1
+		elif t == "passive_up" and oid == needp:
+			r = 2
+		elif t == "new_passive" and oid == needp:
+			r = 3
+		elif t == "weapon_up":
+			r = 4
+		elif t == "new_weapon" and weapons.size() < 5:
+			r = 5
+		elif t == "new_skill":
+			r = 6
+		if r < best_rank:
+			best_rank = r
+			best = o
+	return best
 
 func _corrupt_file(path: String) -> void:
 	var f := FileAccess.open(path, FileAccess.WRITE)
