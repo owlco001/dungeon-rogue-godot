@@ -20,6 +20,7 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 EventBus="*res://autoload/event_bus.gd"
 SaveService="*res://autoload/save_service.gd"
 ContentDB="*res://autoload/content_db.gd"
+Registry="*res://systems/entity_registry.gd"
 Sfx="*res://scripts/sfx.gd"
 
 [display]
@@ -67,3 +68,8 @@ renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/default_filters/use_nearest_mipmap_filter=true
 environment/defaults/default_clear_color=Color(0.05, 0.06, 0.09, 1)
+
+[dungeon]
+
+use_registry=true
+pool_entities=true

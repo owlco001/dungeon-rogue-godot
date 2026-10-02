@@ -74,6 +74,7 @@ func _ready() -> void:
 	hp = max_hp
 	if bool(s.get("flags", {}).get("taunt", false)):
 		add_to_group("taunt_summons")
+		Registry.register_taunt(self)
 	_follow_off = Vector2.RIGHT.rotated(randf() * TAU) * randf_range(70.0, 110.0)
 	var cs := CollisionShape2D.new()
 	var circle := CircleShape2D.new()

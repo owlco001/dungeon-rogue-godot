@@ -95,7 +95,7 @@ func _physics_process(delta: float) -> void:
 	if boomerang:
 		_spin += delta * 14.0
 		_sprite.rotation = _spin
-	for e in get_tree().get_nodes_in_group("enemies"):
+	for e in Registry.query_circle(global_position, 34.0):
 		if not is_instance_valid(e) or e.dead or _hit_set.has(e.get_instance_id()):
 			continue
 		if global_position.distance_to(e.global_position) < 34.0:
@@ -170,7 +170,7 @@ func _tick_boomerang(delta: float) -> bool:
 
 ## 黑洞：命中点小范围吸附
 func _blackhole_pull() -> void:
-	for e in get_tree().get_nodes_in_group("enemies"):
+	for e in Registry.query_circle(global_position, 130.0):
 		if not is_instance_valid(e) or e.dead:
 			continue
 		var to: Vector2 = global_position - e.global_position
@@ -210,15 +210,7 @@ func _apply_homing(delta: float) -> void:
 	if boomerang and _returning:
 		return
 	# gentle steering so fast strafing enemies (bats) stay hittable
-	var best: Node2D = null
-	var best_d := 150.0
-	for e in get_tree().get_nodes_in_group("enemies"):
-		if not is_instance_valid(e) or e.dead or _hit_set.has(e.get_instance_id()):
-			continue
-		var d := global_position.distance_to(e.global_position)
-		if d < best_d:
-			best_d = d
-			best = e
+	var best: Node2D = Registry.nearest(global_position, 150.0, _hit_set)
 	if best == null:
 		return
 	var want := (best.global_position - global_position).normalized()
@@ -228,13 +220,4 @@ func _apply_homing(delta: float) -> void:
 
 
 func _next_chain_target(from_enemy: Node2D) -> Node2D:
-	var best: Node2D = null
-	var best_d := 240.0
-	for e in get_tree().get_nodes_in_group("enemies"):
-		if not is_instance_valid(e) or e.dead or _hit_set.has(e.get_instance_id()):
-			continue
-		var d := from_enemy.global_position.distance_to(e.global_position)
-		if d < best_d:
-			best_d = d
-			best = e
-	return best
+	return Registry.nearest(from_enemy.global_position, 240.0, _hit_set)

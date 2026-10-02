@@ -446,15 +446,7 @@ func _tick_weapons(delta: float) -> void:
 
 
 func _nearest_enemy(max_range: float) -> Node2D:
-	var best: Node2D = null
-	var best_d := max_range
-	for e in get_tree().get_nodes_in_group("enemies"):
-		if not is_instance_valid(e) or e.dead:
-			continue
-		var d := global_position.distance_to(e.global_position)
-		if d < best_d:
-			best_d = d
-			best = e
+	var best: Node2D = Registry.nearest(global_position, max_range)
 	return best
 
 
@@ -523,7 +515,7 @@ func _do_whirlwind(s: Dictionary) -> void:
 	get_parent().add_child(orbit)
 	orbit.emitting = true
 	# 命中火花 + 伤害数字
-	for e in get_tree().get_nodes_in_group("enemies"):
+	for e in Registry.query_circle(global_position, radius):
 		if not is_instance_valid(e) or e.dead:
 			continue
 		var to: Vector2 = e.global_position - global_position
@@ -550,25 +542,11 @@ func _do_whirlwind(s: Dictionary) -> void:
 
 # ---------- v0.3 新武器 ----------
 func _enemies_alive() -> bool:
-	for e in get_tree().get_nodes_in_group("enemies"):
-		if is_instance_valid(e) and not bool(e.get("dead")):
-			return true
-	return false
+	return Registry.alive_count() > 0
 
 
 func _enemy_near(pos: Vector2, dist: float, exclude := {}) -> Node2D:
-	var best: Node2D = null
-	var best_d := dist
-	for e in get_tree().get_nodes_in_group("enemies"):
-		if not is_instance_valid(e) or bool(e.get("dead")):
-			continue
-		if exclude.has(e.get_instance_id()):
-			continue
-		var d := pos.distance_to(e.global_position)
-		if d < best_d:
-			best_d = d
-			best = e
-	return best
+	return Registry.nearest(pos, dist, exclude)
 
 
 func _exec_threshold(s: Dictionary) -> float:
@@ -651,7 +629,7 @@ func _detonate_corpse(c: Node2D, radius: float, s: Dictionary, flags: Dictionary
 	c.set_meta("detonated", true)
 	c.queue_free()
 	FX.explosion(get_parent(), pos, radius, Color(0.55, 0.95, 0.45))
-	for e in get_tree().get_nodes_in_group("enemies"):
+	for e in Registry.query_circle(pos, radius):
 		if not is_instance_valid(e) or bool(e.get("dead")):
 			continue
 		var to: Vector2 = e.global_position - pos
@@ -733,7 +711,7 @@ func _do_curse_aura(s: Dictionary) -> void:
 	var flags: Dictionary = s["flags"]
 	var radius := float(s["radius"])
 	var dmg := float(s["dmg"])
-	for e in get_tree().get_nodes_in_group("enemies"):
+	for e in Registry.query_circle(global_position, radius):
 		if not is_instance_valid(e) or bool(e.get("dead")):
 			continue
 		var to: Vector2 = e.global_position - global_position
@@ -774,7 +752,7 @@ func _do_shield_bash(target: Node2D, s: Dictionary) -> void:
 	var stun := 1.0
 	if flags.has("stun") and not (flags["stun"] is bool):
 		stun = float(flags["stun"])
-	for e in get_tree().get_nodes_in_group("enemies"):
+	for e in Registry.query_circle(global_position, radius):
 		if not is_instance_valid(e) or bool(e.get("dead")):
 			continue
 		var to: Vector2 = e.global_position - global_position
@@ -827,7 +805,7 @@ func _warcry_waves(n: int, radius: float, dmg: float, s: Dictionary) -> void:
 			await get_tree().create_timer(0.28).timeout
 		if _dead:
 			return
-		for e in get_tree().get_nodes_in_group("enemies"):
+		for e in Registry.query_circle(global_position, radius):
 			if not is_instance_valid(e) or bool(e.get("dead")):
 				continue
 			var to: Vector2 = e.global_position - global_position
@@ -922,7 +900,7 @@ func _tick_orbit(delta: float) -> void:
 			child.position = off
 			child.rotation = spin
 			# 接触伤害（每斧每怪 0.45s 一次）
-			for e in get_tree().get_nodes_in_group("enemies"):
+			for e in Registry.query_circle(global_position + off, 40.0):
 				if not is_instance_valid(e) or bool(e.get("dead")):
 					continue
 				var key := "%d_%d" % [a, e.get_instance_id()]
@@ -935,7 +913,7 @@ func _tick_orbit(delta: float) -> void:
 				_deal_hit(e, float(s["dmg"]), to.normalized() if to.length() > 1.0 else Vector2.UP, 0.8, s)
 			# 吸附轻怪
 			if flags.has("pull"):
-				for e in get_tree().get_nodes_in_group("enemies"):
+				for e in Registry.query_circle(global_position, radius * 1.7):
 					if not is_instance_valid(e) or bool(e.get("dead")):
 						continue
 					if bool(e.get("is_boss")) or bool(e.get("elite")):
@@ -970,7 +948,7 @@ func on_enemy_died(e: Node2D) -> void:
 			var s := _wstats(w)
 			if not (s["flags"] as Dictionary).has("spread"):
 				continue
-			for e2 in get_tree().get_nodes_in_group("enemies"):
+			for e2 in Registry.query_circle(e.global_position, 220.0):
 				if not is_instance_valid(e2) or bool(e2.get("dead")) or e2 == e:
 					continue
 				if e.global_position.distance_to(e2.global_position) <= 220.0 and e2.has_method("apply_curse"):
@@ -1376,13 +1354,12 @@ func _tick_arrow_rain(delta: float) -> void:
 
 
 func _densest_cluster(radius: float) -> Vector2:
+	# v0.8 B4：空间网格加速（原实现为全量组 O(n²) 扫描）
 	var best := Vector2.INF
 	var best_n := 0
-	for e in get_tree().get_nodes_in_group("enemies"):
-		if not is_instance_valid(e) or bool(e.get("dead")):
-			continue
+	for e in Registry.all_enemies():
 		var n := 0
-		for e2 in get_tree().get_nodes_in_group("enemies"):
+		for e2 in Registry.query_circle(e.global_position, radius):
 			if is_instance_valid(e2) and not bool(e2.get("dead")) and e.global_position.distance_to(e2.global_position) <= radius:
 				n += 1
 		if n > best_n:
@@ -1395,7 +1372,7 @@ func _densest_cluster(radius: float) -> Vector2:
 func _cast_stomp(lv: int) -> void:
 	var radius := 240.0 * (1.0 + 0.15 * float(lv - 1)) * _area_mult()
 	var dmg := 70.0 * float(lv) * _dmg_mult()
-	for e in get_tree().get_nodes_in_group("enemies"):
+	for e in Registry.query_circle(global_position, radius):
 		if not is_instance_valid(e) or bool(e.get("dead")):
 			continue
 		var to: Vector2 = e.global_position - global_position
@@ -1422,7 +1399,7 @@ func _cast_soul_drain(lv: int) -> void:
 	var radius := 260.0 * _area_mult()
 	var missing := 1.0 - hp / maxf(1.0, max_hp)
 	var total := 0.0
-	for e in get_tree().get_nodes_in_group("enemies"):
+	for e in Registry.query_circle(global_position, radius):
 		if not is_instance_valid(e) or bool(e.get("dead")):
 			continue
 		var to: Vector2 = e.global_position - global_position

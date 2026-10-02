@@ -43,6 +43,7 @@ var _elite_t := 0.0
 
 func _ready() -> void:
 	add_to_group("enemies")
+	Registry.register_enemy(self)
 	var def: Dictionary = GameData.ENEMIES[enemy_id]
 	hp = float(def["hp"]) * hp_mult
 	if elite:
@@ -150,7 +151,7 @@ func _physics_process(delta: float) -> void:
 func _pick_target() -> Node2D:
 	var best: Node2D = null
 	var best_d := 420.0
-	for t in get_tree().get_nodes_in_group("taunt_summons"):
+	for t in Registry.taunt_list():
 		if not is_instance_valid(t) or bool(t.get("dead")):
 			continue
 		var d := global_position.distance_to(t.global_position)
@@ -210,6 +211,7 @@ func take_damage(amount: float, from_dir: Vector2, knock_mult: float = 1.0, stun
 
 func _die() -> void:
 	dead = true
+	Registry.unregister_enemy(self)
 	collision_layer = 0
 	collision_mask = 0
 	# 尸体标记（尸爆用）

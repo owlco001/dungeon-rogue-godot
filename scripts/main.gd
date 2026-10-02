@@ -89,6 +89,11 @@ func _on_character_chosen(char_id: String) -> void:
 	next_floor()
 
 
+func _physics_process(_delta: float) -> void:
+	# v0.8 B4：每物理帧首行重建空间网格（EntityRegistry）
+	Registry.begin_frame()
+
+
 func _process(delta: float) -> void:
 	if not _started or not is_instance_valid(player):
 		return
@@ -305,7 +310,7 @@ func spawn_corpse(pos: Vector2, elite: bool) -> void:
 func spawn_explosion(pos: Vector2, radius: float, dmg: float,
 		crit_chance: float, crit_mult: float, exclude: Node2D = null) -> void:
 	_explosion_fx(pos, radius, Color(1.0, 0.75, 0.3))
-	for e in get_tree().get_nodes_in_group("enemies"):
+	for e in Registry.query_circle(pos, radius):
 		if not is_instance_valid(e) or bool(e.get("dead")) or e == exclude:
 			continue
 		var to: Vector2 = e.global_position - pos

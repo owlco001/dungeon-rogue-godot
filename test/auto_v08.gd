@@ -58,6 +58,8 @@ func _run(mode: String) -> void:
 			await _v8()
 		"v9":
 			_v9()
+		"v7":
+			await _v7()
 		"v2":
 			await _v2()
 		_:
@@ -331,6 +333,53 @@ func _floor_total_hp(f: int) -> float:
 		for k in asg.keys():
 			sum += float(GameData.ENEMIES[k]["hp"]) * (GameData.elite_hp_mult() - 1.0) * float(int(asg[k]))
 	return sum * GameData.enemy_hp_mult(f)
+
+# ---- V7（B4）：EntityRegistry 与组查询一致性 ----
+func _v7() -> void:
+	Lang.set_lang("zh")
+	var inst: Node = load("res://scenes/lobby.tscn").instantiate()
+	root.add_child(inst)
+	await _wait(1.0)
+	var tab := _find_btn(inst, ["出战", "Battle"])
+	if tab == null:
+		_check("V7 entry", false, "no fight tab")
+		return
+	tab.pressed.emit()
+	await _wait(0.5)
+	var btn := _find_btn(inst, ["开始战斗", "Start"])
+	if btn == null:
+		_check("V7 entry", false, "no start btn")
+		return
+	btn.pressed.emit()
+	var player: Node = null
+	for i in range(50):
+		await _wait(0.1)
+		player = get_first_node_in_group("player")
+		if player != null:
+			break
+	_check("V7 entry", player != null)
+	if player == null:
+		return
+	await _wait(0.5)
+	var reg: Node = root.get_node_or_null("Registry")
+	_check("V7 registry exists", reg != null)
+	if reg == null:
+		return
+	var group_n := get_nodes_in_group("enemies").size()
+	var reg_n := (reg.get("enemies") as Array).size()
+	_check("V7 registry mirrors group", reg_n == group_n, "registry=%d group=%d" % [reg_n, group_n])
+	_check("V7 alive_count", int(reg.call("alive_count")) == group_n,
+		"alive=%d group=%d" % [int(reg.call("alive_count")), group_n])
+	var all_q: Array = reg.call("query_circle", player.global_position, 5000.0)
+	_check("V7 query_circle covers all", all_q.size() == group_n, "q=%d group=%d" % [all_q.size(), group_n])
+	var near: Node2D = reg.call("nearest", player.global_position, 5000.0)
+	_check("V7 nearest found", near != null)
+	# 击杀一只后注册表应同步减少（_die 注销 + tree_exited 兜底）
+	var victim: Node2D = get_nodes_in_group("enemies")[0]
+	victim.call("take_damage", 99999.0, Vector2.ZERO, 0.0)
+	await _wait(0.4)
+	var reg_n2 := (reg.get("enemies") as Array).size()
+	_check("V7 unregister on death", reg_n2 == group_n - 1, "after=%d before=%d" % [reg_n2, group_n])
 
 func _corrupt_file(path: String) -> void:
 	var f := FileAccess.open(path, FileAccess.WRITE)
