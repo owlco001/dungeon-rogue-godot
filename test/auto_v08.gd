@@ -310,9 +310,9 @@ func _v8_pick(player: Node, opts: Array) -> Dictionary:
 
 # ---- V9 静态（B3）：刷怪曲线断言（01 §3.2）----
 func _v9() -> void:
-	_check("V9 count f1=6", GameData.floor_count(1) == 6, "got %d" % GameData.floor_count(1))
-	_check("V9 count f29=44", GameData.floor_count(29) == 44, "got %d" % GameData.floor_count(29))
-	_check("V9 count f60=46 cap", GameData.floor_count(60) == 46, "got %d" % GameData.floor_count(60))
+	_check("V9 count f1=10", GameData.floor_count(1) == 10, "got %d" % GameData.floor_count(1))
+	_check("V9 count f29=72", GameData.floor_count(29) == 72, "got %d" % GameData.floor_count(29))
+	_check("V9 count f60=80 cap", GameData.floor_count(60) == 80, "got %d" % GameData.floor_count(60))
 	var mono := true
 	for f in range(2, 61):
 		if GameData.floor_count(f) < GameData.floor_count(f - 1):

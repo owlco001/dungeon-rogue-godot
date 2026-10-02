@@ -89,11 +89,12 @@ func _add_box(pos: Vector2, size: Vector2) -> void:
 	add_child(cs)
 
 
-class WallsVisual extends Node2D:
-	# L4 房间墙体视觉（v0.8.6 主题化）：逐格主题墙砖 + 亮度抖动；
-	# 南侧邻地面 → 立面（side 贴图）+ 底边压暗 + 向地面投 10px 影；
-	# 北侧邻地面 → 顶部高光。全部命令在一个 canvas item 内（缓存绘制）。
-	var rects: Array = []  # grid 缺失时的兜底（合并矩形）
+class WallRow extends Node2D:
+	# v0.8.22 伪3D Y-sort：每行墙一个节点，父级（Main）开 y_sort_enabled；
+	# 节点 y 取行底 - YSORT_BIAS（角色精灵半高与碰撞半径之差）：贴上墙时角色盖过墙跟、
+	# 贴下墙时墙盖过角色。绘制内容与旧 WallsVisual 单格逻辑一致（本地坐标）。
+	const YSORT_BIAS := 20.0
+	var row := 0
 	var grid := PackedByteArray()
 	var gw := 32
 	var gh := 24
@@ -109,56 +110,67 @@ class WallsVisual extends Node2D:
 
 	func _draw() -> void:
 		if grid.is_empty() or wall_tex == null:
-			# 兜底：旧平色矩形
-			for r in rects:
-				var p: Vector2 = r["pos"]
-				var s: Vector2 = r["size"]
-				var top := Rect2(p - s * 0.5, s)
-				draw_rect(top, Color(0.16, 0.14, 0.18, 1.0))
-				draw_rect(Rect2(top.position, Vector2(s.x, 6.0)), Color(0.32, 0.28, 0.34, 1.0))
 			return
 		var side: Texture2D = side_tex if side_tex != null else wall_tex
-		for y in range(gh):
-			for x in range(gw):
-				if grid[y * gw + x] != 1:
-					continue
-				var rect := Rect2(float(x) * cell, float(y) * cell, cell, cell)
-				var h := hash("%s:%d:%d" % [theme, x, y])
-				var shade := 0.88 + float(absi(h) % 100) / 100.0 * 0.20
-				# 主体：side 砖纹（wall 贴图是横向光带条纹，只能当顶盖用）
-				# v0.8.15 去重复：按 hash 水平镜像，打破竖条纹周期感
-				if (absi(h >> 7) % 2) == 0:
-					draw_set_transform(rect.position + Vector2(cell, 0.0), 0.0, Vector2(-1, 1))
-					draw_texture_rect(side, Rect2(Vector2.ZERO, Vector2(cell, cell)), false,
+		for x in range(gw):
+			if grid[row * gw + x] != 1:
+				continue
+			var lp := Vector2(float(x) * cell, -cell)  # 本行格子本地左上
+			var h := hash("%s:%d:%d" % [theme, x, row])
+			var shade := 0.88 + float(absi(h) % 100) / 100.0 * 0.20
+			# 主体：side 砖纹（wall 贴图是横向光带条纹，只能当顶盖用）
+			# v0.8.15 去重复：按 hash 水平镜像，打破竖条纹周期感
+			if (absi(h >> 7) % 2) == 0:
+				draw_set_transform(lp + Vector2(cell, 0.0), 0.0, Vector2(-1, 1))
+				draw_texture_rect(side, Rect2(Vector2.ZERO, Vector2(cell, cell)), false,
 						Color(shade, shade, shade))
-					draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-				else:
-					draw_texture_rect(side, rect, false, Color(shade, shade, shade))
-				if not _is_wall(x, y - 1):
-					# 北侧顶盖：wall 光带压进顶部 12px 成受光斜面 + 高光线
-					draw_texture_rect(wall_tex, Rect2(rect.position, Vector2(cell, 12.0)),
+				draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			else:
+				draw_texture_rect(side, Rect2(lp, Vector2(cell, cell)), false, Color(shade, shade, shade))
+			if not _is_wall(x, row - 1):
+				# 北侧顶盖：wall 光带压进顶部 12px 成受光斜面 + 高光线
+				draw_texture_rect(wall_tex, Rect2(lp, Vector2(cell, 12.0)),
 						false, Color(shade, shade, shade))
-					draw_rect(Rect2(rect.position, Vector2(cell, 2.0)), Color(1, 1, 1, 0.25))
-				if not _is_wall(x, y + 1):
-					# 南侧立面：下半压暗 + 底边线 + 地面投影（v0.8.15 投影改 4 级柔边渐隐）
-					draw_rect(Rect2(rect.position + Vector2(0, cell * 0.55),
+				draw_rect(Rect2(lp, Vector2(cell, 2.0)), Color(1, 1, 1, 0.25))
+			if not _is_wall(x, row + 1):
+				# 南侧立面：下半压暗 + 底边线 + 地面投影（v0.8.15 投影改 4 级柔边渐隐）
+				draw_rect(Rect2(lp + Vector2(0, cell * 0.55),
 						Vector2(cell, cell * 0.45)), Color(0, 0, 0, 0.18))
-					draw_rect(Rect2(rect.position + Vector2(0, cell - 3.0), Vector2(cell, 3.0)),
+				draw_rect(Rect2(lp + Vector2(0, cell - 3.0), Vector2(cell, 3.0)),
 						Color(0, 0, 0, 0.45))
-					for i in range(4):
-						var sa := 0.28 * (1.0 - float(i) / 4.0)
-						draw_rect(Rect2(rect.position + Vector2(0, cell + float(i) * 2.5),
+				for i in range(4):
+					var sa := 0.28 * (1.0 - float(i) / 4.0)
+					draw_rect(Rect2(lp + Vector2(0, float(i) * 2.5),
 							Vector2(cell, 2.5)), Color(0, 0, 0, sa))
 
 
+class PillarVisual extends Node2D:
+	# v0.8.22 柱子也参与 Y-sort（之前烘进静态图，永远在角色下面）
+	var pillar_tex: Texture2D = null
+
+	func _draw() -> void:
+		draw_set_transform(Vector2(8, 14), 0.0, Vector2(1.0, 0.55))
+		draw_circle(Vector2.ZERO, 50.0, Color(0, 0, 0, 0.45))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		if pillar_tex != null:
+			var ps := pillar_tex.get_size()
+			var target := 116.0
+			var k := target / maxf(ps.x, ps.y)
+			draw_texture_rect(pillar_tex,
+					Rect2(-ps.x * k * 0.5, -ps.y * k * 0.5, ps.x * k, ps.y * k), false)
+		else:
+			draw_circle(Vector2.ZERO, 42.0, Color(0.20, 0.18, 0.26))
+			draw_circle(Vector2.ZERO, 42.0 * 0.72, Color(0.26, 0.23, 0.33))
+
+
 var _room_wall_shapes: Array = []
-var _room_walls_visual: WallsVisual = null
+var _room_wall_rows: Array = []
+var _pillar_nodes: Array = []
 
 
 ## L4：按房间生成结果建墙（碰撞挂本 StaticBody2D，layer 4 与边框一致）
 func build_room_walls(rects: Array, p_grid: PackedByteArray = PackedByteArray()) -> void:
 	clear_room_walls()
-	var visual_rects: Array = []
 	for r in rects:
 		var cs := CollisionShape2D.new()
 		var shape := RectangleShape2D.new()
@@ -167,15 +179,27 @@ func build_room_walls(rects: Array, p_grid: PackedByteArray = PackedByteArray())
 		cs.position = r["pos"]
 		add_child(cs)
 		_room_wall_shapes.append(cs)
-		visual_rects.append(r)
-	_room_walls_visual = WallsVisual.new()
-	_room_walls_visual.rects = visual_rects
-	_room_walls_visual.grid = p_grid
-	_room_walls_visual.wall_tex = _wall_tex
-	_room_walls_visual.side_tex = _side_tex
-	_room_walls_visual.theme = theme
-	_room_walls_visual.z_index = 2
-	add_child(_room_walls_visual)
+	# v0.8.22：每行墙一个节点，挂到 Main（父级开 y_sort）参与伪3D 排序
+	var yparent := get_parent()
+	if yparent == null or p_grid.is_empty():
+		return
+	for y in range(24):
+		var has := false
+		for x in range(32):
+			if p_grid[y * 32 + x] == 1:
+				has = true
+				break
+		if not has:
+			continue
+		var rn := WallRow.new()
+		rn.row = y
+		rn.grid = p_grid
+		rn.wall_tex = _wall_tex
+		rn.side_tex = _side_tex
+		rn.theme = theme
+		rn.position = Vector2(0, (float(y) + 1.0) * 50.0 - WallRow.YSORT_BIAS)
+		yparent.add_child(rn)
+		_room_wall_rows.append(rn)
 
 
 func clear_room_walls() -> void:
@@ -183,9 +207,10 @@ func clear_room_walls() -> void:
 		if is_instance_valid(cs):
 			cs.queue_free()
 	_room_wall_shapes.clear()
-	if is_instance_valid(_room_walls_visual):
-		_room_walls_visual.queue_free()
-		_room_walls_visual = null
+	for rn in _room_wall_rows:
+		if is_instance_valid(rn):
+			rn.queue_free()
+	_room_wall_rows.clear()
 
 
 func set_theme(t: String) -> void:
@@ -205,6 +230,14 @@ func set_theme(t: String) -> void:
 		_side_tex = _wall_tex
 	_hazard_tex = _make_hazard_texture()
 	_pillar_tex = load("res://assets/tiles/decor/pillar.png") as Texture2D
+	# v0.8.22：柱子节点参与 Y-sort（挂 Main）；baker 不建（烘焙图里不含柱子）
+	if not _is_baker and _pillar_nodes.is_empty() and get_parent() != null:
+		for pp in PILLARS:
+			var pv := PillarVisual.new()
+			pv.pillar_tex = _pillar_tex
+			pv.position = pp
+			get_parent().add_child(pv)
+			_pillar_nodes.append(pv)
 	_decal_texs.clear()
 	for dn in DECAL_NAMES:
 		_decal_texs.append(load("res://assets/tiles/decals/decal_%s.png" % dn) as Texture2D)
@@ -273,11 +306,12 @@ func set_theme(t: String) -> void:
 	_build_torches()
 	_build_rune_decals(drng, center)
 	# v0.8.6：房间内墙跟随主题换砖（build_room_walls 时用的是上一层贴图）
-	if _room_walls_visual != null and is_instance_valid(_room_walls_visual):
-		_room_walls_visual.wall_tex = _wall_tex
-		_room_walls_visual.side_tex = _side_tex
-		_room_walls_visual.theme = theme
-		_room_walls_visual.queue_redraw()
+	for rn in _room_wall_rows:
+		if is_instance_valid(rn):
+			rn.wall_tex = _wall_tex
+			rn.side_tex = _side_tex
+			rn.theme = theme
+			rn.queue_redraw()
 	queue_redraw()
 	if not _is_baker:
 		_request_bake()
@@ -558,17 +592,4 @@ func _draw() -> void:
 	draw_texture_rect(_vignette_b, Rect2(0, H - 40, W, 40), false)
 	draw_texture_rect(_vignette_l, Rect2(0, 0, 40, H), false)
 	draw_texture_rect(_vignette_r, Rect2(W - 40, 0, 40, H), false)
-	# 柱子：椭圆阴影 + 柱体贴图
-	for p in PILLARS:
-		draw_set_transform(p + Vector2(8, 14), 0.0, Vector2(1.0, 0.55))
-		draw_circle(Vector2.ZERO, PILLAR_R + 8.0, Color(0, 0, 0, 0.45))
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-		if _pillar_tex != null:
-			var ps := _pillar_tex.get_size()
-			var target := 116.0
-			var k := target / maxf(ps.x, ps.y)
-			draw_texture_rect(_pillar_tex,
-				Rect2(p.x - ps.x * k * 0.5, p.y - ps.y * k * 0.5, ps.x * k, ps.y * k), false)
-		else:
-			draw_circle(p, PILLAR_R, Color(0.20, 0.18, 0.26))
-			draw_circle(p, PILLAR_R * 0.72, Color(0.26, 0.23, 0.33))
+	# v0.8.22：柱子改由 PillarVisual 节点绘制（参与 Y-sort），此处不再绘制

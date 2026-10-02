@@ -25,12 +25,15 @@ class BrambleZone extends Node2D:
 		_t += d
 		_tick -= d
 		queue_redraw()
+		# v0.8.20：在范围内每帧压住减速（之前 0.5s 脉冲一次、0.225s 就回满，减速断断续续）
+		var pl := get_tree().get_first_node_in_group("player") as Node2D
+		var inside := pl != null and is_instance_valid(pl) \
+				and global_position.distance_to(pl.global_position) <= radius
+		if inside:
+			pl.set("external_slow_mult", 0.55)
 		if _tick <= 0.0:
 			_tick = 0.5
-			var pl := get_tree().get_first_node_in_group("player") as Node2D
-			if pl != null and is_instance_valid(pl) \
-					and global_position.distance_to(pl.global_position) <= radius:
-				pl.set("external_slow_mult", 0.55)
+			if inside:
 				if pl.has_method("take_damage"):
 					pl.take_damage(tick_dmg,
 						(pl.global_position - global_position).normalized(), 0.5)
@@ -83,6 +86,9 @@ var _last_advance_msec := -99999
 
 func _ready() -> void:
 	add_to_group("game")
+	# v0.8.22 伪3D：子节点按 Y 排序（同 z_index 内）。墙按行拆节点、柱子独立节点，
+	# 与玩家/怪/掉落同级排序：贴上墙角色盖过墙跟，贴下墙角色被墙盖住。
+	y_sort_enabled = true
 	arena = StaticBody2D.new()
 	arena.set_script(ArenaScript)
 	arena.name = "Arena"
@@ -142,7 +148,6 @@ func _on_character_chosen(char_id: String) -> void:
 	player.name = "Player"
 	player.position = Vector2(ARENA_W * 0.5, ARENA_H * 0.5)
 	add_child(player)
-	player.z_index = 3  # v0.8.20：实体盖过房间墙（墙 z=2），修北墙边被盖住的图层错误
 	player.hp_changed.connect(_on_player_hp)
 	player.xp_changed.connect(_on_player_xp)
 	player.gold_changed.connect(hud.set_gold)
@@ -326,7 +331,6 @@ func _spawn_enemy(eid: String, hp_m: float, dmg_m: float, is_elite: bool) -> voi
 	e.position = _spawn_pos()
 	e.died.connect(_on_enemy_died)
 	add_child(e)
-	e.z_index = 3
 	if e.has_meta("pooled_reuse"):
 		e.remove_meta("pooled_reuse")
 		e.spawn_init()
@@ -858,7 +862,6 @@ func continue_run(save_data: Dictionary) -> void:
 	player.name = "Player"
 	player.position = Vector2(ARENA_W * 0.5, ARENA_H * 0.5)
 	add_child(player)
-	player.z_index = 3  # v0.8.20：实体盖过房间墙（墙 z=2），修北墙边被盖住的图层错误
 	player.hp_changed.connect(_on_player_hp)
 	player.xp_changed.connect(_on_player_xp)
 	player.gold_changed.connect(hud.set_gold)
@@ -884,6 +887,7 @@ func continue_run(save_data: Dictionary) -> void:
 			w["cd_t"] = float(w.get("cd_t", 0.0))
 	player.passives = (save_data.get("passives", {}) as Dictionary).duplicate(true)
 	player.relics = (save_data.get("relics", []) as Array).duplicate()
+	player._recalc()  # v0.8.20：继续存档后按被动/遗物重算速度与磁吸（之前残留初始值）
 	player.skills = (save_data.get("skills", []) as Array).duplicate(true)
 	for s in player.skills:
 		if s is Dictionary:

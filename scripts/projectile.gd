@@ -29,6 +29,8 @@ var mini := false              # 分裂小斧：不再分裂
 var _traveled := 0.0
 var _hit_set := {}
 var _sprite: Sprite2D
+var _hostile_tint := Color(0.55, 1.0, 0.29)  # v0.8.20：敌对弹外观延迟到 _ready 应用（首建时 _sprite 尚为 null）
+var _hostile_scale := 0.8
 var _trail: CPUParticles2D = null
 var _game: Node = null
 var _returning := false
@@ -83,8 +85,17 @@ func setup_hostile(p_tex: String, p_pos: Vector2, p_dir: Vector2, p_speed: float
 		p_dmg: float, p_range: float, p_tint: Color = Color(0.55, 1.0, 0.29)) -> void:
 	setup(p_tex, p_pos, p_dir, p_speed, p_dmg, 0, 0, 0.0, 0.0, 2.0, p_range, 0.0)
 	hostile = true
-	_sprite.modulate = p_tint
-	_sprite.scale = Vector2.ONE * 0.8
+	_hostile_tint = p_tint
+	# v0.8.20：调用方在 add_child 前 setup，首建时 _sprite 为 null，外观留给 _ready 应用
+	if _sprite != null:
+		_apply_hostile_look()
+
+
+func _apply_hostile_look() -> void:
+	if _sprite == null:
+		return
+	_sprite.modulate = _hostile_tint
+	_sprite.scale = Vector2.ONE * _hostile_scale
 
 
 func spawn_init() -> void:
@@ -100,6 +111,8 @@ func _ready() -> void:
 	_sprite = Sprite2D.new()
 	_sprite.texture = load(tex_path) as Texture2D
 	_sprite.rotation = dir.angle()
+	if hostile:
+		_apply_hostile_look()
 	add_child(_sprite)
 	z_index = 4
 	_game = get_tree().get_first_node_in_group("game")
@@ -281,6 +294,9 @@ func _explode() -> void:
 
 
 func _apply_homing(delta: float) -> void:
+	# v0.8.20：敌对弹不吃寻敌转向（否则酸弹会被带向喷吐怪自己，偏离玩家）
+	if hostile:
+		return
 	# 回旋斧返程时不追踪
 	if boomerang and _returning:
 		return

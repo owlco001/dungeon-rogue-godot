@@ -93,6 +93,7 @@ func _ready() -> void:
 	RelicEffects.attach(self)
 	_setup_dust()
 	_play("idle_down")
+	_recalc()  # v0.8.20：新开局也按被动/遗物/局外加成算速度与磁吸（之前要等第一次获得被动才生效）
 	hp_changed.emit(hp, max_hp)
 
 

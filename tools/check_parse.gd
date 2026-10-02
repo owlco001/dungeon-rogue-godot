@@ -9,7 +9,10 @@ func _initialize() -> void:
 	files.sort()
 	var failed: Array[String] = []
 	for f in files:
-		if load(f) == null:
+		var s := load(f) as GDScript
+		# v0.8.20：load() 对语法错误的脚本也不返回 null；reload() 会误伤引用 autoload 的脚本，
+		# 用 can_instantiate() 判定（坏脚本 false，正常脚本/autoload 均为 true，已实测）
+		if s == null or not s.can_instantiate():
 			failed.append(f)
 	var auto_failed: Array[String] = []
 	for p in ProjectSettings.get_property_list():
