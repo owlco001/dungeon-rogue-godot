@@ -365,21 +365,29 @@ func _v7() -> void:
 	_check("V7 registry exists", reg != null)
 	if reg == null:
 		return
-	var group_n := get_nodes_in_group("enemies").size()
+	# 组里包含死亡补间中的敌人，注册表只记存活——按存活数对比（防战斗时序竞态）
+	var group_n := 0
+	for e in get_nodes_in_group("enemies"):
+		if not bool(e.get("dead")):
+			group_n += 1
 	var reg_n := (reg.get("enemies") as Array).size()
-	_check("V7 registry mirrors group", reg_n == group_n, "registry=%d group=%d" % [reg_n, group_n])
+	_check("V7 registry mirrors group", reg_n == group_n, "registry=%d alive_group=%d" % [reg_n, group_n])
 	_check("V7 alive_count", int(reg.call("alive_count")) == group_n,
 		"alive=%d group=%d" % [int(reg.call("alive_count")), group_n])
 	var all_q: Array = reg.call("query_circle", player.global_position, 5000.0)
 	_check("V7 query_circle covers all", all_q.size() == group_n, "q=%d group=%d" % [all_q.size(), group_n])
 	var near: Node2D = reg.call("nearest", player.global_position, 5000.0)
 	_check("V7 nearest found", near != null)
-	# 击杀一只后注册表应同步减少（_die 注销 + tree_exited 兜底）
-	var victim: Node2D = get_nodes_in_group("enemies")[0]
+	# 击杀一只存活敌人后注册表应同步减少（_die 注销 + tree_exited 兜底）
+	var victim: Node2D = null
+	for e in get_nodes_in_group("enemies"):
+		if not bool(e.get("dead")):
+			victim = e
+			break
 	victim.call("take_damage", 99999.0, Vector2.ZERO, 0.0)
 	await _wait(0.4)
 	var reg_n2 := (reg.get("enemies") as Array).size()
-	_check("V7 unregister on death", reg_n2 == group_n - 1, "after=%d before=%d" % [reg_n2, group_n])
+	_check("V7 unregister on death", reg_n2 == reg_n - 1, "after=%d before=%d" % [reg_n2, reg_n])
 	# FX 六池：直接触发一次特效调用使池按需预建，再断言 164 节点不超额增长
 	var fx = load("res://scripts/fx.gd")
 	fx.glow(player.get_parent(), player.global_position, 60.0, Color(1, 1, 1, 0.8), 0.2, 5)
@@ -390,6 +398,16 @@ func _v7() -> void:
 	if pool_root != null:
 		_check("V7 fx pool size 164", pool_root.get_child_count() == 164,
 			"children=%d stats=%s parents=%s" % [pool_root.get_child_count(), str(fx.pool_stats()), str(fx.pool_debug_parents())])
+
+	# 实体池：击杀整层后敌人应回收进池（死亡补间结束）而非全部释放
+	for e in get_nodes_in_group("enemies"):
+		e.call("take_damage", 99999.0, Vector2.ZERO, 0.0)
+	await _wait(1.5)
+	var pm = load("res://systems/pool_manager.gd")
+	var ep := int(pm.pool_size("enemy"))
+	_check("V7 enemy pool recycles", ep >= 4, "enemy pool=%d" % ep)
+	_check("V7 registry drained", (reg.get("enemies") as Array).is_empty(),
+		"left=%d" % (reg.get("enemies") as Array).size())
 
 func _corrupt_file(path: String) -> void:
 	var f := FileAccess.open(path, FileAccess.WRITE)

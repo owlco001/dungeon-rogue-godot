@@ -2,6 +2,8 @@ extends Node2D
 ## Player projectile: flies (with slight homing), hits enemies, supports
 ## pierce / chain (墨菲法球) / explosive (霰弹枪), per-hit crit rolls.
 
+const PoolManager := preload("res://systems/pool_manager.gd")
+
 var tex_path := ""
 var dir := Vector2.RIGHT
 var speed := 500.0
@@ -24,6 +26,7 @@ var mini := false              # 分裂小斧：不再分裂
 var _traveled := 0.0
 var _hit_set := {}
 var _sprite: Sprite2D
+var _trail: CPUParticles2D = null
 var _game: Node = null
 var _returning := false
 var _returns_done := 0
@@ -46,6 +49,35 @@ func setup(p_tex: String, p_pos: Vector2, p_dir: Vector2, p_speed: float,
 	crit_mult = p_crit_mult
 	max_dist = p_max_dist
 	knock_mult = p_knock
+	# v0.8 B4 池化复用：每世状态全量复位（生成方在 setup 之后再设 boomerang/home 等专属字段）
+	_traveled = 0.0
+	_hit_set.clear()
+	_returning = false
+	_returns_done = 0
+	_spin = 0.0
+	boomerang = false
+	boomerang_returns = 1
+	blackhole = false
+	split_axe = false
+	mini = false
+	home = null
+	scale = Vector2.ONE
+	visible = true
+	if _sprite != null:
+		_sprite.texture = load(tex_path) as Texture2D
+		_sprite.rotation = dir.angle()
+	if _trail != null:
+		_trail.direction = -dir
+		_trail.emitting = true
+
+
+## 池化复用时由生成方在 add_child 后调用（_ready 不会重跑）
+func spawn_init() -> void:
+	_game = get_tree().get_first_node_in_group("game")
+
+
+func _despawn() -> void:
+	PoolManager.release_or_free("projectile", self)
 
 
 func _ready() -> void:
@@ -71,6 +103,7 @@ func _ready() -> void:
 	trail.color = Color(1.0, 0.85, 0.5, 0.5)
 	trail.z_index = 3
 	add_child(trail)
+	_trail = trail
 	trail.emitting = true
 
 
@@ -90,7 +123,7 @@ func _physics_process(delta: float) -> void:
 		if _tick_boomerang(delta):
 			return
 	elif _traveled > max_dist:
-		queue_free()
+		_despawn()
 		return
 	if boomerang:
 		_spin += delta * 14.0
@@ -119,7 +152,7 @@ func _physics_process(delta: float) -> void:
 				# v0.8：普通命中不再全局顿帧（白名单制），反馈由白闪+击退+形变承担
 			if explosive_radius > 0.0:
 				_explode()
-				queue_free()
+				_despawn()
 				return
 			if chains_left > 0:
 				var nxt := _next_chain_target(e)
@@ -136,7 +169,7 @@ func _physics_process(delta: float) -> void:
 			if pierce_left > 0:
 				pierce_left -= 1
 				continue
-			queue_free()
+			_despawn()
 			return
 
 
@@ -150,7 +183,7 @@ func _tick_boomerang(delta: float) -> bool:
 		_returning = true
 	if _returning:
 		if home == null or not is_instance_valid(home):
-			queue_free()
+			_despawn()
 			return true
 		var to: Vector2 = home.global_position - global_position
 		if to.length() < 44.0:
@@ -159,7 +192,7 @@ func _tick_boomerang(delta: float) -> bool:
 			if _returns_done >= boomerang_returns:
 				if _game != null:
 					FX.glow(_game, global_position, 60.0, Color(1.0, 0.8, 0.4, 0.6), 0.2, 5)
-				queue_free()
+				_despawn()
 				return true
 			_returning = false
 			_traveled = 0.0
@@ -185,8 +218,10 @@ func _blackhole_pull() -> void:
 ## 分裂：命中时分裂出 2 把小斧
 func _spawn_mini_axes() -> void:
 	for i in range(2):
-		var m := Node2D.new()
-		m.set_script(load("res://scripts/projectile.gd"))
+		var m: Node2D = PoolManager.acquire("projectile", func() -> Node:
+			var np := Node2D.new()
+			np.set_script(load("res://scripts/projectile.gd"))
+			return np)
 		var mdir := dir.rotated(randf_range(-0.6, 0.6))
 		m.setup(tex_path, global_position, mdir, speed * 0.8, dmg * 0.5,
 			0, 1, 0.0, crit_chance, crit_mult, max_dist * 0.6, knock_mult)
@@ -197,6 +232,9 @@ func _spawn_mini_axes() -> void:
 		m.scale = Vector2.ONE * 0.6
 		_game.add_child(m)
 		m.add_to_group("projectiles")
+		if m.has_meta("pooled_reuse"):
+			m.remove_meta("pooled_reuse")
+			m.spawn_init()
 
 
 func _explode() -> void:

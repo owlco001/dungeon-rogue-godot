@@ -1,5 +1,6 @@
 extends CharacterBody2D
 class_name Summon
+const PoolManager := preload("res://systems/pool_manager.gd")
 ## 召唤物 v0.3：哨兵炮塔(定点自动射击) / 猎犬·骷髅战士·蜂群(近战追击索敌)。
 ## 单帧精灵 + 程序化 juice：y 正弦浮动、移动倾斜、受击 squash。
 ## flags: overload(超载) / split(死亡分裂) / bloodlust(嗜血) / hp_mult /
@@ -144,8 +145,10 @@ func _tick_turret(delta: float, s: Dictionary, flags: Dictionary) -> void:
 
 
 func _fire_at(target: Node2D, s: Dictionary) -> void:
-	var p := Node2D.new()
-	p.set_script(load("res://scripts/projectile.gd"))
+	var p: Node2D = PoolManager.acquire("projectile", func() -> Node:
+		var np := Node2D.new()
+		np.set_script(load("res://scripts/projectile.gd"))
+		return np)
 	var dir := (target.global_position - global_position).normalized()
 	var crit_chance: float = _player._crit_chance() if _player.has_method("_crit_chance") else 0.05
 	var crit_mult: float = _player._crit_mult() if _player.has_method("_crit_mult") else 1.5
@@ -156,6 +159,9 @@ func _fire_at(target: Node2D, s: Dictionary) -> void:
 		crit_chance, crit_mult, float(s.get("range", 520.0)) + 60.0, 1.0)
 	_game.add_child(p)
 	p.add_to_group("projectiles")
+	if p.has_meta("pooled_reuse"):
+		p.remove_meta("pooled_reuse")
+		p.spawn_init()
 	FX.glow(_game, global_position + dir * 30.0, 40.0, Color(1.0, 0.8, 0.4, 0.6), 0.15, 5)
 
 

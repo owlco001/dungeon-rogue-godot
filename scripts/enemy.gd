@@ -6,7 +6,26 @@ class_name Enemy
 
 signal died(enemy: Enemy)
 
+const PoolManager := preload("res://systems/pool_manager.gd")
+
 var enemy_id := "slime"
+# v0.8 B4：SpriteFrames 按兵种共享（原实现每只怪新建一份，7 份重复构建）
+static var _frames_cache := {}
+
+
+static func _shared_frames(eid: String) -> SpriteFrames:
+	if _frames_cache.has(eid):
+		return _frames_cache[eid]
+	var sf := SpriteFrames.new()
+	sf.add_animation("idle")
+	sf.set_animation_speed("idle", 7.0)
+	sf.set_animation_loop("idle", true)
+	for i in range(2):
+		var p := "res://assets/sprites/enemies/enemy_%s_idle_%02d.png" % [eid, i]
+		sf.add_frame("idle", load(p) as Texture2D)
+	_frames_cache[eid] = sf
+	return sf
+
 var hp := 30.0
 var max_hp := 30.0
 var speed := 85.0
@@ -42,8 +61,29 @@ var _elite_t := 0.0
 
 
 func _ready() -> void:
+	spawn_init()
+
+
+## 出生初始化（首生由 _ready 调用；池化复用时由生成方在 add_child 后调用）
+func spawn_init() -> void:
 	add_to_group("enemies")
 	Registry.register_enemy(self)
+	dead = false
+	touch_cd = 0.0
+	stun_t = 0.0
+	slow_t = 0.0
+	poison_t = 0.0
+	poison_dps = 0.0
+	weaken_t = 0.0
+	curse_t = 0.0
+	curse_dps = 0.0
+	_knock_t = 0.0
+	_flash_t = 0.0
+	_punch = 1.0
+	_elite_t = 0.0
+	collision_layer = 2
+	collision_mask = 4
+	visible = true
 	var def: Dictionary = GameData.ENEMIES[enemy_id]
 	hp = float(def["hp"]) * hp_mult
 	if elite:
@@ -54,23 +94,31 @@ func _ready() -> void:
 	xp_value = int(def["xp"]) * (5 if elite else 1)
 	base_scale = float(def["scale"]) * (1.3 if elite else 1.0)
 	fly = bool(def.get("fly", false))
-	var sf := SpriteFrames.new()
-	sf.add_animation("idle")
-	sf.set_animation_speed("idle", 7.0)
-	sf.set_animation_loop("idle", true)
-	for i in range(2):
-		var p := "res://assets/sprites/enemies/enemy_%s_idle_%02d.png" % [enemy_id, i]
-		sf.add_frame("idle", load(p) as Texture2D)
-	sprite.frames = sf
+	sprite.frames = _shared_frames(enemy_id)
 	sprite.scale = Vector2.ONE * base_scale
+	sprite.modulate = Color.WHITE
 	sprite.play("idle")
 	_player = get_tree().get_first_node_in_group("player") as Node2D
 	_wobble = randf() * TAU
 
 
+## 池化回收前：断开生成方连接的 died 信号（生成方每次出生重连）
+func pool_reset() -> void:
+	for c in died.get_connections():
+		died.disconnect(c["callable"])
+
+
+func _release_self() -> void:
+	PoolManager.release_or_free("enemy", self)
+
+
 func _physics_process(delta: float) -> void:
-	if dead or _player == null or not is_instance_valid(_player):
+	if dead:
 		return
+	if not is_instance_valid(_player):
+		_player = get_tree().get_first_node_in_group("player") as Node2D
+		if _player == null:
+			return
 	if touch_cd > 0.0:
 		touch_cd -= delta
 	if _flash_t > 0.0:
@@ -229,4 +277,4 @@ func _die() -> void:
 	tw.set_parallel(true)
 	tw.tween_property(sprite, "scale", Vector2(base_scale * 1.3, base_scale * 0.3), 0.16).set_trans(Tween.TRANS_QUAD)
 	tw.tween_property(sprite, "modulate:a", 0.0, 0.3).set_delay(0.1)
-	tw.chain().tween_callback(queue_free)
+	tw.chain().tween_callback(_release_self)

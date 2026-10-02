@@ -11,6 +11,7 @@ signal died
 signal relics_changed
 
 const ACCEL := 1500.0
+const PoolManager := preload("res://systems/pool_manager.gd")
 const FRICTION := 1800.0
 const BASE_MAGNET_RADIUS := 110.0
 const PICKUP_RADIUS := 26.0
@@ -460,8 +461,10 @@ func _fire_projectiles(target: Node2D, s: Dictionary, spread_deg: float) -> void
 		if n > 1:
 			ang = deg_to_rad(lerpf(-spread_deg * 0.5, spread_deg * 0.5, float(i) / float(n - 1)))
 		var dir := base_dir.rotated(ang)
-		var p := Node2D.new()
-		p.set_script(load("res://scripts/projectile.gd"))
+		var p: Node2D = PoolManager.acquire("projectile", func() -> Node:
+			var np := Node2D.new()
+			np.set_script(load("res://scripts/projectile.gd"))
+			return np)
 		p.setup(
 			"res://assets/sprites/fx/projectiles/%s.png" % String(s["proj"]),
 			global_position + dir * 40.0, dir,
@@ -472,6 +475,9 @@ func _fire_projectiles(target: Node2D, s: Dictionary, spread_deg: float) -> void
 		)
 		get_parent().add_child(p)
 		p.add_to_group("projectiles")
+		if p.has_meta("pooled_reuse"):
+			p.remove_meta("pooled_reuse")
+			p.spawn_init()
 		if (s["flags"] as Dictionary).has("blackhole"):
 			p.blackhole = true
 
@@ -843,8 +849,10 @@ func _fire_boomerang(target: Node2D, s: Dictionary) -> void:
 		if n > 1:
 			ang = deg_to_rad(lerpf(-30.0, 30.0, float(i) / float(n - 1)))
 		var dir := base_dir.rotated(ang)
-		var p := Node2D.new()
-		p.set_script(load("res://scripts/projectile.gd"))
+		var p: Node2D = PoolManager.acquire("projectile", func() -> Node:
+			var np := Node2D.new()
+			np.set_script(load("res://scripts/projectile.gd"))
+			return np)
 		p.setup(
 			"res://assets/sprites/fx/projectiles/%s.png" % String(s["proj"]),
 			global_position + dir * 40.0, dir,
@@ -859,6 +867,9 @@ func _fire_boomerang(target: Node2D, s: Dictionary) -> void:
 		p.home = self
 		get_parent().add_child(p)
 		p.add_to_group("projectiles")
+		if p.has_meta("pooled_reuse"):
+			p.remove_meta("pooled_reuse")
+			p.spawn_init()
 	FX.glow(get_parent(), global_position, 90.0, Color(1.0, 0.8, 0.4, 0.7), 0.25, 5)
 
 
@@ -1337,14 +1348,19 @@ func _tick_arrow_rain(delta: float) -> void:
 		_arrow_rain["tick"] = 0.25
 		var target := _enemy_near(center + Vector2(randf_range(-140, 140), randf_range(-140, 140)), 260.0)
 		var aim: Vector2 = target.global_position if target != null else center
-		var p := Node2D.new()
-		p.set_script(load("res://scripts/projectile.gd"))
+		var p: Node2D = PoolManager.acquire("projectile", func() -> Node:
+			var np := Node2D.new()
+			np.set_script(load("res://scripts/projectile.gd"))
+			return np)
 		var dmg: float = float(_arrow_rain["dmg"])
 		p.setup("res://assets/sprites/fx/projectiles/proj_arrow.png",
 			aim + Vector2(randf_range(-30, 30), -320.0), Vector2.DOWN,
 			760.0, dmg, 0, 1, 0.0, _crit_chance(), _crit_mult(), 420.0, 0.6)
 		get_parent().add_child(p)
 		p.add_to_group("projectiles")
+		if p.has_meta("pooled_reuse"):
+			p.remove_meta("pooled_reuse")
+			p.spawn_init()
 		FX.glow(get_parent(), aim, 40.0, Color(1.0, 0.9, 0.5, 0.5), 0.15, 5)
 	if float(_arrow_rain["t"]) <= 0.0:
 		var tw := node.create_tween()

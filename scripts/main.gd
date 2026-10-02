@@ -8,6 +8,7 @@ const BossScript := preload("res://scripts/boss.gd")
 const HudScene := preload("res://scenes/hud.tscn")
 const ArenaScript := preload("res://scripts/arena.gd")
 const GemScript := preload("res://scripts/gem.gd")
+const PoolManager := preload("res://systems/pool_manager.gd")
 const StairsScript := preload("res://scripts/stairs.gd")
 
 const ARENA_W := 1600.0
@@ -115,6 +116,13 @@ func next_floor() -> void:
 	if is_instance_valid(_stairs):
 		_stairs.queue_free()
 	_stairs = null
+	# v0.8 B4：跨层清理残留宝石与尸体（节点数有界，防长局累积）
+	for g in get_tree().get_nodes_in_group("pickups"):
+		if is_instance_valid(g):
+			g.queue_free()
+	for c in get_tree().get_nodes_in_group("corpses"):
+		if is_instance_valid(c):
+			c.queue_free()
 	_boss_ref = null
 	hud.hide_boss_bar()
 	var fdef: Dictionary = GameData.floor_def(floor_num)
@@ -166,8 +174,14 @@ func _spawn_floor_enemies() -> void:
 		hud.show_toast(Lang.t("精英会掉落遗物"))
 
 
+## v0.8 B4：敌人获取（池化复用时补跑 spawn_init，_ready 不会重跑）
+func _acquire_enemy() -> Enemy:
+	var e: Enemy = PoolManager.acquire("enemy", func() -> Node: return EnemyScene.instantiate()) as Enemy
+	return e
+
+
 func _spawn_enemy(eid: String, hp_m: float, dmg_m: float, is_elite: bool) -> void:
-	var e: Enemy = EnemyScene.instantiate()
+	var e: Enemy = _acquire_enemy()
 	e.enemy_id = eid
 	e.hp_mult = hp_m
 	e.dmg_mult = dmg_m
@@ -175,6 +189,9 @@ func _spawn_enemy(eid: String, hp_m: float, dmg_m: float, is_elite: bool) -> voi
 	e.position = _spawn_pos()
 	e.died.connect(_on_enemy_died)
 	add_child(e)
+	if e.has_meta("pooled_reuse"):
+		e.remove_meta("pooled_reuse")
+		e.spawn_init()
 
 
 ## boss summon helper
@@ -183,13 +200,17 @@ func spawn_boss_minions(at: Vector2, count: int) -> void:
 	var dmg_m := GameData.enemy_dmg_mult(floor_num)
 	var ids := ["slime", "bat", "skeleton"]
 	for i in range(count):
-		var e: Enemy = EnemyScene.instantiate()
+		var e: Enemy = _acquire_enemy()
 		e.enemy_id = ids[i % ids.size()]
 		e.hp_mult = hp_m
 		e.dmg_mult = dmg_m
+		e.elite = false
 		e.position = at + Vector2.RIGHT.rotated(randf() * TAU) * randf_range(120.0, 220.0)
 		e.died.connect(_on_enemy_died)
 		add_child(e)
+		if e.has_meta("pooled_reuse"):
+			e.remove_meta("pooled_reuse")
+			e.spawn_init()
 	_update_enemy_label()
 
 
@@ -254,10 +275,15 @@ func _clear_minions() -> void:
 
 
 func _spawn_gem(pos: Vector2, kind: String, value: int, relic_id: String) -> void:
-	var g := Node2D.new()
-	g.set_script(GemScript)
+	var g: Node2D = PoolManager.acquire("gem", func() -> Node:
+		var np := Node2D.new()
+		np.set_script(GemScript)
+		return np) as Node2D
 	g.setup(kind, value, pos, relic_id)
 	add_child(g)
+	if g.has_meta("pooled_reuse"):
+		g.remove_meta("pooled_reuse")
+		g.spawn_init()
 
 
 func _spawn_stairs() -> void:
