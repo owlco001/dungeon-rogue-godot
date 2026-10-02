@@ -1,6 +1,0 @@
-PASS V5H A micro-freeze 0.35 | ts=0.35
-PASS V5H A restored >=0.95 | ts=1.0
-PASS V5H A cooldown no-stack | ts=1.0
-PASS V5H B cine 0.05 | ts=0.05
-PASS V5H A silent during B | ts=0.05
-PASS V5H B restored >=0.95 | ts=1.0

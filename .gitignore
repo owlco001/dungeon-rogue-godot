@@ -20,3 +20,4 @@ __pycache__/
 
 # Staging/raw intermediates
 assets/.staging/
+test/result.txt
