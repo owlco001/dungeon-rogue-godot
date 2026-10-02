@@ -93,7 +93,7 @@ class WallRow extends Node2D:
 	# v0.8.22 伪3D Y-sort：每行墙一个节点，父级（Main）开 y_sort_enabled；
 	# 节点 y 取行底 - YSORT_BIAS（角色精灵半高与碰撞半径之差）：贴上墙时角色盖过墙跟、
 	# 贴下墙时墙盖过角色。绘制内容与旧 WallsVisual 单格逻辑一致（本地坐标）。
-	const YSORT_BIAS := 20.0
+	const YSORT_BIAS := 52.0  # 玩家脚底在原点+52：bias 取 52 即严格的地面前后判定（脚在墙基南则在前）
 	var row := 0
 	var grid := PackedByteArray()
 	var gw := 32
