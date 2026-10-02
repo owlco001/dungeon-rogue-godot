@@ -370,6 +370,9 @@ func _wstats(w: Dictionary) -> Dictionary:
 		var aff: Array = char_def.get("affinity", [])
 		if school in aff:
 			s["dmg"] = float(s["dmg"]) * 1.15
+			# v0.8.16 超武流派联动：亲和流派底武器合成的超武，伤害再 ×1.10（共 1.265）
+			if is_super:
+				s["dmg"] = float(s["dmg"]) * 1.10
 	return s
 
 
@@ -1015,8 +1018,13 @@ func build_levelup_options() -> Array:
 			if int(passives.get(need_p, 0)) < GameData.PASSIVE_MAX_LV:
 				continue
 			var nm: String = GameData.WEAPONS[wid]["name"]
+			# v0.8.16 超武流派联动：亲和流派底武器的合成选项加"·亲和超武"标记
+			var aff_mark := ""
+			var bschool := String(GameData.WEAPONS[wid].get("school", ""))
+			if bschool != "" and bschool in char_def.get("affinity", []):
+				aff_mark = Lang.t("·亲和超武")
 			synth.append({"type": "synthesize", "id": wid, "super_id": swid,
-				"title": Lang.t("合成超武:%s") % Lang.t(String(sw["name"])),
+				"title": (Lang.t("合成超武:%s") % Lang.t(String(sw["name"]))) + aff_mark,
 				"desc": "%s Lv8 + %s Lv5" % [Lang.t(nm), Lang.t(String(GameData.PASSIVES[need_p]["name"]))]})
 	for w in weapons:
 		var wid := String(w["id"])

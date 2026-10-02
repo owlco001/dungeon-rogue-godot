@@ -70,6 +70,8 @@ func _run(mode: String) -> void:
 			await _v11()
 		"v13":
 			await _v13()
+		"v14":
+			await _v14()
 		"v7":
 			await _v7()
 		"v5":
@@ -857,3 +859,63 @@ func _v13_measure(player: Node, who: String, schools: Array, min_share: float) -
 	_check("V13 %s affinity draft share>=%.2f" % [who, min_share], share >= min_share,
 		"share=%.3f n=%d" % [share, total])
 	_check("V13 %s affinity mark shown" % who, mark_seen, "title has 亲和")
+
+
+## V14：超武流派联动 —— 亲和超武伤害 ×1.265（1.15×1.10），非亲和超武不变；合成选项带"·亲和超武"标记
+func _v14() -> void:
+	Lang.set_lang("zh")
+	var inst: Node = load("res://scenes/lobby.tscn").instantiate()
+	root.add_child(inst)
+	await _wait(1.0)
+	var tab := _find_btn(inst, ["出战", "Battle"])
+	if tab == null:
+		_check("V14 entry", false, "no fight tab")
+		return
+	tab.pressed.emit()
+	await _wait(0.5)
+	var btn := _find_btn(inst, ["开始战斗", "Start"])
+	if btn == null:
+		_check("V14 start", false, "no start btn")
+		return
+	btn.pressed.emit()
+	var player: Node = null
+	for i in range(50):
+		await _wait(0.1)
+		player = get_first_node_in_group("player")
+		if player != null:
+			break
+	_check("V14 player", player != null)
+	if player == null:
+		return
+	var saved: Dictionary = (player.get("char_def") as Dictionary).duplicate()
+	var noaff: Dictionary = saved.duplicate()
+	noaff["affinity"] = []
+	# 亲和超武（super_bow：底武器 bow 为 gun，艾拉亲和）应为 1.15×1.10=1.265
+	player.set("char_def", noaff)
+	var d0: Dictionary = player.call("_wstats", {"id": "super_bow", "lv": 1, "cd_t": 0.0})
+	player.set("char_def", saved)
+	var d1: Dictionary = player.call("_wstats", {"id": "super_bow", "lv": 1, "cd_t": 0.0})
+	var ratio := float(d1["dmg"]) / float(d0["dmg"])
+	_check("V14 affinity super dmg x1.265", abs(ratio - 1.265) < 0.001, "ratio=%.4f" % ratio)
+	# 非亲和超武（super_melee_axe）不受影响
+	var e0: Dictionary = player.call("_wstats", {"id": "super_melee_axe", "lv": 1, "cd_t": 0.0})
+	player.set("char_def", noaff)
+	var e1: Dictionary = player.call("_wstats", {"id": "super_melee_axe", "lv": 1, "cd_t": 0.0})
+	player.set("char_def", saved)
+	var ratio2 := float(e0["dmg"]) / float(e1["dmg"])
+	_check("V14 non-affinity super unchanged", abs(ratio2 - 1.0) < 0.001, "ratio=%.4f" % ratio2)
+	# 合成选项标记：bow Lv8 + aspeed Lv5 → 合成选项标题带"·亲和超武"
+	player.set("weapons", [{"id": "bow", "lv": 8, "cd_t": 0.0}])
+	player.set("passives", {"aspeed": 5})
+	player.set("skills", [])
+	player.set("_lvup_count", 99)
+	player.set("_lvups_since_passive", 0)
+	player.set("_funnel_weapon", "")
+	player.call("_recalc")
+	var opts: Array = player.call("build_levelup_options")
+	var mark_ok := false
+	for o in opts:
+		if String(o["type"]) == "synthesize" and String(o["id"]) == "bow":
+			if String(o["title"]).contains("亲和超武"):
+				mark_ok = true
+	_check("V14 synthesize affinity mark", mark_ok, "title has 亲和超武")
