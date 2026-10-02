@@ -61,13 +61,20 @@ func generate(p_seed: int) -> void:
 				if cx > 0 and cy > 0 and cx < GW - 1 and cy < GH - 1:
 					grid[cy * GW + cx] = 0
 	_rebuild_pf()
-	# 连通性修复 v2：柱子封格堵死时，不解封不可达格——改为沿布局路径
-	# 把走廊加宽（3×3 挖空）后重建 pf，让路径从柱子旁绕过去
+	# 连通性修复 v3（v0.8.10）：用 BFS 真连通判定。旧版用 find_path 判连通，但它会把
+	# 端点吸附到 4 格内的最近地面，隔墙也会误报连通，于是整间房被口袋修剪误杀
+	# （玩家能走进去、怪却寻不到路）。仍不通的房间沿布局路径 3×3 加宽后重建 pf，
+	# 两轮后仍不通则换 seed 重生成，保证每间房都真连通。
 	var hall_c := Vector2(GW * CELL * 0.5, GH * CELL * 0.5)
-	for rm in rooms:
-		var rc := Vector2((float(rm["x"]) + float(rm["w"]) * 0.5) * CELL,
-			(float(rm["y"]) + float(rm["h"]) * 0.5) * CELL)
-		if PF.find_path(pf_grid, GW, GH, rc, hall_c, CELL).is_empty():
+	for round_i in range(2):
+		var reach := _pf_reachable(hall_c)
+		var all_ok := true
+		for rm in rooms:
+			if _room_reached(rm, reach):
+				continue
+			all_ok = false
+			var rc := Vector2((float(rm["x"]) + float(rm["w"]) * 0.5) * CELL,
+				(float(rm["y"]) + float(rm["h"]) * 0.5) * CELL)
 			var lp: PackedVector2Array = PF.find_path(grid, GW, GH, rc, hall_c, CELL)
 			for wp in lp:
 				var cc := world_to_cell(wp)
@@ -78,10 +85,28 @@ func generate(p_seed: int) -> void:
 						if nx > 0 and ny > 0 and nx < GW - 1 and ny < GH - 1:
 							grid[ny * GW + nx] = 0
 			_rebuild_pf()
+		if all_ok:
+			break
+	var reach2 := _pf_reachable(hall_c)
+	for rm in rooms:
+		if not _room_reached(rm, reach2):
+			generate(p_seed + 997)
+			return
 	# 口袋修剪：pf 上未连通大厅的地面格一律标墙（不可达区域不进刷怪/寻路池）
+	for y in range(GH):
+		for x in range(GW):
+			if pf_grid[y * GW + x] == 0 and not reach2.has(Vector2i(x, y)):
+				pf_grid[y * GW + x] = 1
+
+
+## pf 网格上从大厅出发的 BFS 真连通集（不做端点吸附）
+func _pf_reachable(hall_c: Vector2) -> Dictionary:
 	var seen := {}
-	var queue: Array = [world_to_cell(hall_c)]
-	seen[queue[0]] = true
+	var start := world_to_cell(hall_c)
+	if pf_grid[start.y * GW + start.x] != 0:
+		return seen
+	seen[start] = true
+	var queue: Array = [start]
 	while not queue.is_empty():
 		var c: Vector2i = queue.pop_front()
 		for dd in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
@@ -91,10 +116,16 @@ func generate(p_seed: int) -> void:
 			if not seen.has(nb) and pf_grid[nb.y * GW + nb.x] == 0:
 				seen[nb] = true
 				queue.append(nb)
-	for y in range(GH):
-		for x in range(GW):
-			if pf_grid[y * GW + x] == 0 and not seen.has(Vector2i(x, y)):
-				pf_grid[y * GW + x] = 1
+	return seen
+
+
+## 房间矩形内至少有一格在连通集里（房心压柱子不算不通）
+func _room_reached(rm: Dictionary, reach: Dictionary) -> bool:
+	for y in range(int(rm["y"]), int(rm["y"]) + int(rm["h"])):
+		for x in range(int(rm["x"]), int(rm["x"]) + int(rm["w"])):
+			if reach.has(Vector2i(x, y)):
+				return true
+	return false
 
 
 ## 寻路网格重建：布局网格 + 柱心 63px（柱 r42 + 身 r22）内格心标墙
@@ -224,28 +255,42 @@ func _carve_corridor(a: Dictionary, b: Dictionary) -> void:
 	var ay := int(a["y"]) + int(a["h"]) / 2
 	var bx := int(b["x"]) + int(b["w"]) / 2
 	var by := int(b["y"]) + int(b["h"]) / 2
-	var x0 := mini(ax, bx)
-	var x1 := maxi(ax, bx)
-	var y0 := mini(ay, by)
-	var y1 := maxi(ay, by)
+	# v0.8.10：L 形路径逐格用 2×2 笔刷雕刻——旧写法只给随机一半的线段补平行线，
+	# 另一半线段和拐角仍是 1 格宽（50px），真机上路口过不去。
+	var pts: Array[Vector2i] = []
 	if rng.randf() < 0.5:
-		_carve_h(ax, bx, ay)
-		_carve_v(ay, by, bx)
+		_path_h(pts, ax, bx, ay)
+		_path_v(pts, ay, by, bx)
 	else:
-		_carve_v(ay, by, ax)
-		_carve_h(ax, bx, by)
-	# 走廊宽 2 格
-	_carve_h(x0, x1, clampi(ay + 1, 0, GH - 1))
-	_carve_v(y0, y1, clampi(bx + 1, 0, GW - 1))
+		_path_v(pts, ay, by, ax)
+		_path_h(pts, ax, bx, by)
+	for p in pts:
+		_carve_block2(p.x, p.y)
 
 
-func _carve_h(x0: int, x1: int, y: int) -> void:
-	for x in range(mini(x0, x1), maxi(x0, x1) + 1):
-		if x >= 0 and y >= 0 and x < GW and y < GH:
-			grid[y * GW + x] = 0
+func _path_h(pts: Array[Vector2i], x0: int, x1: int, y: int) -> void:
+	var step := 1 if x1 >= x0 else -1
+	var x := x0
+	while true:
+		pts.append(Vector2i(x, y))
+		if x == x1:
+			break
+		x += step
 
 
-func _carve_v(y0: int, y1: int, x: int) -> void:
-	for y in range(mini(y0, y1), maxi(y0, y1) + 1):
-		if x >= 0 and y >= 0 and x < GW and y < GH:
+func _path_v(pts: Array[Vector2i], y0: int, y1: int, x: int) -> void:
+	var step := 1 if y1 >= y0 else -1
+	var y := y0
+	while true:
+		pts.append(Vector2i(x, y))
+		if y == y1:
+			break
+		y += step
+
+
+func _carve_block2(cx: int, cy: int) -> void:
+	for dy in range(0, 2):
+		for dx in range(0, 2):
+			var x := clampi(cx + dx, 1, GW - 2)
+			var y := clampi(cy + dy, 1, GH - 2)
 			grid[y * GW + x] = 0
