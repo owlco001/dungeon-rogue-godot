@@ -39,6 +39,11 @@ var base_scale := 1.0
 var fly := false
 var elite := false
 var is_boss := false
+var kind := "melee"
+var _dmg_taken := 1.0
+var _shoot_t := 0.0
+var _fuse_t := -1.0
+var _blast_dmg := 0.0
 
 # v0.3 状态：眩晕 / 减速 / 中毒 / 虚弱 / 诅咒
 var stun_t := 0.0
@@ -94,6 +99,11 @@ func spawn_init() -> void:
 	xp_value = int(def["xp"]) * (5 if elite else 1)
 	base_scale = float(def["scale"]) * (1.3 if elite else 1.0)
 	fly = bool(def.get("fly", false))
+	kind = String(def.get("kind", "melee"))
+	_dmg_taken = float(def.get("dmg_taken", 1.0))
+	_shoot_t = randf() * 2.2
+	_fuse_t = -1.0
+	_blast_dmg = 28.0 * dmg_mult
 	sprite.frames = _shared_frames(enemy_id)
 	sprite.scale = Vector2.ONE * base_scale
 	sprite.modulate = Color.WHITE
@@ -140,6 +150,10 @@ func _physics_process(delta: float) -> void:
 		sprite.modulate = Color(1.0 + 2.5 * k, 1.0 + 2.5 * k, 1.0 + 2.5 * k)
 	else:
 		sprite.modulate = Color.WHITE
+	# 自爆前摇：红闪脉动覆盖（05 §4.4 警戒红）+ 地面红环随前摇扩散到爆炸半径
+	if _fuse_t >= 0.0:
+		var fp := 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.03)
+		sprite.modulate = Color(1.0 + 1.6 * fp, 0.45, 0.4)
 
 	var to: Vector2 = _player.global_position - global_position
 	var dist := to.length()
@@ -169,10 +183,38 @@ func _physics_process(delta: float) -> void:
 		# 减速染色
 		sprite.modulate = Color(0.7, 0.85, 1.2) if _flash_t <= 0.0 and not elite else sprite.modulate
 
+	# v0.8 行为分化（01 §4.1）：远程保持距离带并吐酸 / 自爆前摇停步
+	var behavior_hold := false
+	if kind == "ranged":
+		_shoot_t -= delta
+		if dist <= 520.0 and _shoot_t <= 0.0 and target != null:
+			_shoot_t = 2.2
+			_fire_acid(target)
+		if dist < 300.0:
+			velocity = (-dir + side).normalized() * spd
+			behavior_hold = true
+		elif dist <= 400.0:
+			velocity = dir.rotated(PI * 0.5) * (1.0 if sin(_wobble) >= 0.0 else -1.0) * spd * 0.4
+			behavior_hold = true
+	elif kind == "exploder":
+		if _fuse_t < 0.0 and target == _player and dist < 70.0:
+			_fuse_t = 1.0
+			EventBus.exploder_fuse_start.emit(global_position)
+			if get_parent() != null:
+				FX.glow_ring(get_parent(), global_position, 130.0,
+					Color(1.0, 0.29, 0.29, 0.7), 1.0, 4)
+		if _fuse_t >= 0.0:
+			_fuse_t -= delta
+			velocity = Vector2.ZERO
+			behavior_hold = true
+			if _fuse_t < 0.0:
+				_explode()
+				return
+
 	if _knock_t > 0.0:
 		_knock_t -= delta
 		velocity = _knock
-	else:
+	elif not behavior_hold:
 		velocity = (dir + side).normalized() * spd
 	move_and_slide()
 
@@ -186,13 +228,52 @@ func _physics_process(delta: float) -> void:
 		var hop := absf(sin(_wobble * 2.0))
 		sprite.position.y = -10.0 - hop * 7.0
 		sprite.scale = Vector2(base_scale * (1.0 - 0.06 * hop), base_scale * (1.0 + 0.09 * hop)) * _punch
+	if _fuse_t >= 0.0:
+		sprite.scale *= 1.0 + (1.0 - maxf(_fuse_t, 0.0)) * 0.45
 
-	if dist < 54.0 and touch_cd <= 0.0 and target.has_method("take_damage"):
+	if dist < 54.0 and touch_cd <= 0.0 and kind != "exploder" and target.has_method("take_damage"):
 		var hit_dmg := dmg * (0.7 if weaken_t > 0.0 else 1.0)
 		target.take_damage(hit_dmg, dir, 1.0, self)
 		touch_cd = 0.8
 	if weaken_t > 0.0:
 		weaken_t -= delta
+
+
+## 喷吐怪：复用 projectile.gd 的敌对弹（01 §4.1/§9.4）
+func _fire_acid(t: Node2D) -> void:
+	var game := get_parent()
+	if game == null:
+		return
+	var p: Node2D = PoolManager.acquire("projectile", func() -> Node:
+		var np := Node2D.new()
+		np.set_script(load("res://scripts/projectile.gd"))
+		return np)
+	var dir_t: Vector2 = (t.global_position - global_position).normalized()
+	p.setup_hostile("res://assets/sprites/fx/projectiles/proj_bullet.png",
+		global_position + dir_t * 30.0, dir_t, 320.0, dmg, 520.0)
+	p.home = self
+	game.add_child(p)
+	p.add_to_group("projectiles")
+	if p.has_meta("pooled_reuse"):
+		p.remove_meta("pooled_reuse")
+		p.spawn_init()
+	EventBus.enemy_fired.emit(global_position)
+
+
+## 自爆怪引爆：半径 130，伤害 28×层倍率；爆炸后按正常死亡结算（XP/掉落）
+func _explode() -> void:
+	if dead:
+		return
+	var game := get_tree().get_first_node_in_group("game")
+	if game != null:
+		FX.explosion(game, global_position, 130.0, Color(1.0, 0.45, 0.2))
+		FX.shake(game, 10.0)
+		FX.hitstop(get_tree(), 0.04)
+	if is_instance_valid(_player) \
+			and global_position.distance_to(_player.global_position) <= 130.0:
+		var d: Vector2 = (_player.global_position - global_position).normalized()
+		_player.take_damage(_blast_dmg, d, 1.0, self)
+	_die()
 
 
 ## 嘲讽目标选择：范围内嘲讽召唤物 > 玩家
@@ -246,7 +327,7 @@ func apply_weaken(duration: float) -> void:
 func take_damage(amount: float, from_dir: Vector2, knock_mult: float = 1.0, stun: float = 0.0) -> void:
 	if dead:
 		return
-	hp -= amount
+	hp -= amount * _dmg_taken
 	_flash_t = 0.08
 	_punch = 1.12
 	_knock = from_dir * 320.0 * knock_mult

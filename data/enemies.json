@@ -1,0 +1,67 @@
+{
+ "bat": {
+  "dmg": 8.0,
+  "fly": true,
+  "hp": 16.0,
+  "kind": "melee",
+  "name": "蝙蝠",
+  "scale": 1.0,
+  "speed": 150.0,
+  "xp": 2
+ },
+ "brute": {
+  "dmg": 20.0,
+  "hp": 80.0,
+  "kind": "melee",
+  "name": "蛮兽",
+  "scale": 1.35,
+  "speed": 70.0,
+  "xp": 10
+ },
+ "exploder": {
+  "dmg": 0.0,
+  "hp": 34.0,
+  "kind": "exploder",
+  "name": "自爆怪",
+  "scale": 1.0,
+  "speed": 130.0,
+  "xp": 5
+ },
+ "gargoyle": {
+  "dmg": 22.0,
+  "dmg_taken": 0.7,
+  "hp": 120.0,
+  "kind": "melee",
+  "name": "石像鬼",
+  "scale": 1.15,
+  "speed": 60.0,
+  "xp": 12
+ },
+ "skeleton": {
+  "dmg": 12.0,
+  "hp": 24.0,
+  "kind": "melee",
+  "name": "骷髅兵",
+  "scale": 1.0,
+  "speed": 105.0,
+  "xp": 4
+ },
+ "slime": {
+  "dmg": 10.0,
+  "hp": 30.0,
+  "kind": "melee",
+  "name": "史莱姆",
+  "scale": 1.0,
+  "speed": 85.0,
+  "xp": 2
+ },
+ "spitter": {
+  "dmg": 12.0,
+  "hp": 26.0,
+  "kind": "ranged",
+  "name": "喷吐怪",
+  "scale": 1.0,
+  "speed": 95.0,
+  "xp": 6
+ }
+}

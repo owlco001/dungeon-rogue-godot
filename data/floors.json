@@ -1,1 +1,40 @@
-{"count":{"base":6,"max":46,"min":6,"per_floor":1.35},"elite_hp_mult":2.0,"mix_anchors":{"1":{"bat":0.3,"slime":0.7},"10":{"bat":0.25,"brute":0.1,"skeleton":0.25,"slime":0.4},"20":{"bat":0.2,"brute":0.17,"skeleton":0.33,"slime":0.3},"30":{"bat":0.18,"brute":0.23,"skeleton":0.37,"slime":0.22}}}
+{
+ "count": {
+  "base": 6,
+  "max": 46,
+  "min": 6,
+  "per_floor": 1.35
+ },
+ "elite_hp_mult": 2.0,
+ "mix_anchors": {
+  "1": {
+   "bat": 0.3,
+   "slime": 0.7
+  },
+  "10": {
+   "slime": 0.368,
+   "bat": 0.23,
+   "skeleton": 0.23,
+   "spitter": 0.08,
+   "brute": 0.092
+  },
+  "20": {
+   "slime": 0.175,
+   "bat": 0.13,
+   "skeleton": 0.26,
+   "spitter": 0.12,
+   "exploder": 0.09,
+   "gargoyle": 0.035,
+   "brute": 0.19
+  },
+  "30": {
+   "slime": 0.136,
+   "bat": 0.112,
+   "skeleton": 0.229,
+   "spitter": 0.16,
+   "exploder": 0.12,
+   "gargoyle": 0.1,
+   "brute": 0.143
+  }
+ }
+}

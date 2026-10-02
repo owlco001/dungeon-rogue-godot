@@ -21,6 +21,8 @@ var boomerang_returns := 1     # 回旋次数（去程+返程为一次）
 var blackhole := false
 var split_axe := false
 var home: Node2D = null        # 回旋斧的发射者（玩家）
+var hostile := false           # v0.8 敌对弹（喷吐怪酸弹/Boss 弹幕）：命中玩家而非敌人
+var _player_ref: Node2D = null
 var mini := false              # 分裂小斧：不再分裂
 
 var _traveled := 0.0
@@ -61,10 +63,12 @@ func setup(p_tex: String, p_pos: Vector2, p_dir: Vector2, p_speed: float,
 	split_axe = false
 	mini = false
 	home = null
+	hostile = false
 	scale = Vector2.ONE
 	visible = true
 	if _sprite != null:
 		_sprite.texture = load(tex_path) as Texture2D
+		_sprite.modulate = Color.WHITE  # 敌对弹的绿色 tint 每世复位
 		_sprite.rotation = dir.angle()
 	if _trail != null:
 		_trail.direction = -dir
@@ -72,8 +76,18 @@ func setup(p_tex: String, p_pos: Vector2, p_dir: Vector2, p_speed: float,
 
 
 ## 池化复用时由生成方在 add_child 后调用（_ready 不会重跑）
+## v0.8 敌对弹设置：绿色 tint + 白核（05 §4.4 颜色域隔离），命中玩家
+func setup_hostile(p_tex: String, p_pos: Vector2, p_dir: Vector2, p_speed: float,
+		p_dmg: float, p_range: float) -> void:
+	setup(p_tex, p_pos, p_dir, p_speed, p_dmg, 0, 0, 0.0, 0.0, 2.0, p_range, 0.0)
+	hostile = true
+	_sprite.modulate = Color(0.55, 1.0, 0.29)
+	_sprite.scale = Vector2.ONE * 0.8
+
+
 func spawn_init() -> void:
 	_game = get_tree().get_first_node_in_group("game")
+	_player_ref = get_tree().get_first_node_in_group("player") as Node2D
 
 
 func _despawn() -> void:
@@ -128,6 +142,14 @@ func _physics_process(delta: float) -> void:
 	if boomerang:
 		_spin += delta * 14.0
 		_sprite.rotation = _spin
+	if hostile:
+		if not is_instance_valid(_player_ref):
+			_player_ref = get_tree().get_first_node_in_group("player") as Node2D
+		if _player_ref != null and \
+				global_position.distance_to(_player_ref.global_position) < 34.0:
+			_player_ref.take_damage(dmg, dir, 1.0, home)
+			_despawn()
+		return
 	for e in Registry.query_circle(global_position, 34.0):
 		if not is_instance_valid(e) or e.dead or _hit_set.has(e.get_instance_id()):
 			continue

@@ -417,6 +417,9 @@ const ENEMIES := {
 	"bat": {"name": "蝙蝠", "hp": 16.0, "speed": 150.0, "dmg": 8.0, "xp": 2, "scale": 1.0, "fly": true},
 	"skeleton": {"name": "骷髅兵", "hp": 24.0, "speed": 105.0, "dmg": 12.0, "xp": 4, "scale": 1.0},
 	"brute": {"name": "蛮兽", "hp": 80.0, "speed": 70.0, "dmg": 20.0, "xp": 10, "scale": 1.35},
+	"spitter": {"name": "喷吐怪", "hp": 26.0, "speed": 95.0, "dmg": 12.0, "xp": 6, "scale": 1.0, "kind": "ranged"},
+	"exploder": {"name": "自爆怪", "hp": 34.0, "speed": 130.0, "dmg": 0.0, "xp": 5, "scale": 1.0, "kind": "exploder"},
+	"gargoyle": {"name": "石像鬼", "hp": 120.0, "speed": 60.0, "dmg": 22.0, "xp": 12, "scale": 1.15, "kind": "melee", "dmg_taken": 0.7},
 }
 
 const MAX_FLOOR := 30
