@@ -58,6 +58,8 @@ func _run(mode: String) -> void:
 			await _v8()
 		"v9":
 			_v9()
+		"v9d":
+			await _v9d()
 		"v7":
 			await _v7()
 		"v5":
@@ -416,6 +418,59 @@ func _v7() -> void:
 	_check("V7 enemy pool recycles", ep >= maxi(1, reg_n2), "enemy pool=%d killed=%d" % [ep, reg_n2])
 	_check("V7 registry drained", (reg.get("enemies") as Array).is_empty(),
 		"left=%d" % (reg.get("enemies") as Array).size())
+
+# ---- V9d（B6）：波次拆分数学 + 实战波次/计时断言 ----
+func _v9d() -> void:
+	Lang.set_lang("zh")
+	var comp29: Dictionary = GameData.floor_comp(29)
+	var waves29: Array = WaveDirector.split_waves(comp29, GameData.elite_assignment(29))
+	var total := 0
+	var sizes: Array = []
+	for wv in waves29:
+		sizes.append((wv as Array).size())
+		total += (wv as Array).size()
+	var count29 := 0
+	for k in comp29.keys():
+		count29 += int(comp29[k])
+	_check("V9d split sums to floor count", total == count29, "total=%d count=%d" % [total, count29])
+	_check("V9d wave1 ~= 60%", absf(float(sizes[0]) / float(count29) - 0.6) < 0.08, "w1=%d" % sizes[0])
+	_check("V9d wave2 ~= 25%", absf(float(sizes[1]) / float(count29) - 0.25) < 0.08, "w2=%d" % sizes[1])
+	_check("V9d wave3 ~= 15%", absf(float(sizes[2]) / float(count29) - 0.15) < 0.08, "w3=%d" % sizes[2])
+	# 实战
+	var inst: Node = load("res://scenes/lobby.tscn").instantiate()
+	root.add_child(inst)
+	await _wait(1.0)
+	var tab := _find_btn(inst, ["出战", "Battle"])
+	_check("V9d entry", tab != null)
+	if tab == null:
+		return
+	tab.pressed.emit()
+	await _wait(0.5)
+	var btn := _find_btn(inst, ["开始战斗", "Start"])
+	_check("V9d start", btn != null)
+	if btn == null:
+		return
+	btn.pressed.emit()
+	var main: Node = null
+	for i in range(50):
+		await _wait(0.1)
+		main = get_first_node_in_group("game")
+		if main != null:
+			break
+	_check("V9d in battle", main != null)
+	if main == null:
+		return
+	await _wait(0.5)
+	var dir: Node = main.get("_director")
+	_check("V9d director active", dir != null and bool(dir.get("active")))
+	var w1: int = (WaveDirector.split_waves(GameData.floor_comp(1), GameData.elite_assignment(1))[0] as Array).size()
+	# 实战有自动开火，计数允许 ±1 击杀时差
+	_check("V9d wave1 spawned", abs(int(main.call("_enemies_alive")) - w1) <= 1,
+		"alive=%d want=%d" % [int(main.call("_enemies_alive")), w1])
+	dir.call("debug_force_time_up")
+	await _wait(0.8)
+	_check("V9d stairs on timeout", main.get("_stairs") != null)
+
 
 # ---- V5（B4）：高压战斗采样——节点/粒子上限 + time_scale 恢复 + 帧时 p95（headless 参考） ----
 func _v5() -> void:
