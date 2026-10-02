@@ -103,9 +103,14 @@ func _v2() -> void:
 	if game == null:
 		return
 	# 敌人数量取最初 0.3s 内的最大值（避开自动攻击击杀干扰）
+	var waves_on := bool(ProjectSettings.get_setting("dungeon/waves_enabled", true))
 	var expected := 0
-	for k in GameData.floor_comp(1).keys():
-		expected += int(GameData.floor_comp(1)[k])
+	if waves_on:
+		# L3 波次制：进场只有第一波（60/25/15 按兵种 round）
+		expected = (WaveDirector.split_waves(GameData.floor_comp(1), GameData.elite_assignment(1))[0] as Array).size()
+	else:
+		for k in GameData.floor_comp(1).keys():
+			expected += int(GameData.floor_comp(1)[k])
 	var max_seen := 0
 	var t0 := Time.get_ticks_msec()
 	while Time.get_ticks_msec() - t0 < 300:
@@ -407,7 +412,8 @@ func _v7() -> void:
 	await _wait(1.5)
 	var pm = load("res://systems/pool_manager.gd")
 	var ep := int(pm.pool_size("enemy"))
-	_check("V7 enemy pool recycles", ep >= 4, "enemy pool=%d" % ep)
+	# 团灭时存活数 == reg_n2（波次制下小于整层数）
+	_check("V7 enemy pool recycles", ep >= maxi(1, reg_n2), "enemy pool=%d killed=%d" % [ep, reg_n2])
 	_check("V7 registry drained", (reg.get("enemies") as Array).is_empty(),
 		"left=%d" % (reg.get("enemies") as Array).size())
 

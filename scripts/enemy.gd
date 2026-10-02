@@ -44,6 +44,7 @@ var _dmg_taken := 1.0
 var _shoot_t := 0.0
 var _fuse_t := -1.0
 var _blast_dmg := 0.0
+var _dir_smooth := Vector2.ZERO
 
 # v0.3 状态：眩晕 / 减速 / 中毒 / 虚弱 / 诅咒
 var stun_t := 0.0
@@ -104,6 +105,7 @@ func spawn_init() -> void:
 	_shoot_t = randf() * 2.2
 	_fuse_t = -1.0
 	_blast_dmg = 28.0 * dmg_mult
+	_dir_smooth = Vector2.ZERO
 	sprite.frames = _shared_frames(enemy_id)
 	sprite.scale = Vector2.ONE * base_scale
 	sprite.modulate = Color.WHITE
@@ -215,7 +217,13 @@ func _physics_process(delta: float) -> void:
 		_knock_t -= delta
 		velocity = _knock
 	elif not behavior_hold:
-		velocity = (dir + side).normalized() * spd
+		# L3 转向插值：方向 slerp 平滑，避免瞬时掉头抖动
+		var desired: Vector2 = (dir + side).normalized()
+		if _dir_smooth == Vector2.ZERO:
+			_dir_smooth = desired
+		else:
+			_dir_smooth = _dir_smooth.slerp(desired, minf(1.0, 8.0 * delta)).normalized()
+		velocity = _dir_smooth * spd
 	move_and_slide()
 
 	sprite.flip_h = dir.x < 0.0

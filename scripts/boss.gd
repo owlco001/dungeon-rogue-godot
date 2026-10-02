@@ -67,6 +67,8 @@ var _summon_count := 3
 var _barrage_t := 3.0
 var _base_speed := 55.0
 var _enraged := false
+var shared_pool: Dictionary = {}
+var _trail_t := 0.0
 
 var _player: Node2D = null
 var _game: Node = null
@@ -178,6 +180,12 @@ func _physics_process(delta: float) -> void:
 	else:
 		_sprite.modulate = Color.WHITE
 	_sprite.scale = target_scale
+	# 熔渣铸造者 L3：移动留灼烧轨迹（取代砸地固定灼烧区）
+	if bool(boss_def.get("burn_ground", false)) and velocity.length() > 20.0:
+		_trail_t -= delta
+		if _trail_t <= 0.0:
+			_trail_t = 1.2
+			_drop_burn_trail()
 	# 移动倾斜 + 扬尘
 	var moving := velocity.length() > 20.0
 	if moving:
@@ -244,8 +252,12 @@ func _tick_skills(delta: float) -> void:
 		_summon_t -= delta
 		if _summon_t <= 0.0:
 			_summon_t = _summon_cd
-			if _game != null and _game.has_method("spawn_boss_minions"):
-				_game.spawn_boss_minions(global_position, _summon_count)
+			if _game != null:
+				if String(boss_def.get("summon_kind", "")) == "bramble" \
+						and _game.has_method("spawn_bramble"):
+					_game.spawn_bramble(global_position, _summon_count)
+				elif _game.has_method("spawn_boss_minions"):
+					_game.spawn_boss_minions(global_position, _summon_count)
 
 
 func _do_slam_at(at: Vector2) -> void:
@@ -259,13 +271,7 @@ func _do_slam_at(at: Vector2) -> void:
 		return
 	if _game != null and _game.has_method("spawn_hazard"):
 		_game.spawn_hazard(at, 150.0, dmg * 1.6, self)
-	if bool(boss_def.get("burn_ground", false)) and get_parent() != null:
-		var zone := BurnZone.new()
-		zone.radius = 150.0
-		zone.tick_dmg = dmg * 0.35
-		zone.source = self
-		zone.global_position = at
-		get_parent().add_child(zone)
+
 
 
 func _do_slam() -> void:
@@ -275,12 +281,24 @@ func _do_slam() -> void:
 func take_damage(amount: float, from_dir: Vector2, knock_mult: float = 1.0, stun: float = 0.0) -> void:
 	if dead:
 		return
-	hp = maxf(0.0, hp - amount)
+	var shared := not shared_pool.is_empty()
+	if shared:
+		shared_pool["hp"] = maxf(0.0, float(shared_pool["hp"]) - amount)
+		hp = float(shared_pool["hp"])
+	else:
+		hp = maxf(0.0, hp - amount)
 	_flash_t = 0.12
 	_squash_t = 0.12
-	hp_changed.emit(hp, max_hp)
+	hp_changed.emit(hp, float(shared_pool.get("max", max_hp)) if shared else max_hp)
 	_check_phase()
-	if hp <= 0.0:
+	if shared:
+		_check_twin_enrage()
+		if hp <= 0.0:
+			_die()
+			if twin_partner != null and is_instance_valid(twin_partner) \
+					and not bool(twin_partner.get("dead")):
+				twin_partner._die_shared()
+	elif hp <= 0.0:
 		_die()
 
 
@@ -320,6 +338,17 @@ func _enter_phase(p: int) -> void:
 		FX.attach_aura(self, 210.0, Color(1.0, 0.35, 0.25, 0.55))
 
 
+## 双生 L3：共享血池跌破 50% 时双体狂暴（替代 L2 的"一死一狂暴"）
+func _check_twin_enrage() -> void:
+	if _enraged or shared_pool.is_empty():
+		return
+	if float(shared_pool["hp"]) <= float(shared_pool.get("max", 1.0)) * 0.5:
+		enrage_twin()
+		if twin_partner != null and is_instance_valid(twin_partner) \
+				and twin_partner.has_method("enrage_twin"):
+			twin_partner.enrage_twin()
+
+
 ## 八向弹幕：复用 projectile 敌对弹（紫 tint，05 §4.4）
 func _fire_barrage() -> void:
 	var game := get_parent()
@@ -335,6 +364,7 @@ func _fire_barrage() -> void:
 			global_position + dir * 60.0, dir, 260.0, dmg * 0.5, 700.0,
 			Color(0.71, 0.29, 1.0))
 		p.home = self
+		p.hostile_homing = true  # L3：追踪玩家的旋转弹幕
 		game.add_child(p)
 		p.add_to_group("projectiles")
 		if p.has_meta("pooled_reuse"):
@@ -357,18 +387,31 @@ func enrage_twin() -> void:
 	FX.attach_aura(self, 200.0, Color(1.0, 0.3, 0.25, 0.5))
 
 
+## 熔渣轨迹：半径 110、3s、每 0.5s 灼烧 dmg×0.25
+func _drop_burn_trail() -> void:
+	if get_parent() == null:
+		return
+	var zone := BurnZone.new()
+	zone.radius = 110.0
+	zone.tick_dmg = dmg * 0.25
+	zone.source = self
+	zone.global_position = global_position
+	get_parent().add_child(zone)
+
+
 ## 时间凝滞用：Boss 也吃减速
 func apply_slow(duration: float) -> void:
 	_slow_t = maxf(_slow_t, duration)
 
 
+func _die_shared() -> void:
+	if not dead:
+		_die()
+
+
 func _die() -> void:
 	dead = true
 	EventBus.boss_died.emit(boss_id)
-	if is_twin and twin_partner != null and is_instance_valid(twin_partner) \
-			and not bool(twin_partner.get("dead")) \
-			and twin_partner.has_method("enrage_twin"):
-		twin_partner.enrage_twin()
 	Registry.unregister_enemy(self)
 	collision_layer = 0
 	collision_mask = 0

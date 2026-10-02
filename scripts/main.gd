@@ -6,6 +6,41 @@ const PlayerScene := preload("res://scenes/player.tscn")
 const EnemyScene := preload("res://scenes/enemy.tscn")
 const BossScript := preload("res://scripts/boss.gd")
 const ChestScript := preload("res://scripts/chest.gd")
+const WaveDirectorScript := preload("res://systems/wave_director.gd")
+
+
+class BrambleZone extends Node2D:
+	# 荆棘丛（L3）：区域减速 + 周期伤害
+	var radius := 130.0
+	var tick_dmg := 10.0
+	var _t := 0.0
+	var _tick := 0.0
+	func _ready() -> void:
+		FX.glow_ring(get_parent(), global_position, radius * 2.4,
+			Color(0.35, 0.9, 0.4, 0.6), 0.4, 4)
+	func _process(d: float) -> void:
+		_t += d
+		_tick -= d
+		queue_redraw()
+		if _tick <= 0.0:
+			_tick = 0.5
+			var pl := get_tree().get_first_node_in_group("player") as Node2D
+			if pl != null and is_instance_valid(pl) \
+					and global_position.distance_to(pl.global_position) <= radius:
+				pl.set("external_slow_mult", 0.55)
+				if pl.has_method("take_damage"):
+					pl.take_damage(tick_dmg,
+						(pl.global_position - global_position).normalized(), 0.5)
+		if _t >= 6.0:
+			queue_free()
+	func _draw() -> void:
+		var fade := clampf(1.0 - _t / 6.0, 0.0, 1.0)
+		draw_circle(Vector2.ZERO, radius, Color(0.25, 0.75, 0.3, 0.14 + 0.10 * fade))
+		draw_arc(Vector2.ZERO, radius, 0.0, TAU, 40, Color(0.3, 0.85, 0.35, 0.55 * fade), 4.0)
+		for i in range(8):
+			var a := TAU * float(i) / 8.0 + _t * 0.6
+			draw_line(Vector2.ZERO, Vector2.RIGHT.rotated(a) * radius,
+				Color(0.3, 0.8, 0.35, 0.5 * fade), 3.0)
 const HudScene := preload("res://scenes/hud.tscn")
 const ArenaScript := preload("res://scripts/arena.gd")
 const GemScript := preload("res://scripts/gem.gd")
@@ -30,6 +65,10 @@ var _stairs: Area2D = null
 var _boss_ref: Node2D = null
 var _cine_mod: CanvasModulate = null
 var _cine_tween: Tween = null
+var _director: WaveDirector = null
+var _floor_has_waves := false
+var _wave_hp_m := 1.0
+var _wave_dmg_m := 1.0
 var _last_advance_msec := -99999
 
 
@@ -40,6 +79,13 @@ func _ready() -> void:
 	arena.name = "Arena"
 	add_child(arena)
 
+	_director = WaveDirectorScript.new()
+	_director.name = "WaveDirector"
+	add_child(_director)
+	_director.spawn_wave.connect(_on_wave_spawn)
+	_director.stairs_ready.connect(_on_director_stairs)
+	_director.wave_announced.connect(_on_wave_announced)
+	_director.tick_warning.connect(_on_director_tick_warning)
 	_cine_mod = CanvasModulate.new()
 	_cine_mod.name = "CineModulate"
 	add_child(_cine_mod)
@@ -133,6 +179,9 @@ func next_floor() -> void:
 		if is_instance_valid(ch):
 			ch.queue_free()
 	_boss_ref = null
+	if _director != null:
+		_director.stop()
+	_floor_has_waves = false
 	hud.hide_boss_bar()
 	var fdef: Dictionary = GameData.floor_def(floor_num)
 	arena.set_theme(String(fdef["theme"]))
@@ -169,6 +218,10 @@ func _spawn_floor_enemies() -> void:
 			bb.setup(db, Vector2(ARENA_W * 0.5 + 150.0, 320.0))
 			ba.twin_partner = bb
 			bb.twin_partner = ba
+			# L3：双体共享一个血池（HUD 一条，半血双狂暴）
+			var pool := {"hp": float(bdef["hp"]), "max": float(bdef["hp"])}
+			ba.shared_pool = pool
+			bb.shared_pool = pool
 			for b in [ba, bb]:
 				b.died.connect(_on_enemy_died)
 				b.hp_changed.connect(_on_boss_hp)
@@ -194,13 +247,20 @@ func _spawn_floor_enemies() -> void:
 	# v0.8 精英规则：固定 2 只，按基础 HP 从高到低分配（GameData.elite_assignment）
 	var elite_asg: Dictionary = GameData.elite_assignment(floor_num)
 	var elite_kind := GameData.elite_kind_for(floor_num)
-	for eid in comp.keys():
-		var elite_left := int(elite_asg.get(eid, 0))
-		for i in range(int(comp[eid])):
-			var is_elite := elite_left > 0
-			if is_elite:
-				elite_left -= 1
-			_spawn_enemy(String(eid), hp_m, dmg_m, is_elite)
+	if _waves_on():
+		# L3 波次制：导演按 60/25/15 拆波，第一波立即放出
+		_floor_has_waves = true
+		_wave_hp_m = hp_m
+		_wave_dmg_m = dmg_m
+		_director.start_floor(comp, elite_asg)
+	else:
+		for eid in comp.keys():
+			var elite_left := int(elite_asg.get(eid, 0))
+			for i in range(int(comp[eid])):
+				var is_elite := elite_left > 0
+				if is_elite:
+					elite_left -= 1
+				_spawn_enemy(String(eid), hp_m, dmg_m, is_elite)
 	# D4：第 3 层首只精英提示（每局一次）
 	if floor_num == 3 and elite_kind != "" and not _elite_hint_shown:
 		_elite_hint_shown = true
@@ -385,6 +445,45 @@ func _spawn_stairs() -> void:
 	hud.set_enemies(0)
 
 
+func _waves_on() -> bool:
+	return bool(ProjectSettings.get_setting("dungeon/waves_enabled", true))
+
+
+func _on_wave_spawn(entries: Array) -> void:
+	for e in entries:
+		_spawn_enemy(String(e["kind"]), _wave_hp_m, _wave_dmg_m, bool(e["elite"]))
+
+
+func _on_wave_announced(n: int, total: int) -> void:
+	EventBus.wave_started.emit(n, total)
+
+
+func _on_director_tick_warning(sec: int) -> void:
+	EventBus.floor_timer_warning.emit(sec)
+
+
+func _on_director_stairs() -> void:
+	# 计时 70s 到期：直接出楼梯（不要求清怪）
+	if _started and _stairs == null and not GameData.is_boss_floor(floor_num):
+		_spawn_stairs()
+
+
+func _refresh_wave_hud() -> void:
+	if _floor_has_waves and _director != null and _director.active and _started:
+		hud.set_floor_timer(_director.time_left(), WaveDirector.FLOOR_TIME)
+	else:
+		hud.hide_floor_timer()
+	hud.set_score(_run_score())
+
+
+## 生存评分（01 §5.1）：层数×100 + 击杀 + 精英×5 + Boss×50 + 剩余HP×0.5
+func _run_score() -> int:
+	var score := floor_num * 100 + kills + elite_kills * 5 + boss_kills * 50
+	if is_instance_valid(player) and not bool(player.get("dead")):
+		score += int(float(player.get("hp")) * 0.5)
+	return score
+
+
 func _enemies_alive() -> int:
 	var n := 0
 	for e in get_tree().get_nodes_in_group("enemies"):
@@ -398,6 +497,8 @@ func _update_enemy_label() -> void:
 
 
 func _check_floor_clear() -> void:
+	if _floor_has_waves and _director != null and not _director.all_spawned():
+		return
 	if _enemies_alive() == 0 and _stairs == null and _started:
 		_spawn_stairs()
 
@@ -429,6 +530,17 @@ func spawn_explosion(pos: Vector2, radius: float, dmg: float,
 
 
 ## hazard that hurts the PLAYER (boss slam)
+## 荆棘暴君 L3：荆棘丛召唤（区域减速 + 周期伤害）
+func spawn_bramble(at: Vector2, count: int) -> void:
+	var dmg := GameData.enemy_dmg_mult(floor_num) * 8.0
+	for i in range(count):
+		var zone := BrambleZone.new()
+		zone.radius = 130.0
+		zone.tick_dmg = dmg
+		zone.position = at + Vector2.RIGHT.rotated(randf() * TAU) * randf_range(60.0, 260.0)
+		add_child(zone)
+
+
 func spawn_hazard(pos: Vector2, radius: float, dmg: float, source: Node2D = null) -> void:
 	_explosion_fx(pos, radius, Color(1.0, 0.3, 0.25))
 	if is_instance_valid(player):

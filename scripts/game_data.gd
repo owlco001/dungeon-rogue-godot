@@ -381,7 +381,7 @@ const BOSSES := {
 		"twin": true},
 	25: {"id": "thorntyrant", "name": "荆棘暴君", "tex": "res://assets/sprites/bosses/boss_thorntyrant.png",
 		"hp": 19000.0, "dmg": 48.0, "speed": 60.0, "scale": 1.0, "slam_cd": 4.5, "charge_cd": 7.5,
-		"summon_cd": 8.0, "summon_count": 2},
+		"summon_cd": 8.0, "summon_count": 2, "summon_kind": "bramble"},
 	30: {"id": "mohei", "name": "深渊主宰·墨骸", "tex": "res://assets/sprites/bosses/boss_mohei_phase1.png",
 		"tex2": "res://assets/sprites/bosses/boss_mohei_phase2.png",
 		"tex3": "res://assets/sprites/bosses/boss_mohei_phase3.png",

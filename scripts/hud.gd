@@ -13,6 +13,9 @@ var _hp_bar: ProgressBar
 var _xp_bar: ProgressBar
 var _level_label: Label
 var _floor_label: Label
+var _score_label: Label
+var _timer_bar: ProgressBar
+var _timer_label: Label
 var _mute_btn: Button
 var _gold_label: Label
 var _kill_label: Label
@@ -139,6 +142,28 @@ func _build_bars() -> void:
 	xrow.add_child(_level_label)
 
 
+func _build_timer_bar() -> void:
+	var vc := VBoxContainer.new()
+	vc.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	vc.offset_left = -160
+	vc.offset_right = 160
+	vc.offset_top = 10
+	vc.add_theme_constant_override("separation", 2)
+	add_child(vc)
+	_timer_label = _mk_label("70", 14)
+	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vc.add_child(_timer_label)
+	_timer_bar = ProgressBar.new()
+	_timer_bar.custom_minimum_size = Vector2(320, 10)
+	_timer_bar.min_value = 0.0
+	_timer_bar.max_value = 70.0
+	_timer_bar.value = 70.0
+	_timer_bar.show_percentage = false
+	_timer_bar.visible = false
+	_timer_label.visible = false
+	vc.add_child(_timer_bar)
+
+
 func _build_labels() -> void:
 	var box := VBoxContainer.new()
 	box.set_anchors_preset(Control.PRESET_TOP_RIGHT)
@@ -161,6 +186,10 @@ func _build_labels() -> void:
 	_enemy_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_enemy_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.5))
 	box.add_child(_enemy_label)
+	_score_label = _mk_label("评分 0", 15)
+	_score_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_score_label.add_theme_color_override("font_color", Color(0.7, 0.9, 1.0))
+	box.add_child(_score_label)
 	# 静音开关（暂停菜单入口：升级三选一/结算时可点）
 	_mute_btn = Button.new()
 	_mute_btn.text = Lang.t("声音开")
@@ -777,6 +806,25 @@ func set_kills(k: int) -> void:
 
 func set_enemies(n: int) -> void:
 	_enemy_label.text = Lang.t("剩余 %d") % n if n > 0 else Lang.t("上楼!")
+
+
+## L3 波次层倒计时条（01 §5.1）
+func set_floor_timer(sec_left: float, total: float) -> void:
+	_timer_bar.visible = true
+	_timer_label.visible = true
+	_timer_bar.max_value = total
+	_timer_bar.value = sec_left
+	_timer_label.text = "%ds" % int(ceil(sec_left))
+	_timer_bar.modulate = Color(1.0, 0.4, 0.35) if sec_left <= 10.0 else Color.WHITE
+
+
+func hide_floor_timer() -> void:
+	_timer_bar.visible = false
+	_timer_label.visible = false
+
+
+func set_score(score: int) -> void:
+	_score_label.text = Lang.t("评分 %d") % score
 
 
 func set_floor(floor_num: int, floor_name: String) -> void:

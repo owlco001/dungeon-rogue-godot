@@ -22,6 +22,7 @@ var blackhole := false
 var split_axe := false
 var home: Node2D = null        # 回旋斧的发射者（玩家）
 var hostile := false           # v0.8 敌对弹（喷吐怪酸弹/Boss 弹幕）：命中玩家而非敌人
+var hostile_homing := false     # L3：深渊主宰追踪旋转弹幕
 var _player_ref: Node2D = null
 var mini := false              # 分裂小斧：不再分裂
 
@@ -64,6 +65,7 @@ func setup(p_tex: String, p_pos: Vector2, p_dir: Vector2, p_speed: float,
 	mini = false
 	home = null
 	hostile = false
+	hostile_homing = false
 	scale = Vector2.ONE
 	visible = true
 	if _sprite != null:
@@ -130,6 +132,14 @@ func _roll_dmg() -> Array:
 
 func _physics_process(delta: float) -> void:
 	_apply_homing(delta)
+	if hostile and hostile_homing:
+		if not is_instance_valid(_player_ref):
+			_player_ref = get_tree().get_first_node_in_group("player") as Node2D
+		if _player_ref != null:
+			var want: Vector2 = (_player_ref.global_position - global_position).normalized()
+			var turn := clampf(wrapf(want.angle() - dir.angle(), -PI, PI), -1.2 * delta, 1.2 * delta)
+			dir = dir.rotated(turn)
+			_sprite.rotation = dir.angle()
 	var step := speed * delta
 	global_position += dir * step
 	_traveled += step

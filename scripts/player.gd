@@ -40,6 +40,7 @@ var _cross_aura: Node2D = null
 var _cross_aura_t := 0.0
 var _punch_start_ms := -1
 var _synth_aura: Node2D = null
+var external_slow_mult := 1.0  # 荆棘丛区域减速（L3）
 var _relic_tbl_cache: Dictionary = {}
 var MAGNET_RADIUS := BASE_MAGNET_RADIUS
 
@@ -154,8 +155,9 @@ func _physics_process(delta: float) -> void:
 	if external_move.length() > 0.08:
 		input_vec = external_move.limit_length(1.0)
 
+	external_slow_mult = move_toward(external_slow_mult, 1.0, 2.0 * delta)
 	if input_vec != Vector2.ZERO:
-		velocity = velocity.move_toward(input_vec * speed, ACCEL * delta)
+		velocity = velocity.move_toward(input_vec * speed * external_slow_mult, ACCEL * delta)
 	else:
 		velocity = velocity.move_toward(Vector2.ZERO, FRICTION * delta)
 	move_and_slide()
