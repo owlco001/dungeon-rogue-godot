@@ -56,6 +56,8 @@ func _run(mode: String) -> void:
 			await _v5h()
 		"v8":
 			await _v8()
+		"v9":
+			_v9()
 		"v2":
 			await _v2()
 		_:
@@ -282,6 +284,53 @@ func _v8_pick(player: Node, opts: Array) -> Dictionary:
 			best_rank = r
 			best = o
 	return best
+
+# ---- V9 静态（B3）：刷怪曲线断言（01 §3.2）----
+func _v9() -> void:
+	_check("V9 count f1=6", GameData.floor_count(1) == 6, "got %d" % GameData.floor_count(1))
+	_check("V9 count f29=44", GameData.floor_count(29) == 44, "got %d" % GameData.floor_count(29))
+	_check("V9 count f60=46 cap", GameData.floor_count(60) == 46, "got %d" % GameData.floor_count(60))
+	var mono := true
+	for f in range(2, 61):
+		if GameData.floor_count(f) < GameData.floor_count(f - 1):
+			mono = false
+	_check("V9 count monotonic 1-60", mono)
+	var sums_ok := true
+	for f in range(1, 31):
+		var s := 0
+		for k in GameData.floor_comp(f).keys():
+			s += int(GameData.floor_comp(f)[k])
+		if s != GameData.floor_count(f):
+			sums_ok = false
+	_check("V9 comp sums == count", sums_ok)
+	_check("V9 elite kind f3=slime", GameData.elite_kind_for(3) == "slime", GameData.elite_kind_for(3))
+	_check("V9 elite kind f12=brute", GameData.elite_kind_for(12) == "brute", GameData.elite_kind_for(12))
+	# 层总等效 HP：相邻非 Boss 层回落不得超过 10%
+	var prev := -1.0
+	var worst := 0.0
+	var worst_f := 0
+	for f in range(1, 31):
+		if GameData.is_boss_floor(f):
+			continue
+		var tot := _floor_total_hp(f)
+		if prev > 0.0:
+			var drop := (tot - prev) / prev
+			if drop < worst:
+				worst = drop
+				worst_f = f
+		prev = tot
+	_check("V9 hp drop <=10%", worst >= -0.10, "worst=%.3f at f%d" % [worst, worst_f])
+
+func _floor_total_hp(f: int) -> float:
+	var comp := GameData.floor_comp(f)
+	var sum := 0.0
+	for k in comp.keys():
+		sum += float(GameData.ENEMIES[k]["hp"]) * float(int(comp[k]))
+	if GameData.is_elite_floor(f):
+		var asg := GameData.elite_assignment(f)
+		for k in asg.keys():
+			sum += float(GameData.ENEMIES[k]["hp"]) * (GameData.elite_hp_mult() - 1.0) * float(int(asg[k]))
+	return sum * GameData.enemy_hp_mult(f)
 
 func _corrupt_file(path: String) -> void:
 	var f := FileAccess.open(path, FileAccess.WRITE)

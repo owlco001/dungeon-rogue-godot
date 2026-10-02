@@ -388,14 +388,7 @@ const FLOORS := [
 	{"theme": "thorn", "name": "荆棘密林"},
 	{"theme": "void", "name": "虚空祭坛"},
 ]
-const FLOOR_COMPS := [
-	{"slime": 4, "bat": 2},
-	{"slime": 3, "bat": 3, "skeleton": 2},
-	{"slime": 3, "bat": 3, "skeleton": 3, "brute": 1},
-	{"slime": 2, "bat": 4, "skeleton": 4, "brute": 2},
-	{"slime": 2, "bat": 4, "skeleton": 5, "brute": 3},
-	{"slime": 3, "bat": 3, "skeleton": 4, "brute": 3},
-]
+# v0.8 D2：刷怪构成改由 data/floors.json 的 MIX_ANCHORS 插值生成（见 floor_comp）
 
 const GEM_TEX := {
 	"s": "res://assets/sprites/pickups/gem_s.png",
@@ -431,14 +424,131 @@ static func is_elite_floor(floor_num: int) -> bool:
 	return floor_num % 3 == 0 and not is_boss_floor(floor_num)
 
 
-static func floor_comp(floor_num: int) -> Dictionary:
-	var base: Dictionary = FLOOR_COMPS[(floor_num - 1) % FLOOR_COMPS.size()]
-	# 无尽 60 层后刷怪数封顶（防性能与数值失控）
-	var growth := mini(int((floor_num - 1) / FLOOR_COMPS.size()), 9)
+## ---- v0.8 D2 刷怪曲线（01 §3.2）：只数主控 + 构成锚点插值，层总 HP 构造单调 ----
+static var _floors_cfg: Dictionary = {}
+static var _floors_loaded := false
+
+
+static func _floors() -> Dictionary:
+	if _floors_loaded:
+		return _floors_cfg
+	_floors_loaded = true
+	if FileAccess.file_exists("res://data/floors.json"):
+		var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://data/floors.json"))
+		if parsed is Dictionary:
+			_floors_cfg = parsed
+	return _floors_cfg
+
+
+## 每层只数：6 + 1.35×(f-1)，夹在 [6, 46]（同屏上限 60 之下）
+static func floor_count(f: int) -> int:
+	var c: Dictionary = _floors().get("count", {})
+	return clampi(int(round(float(c.get("base", 6.0)) + float(c.get("per_floor", 1.35)) * float(f - 1))),
+		int(c.get("min", 6)), int(c.get("max", 46)))
+
+
+## 兵种构成权重：锚点间线性插值（锚点外取最近锚点）
+static func mix_for_floor(f: int) -> Dictionary:
+	var anchors: Dictionary = _floors().get("mix_anchors", {})
+	if anchors.is_empty():
+		return {"slime": 0.7, "bat": 0.3}
+	var keys: Array = []
+	for k in anchors.keys():
+		keys.append(int(k))
+	keys.sort()
+	var lo: int = keys[0]
+	var hi: int = keys[keys.size() - 1]
+	for k in keys:
+		if k <= f:
+			lo = k
+		if k >= f and hi == keys[keys.size() - 1]:
+			hi = k
+	if f <= int(keys[0]):
+		return (anchors[str(keys[0])] as Dictionary).duplicate()
+	if f >= int(keys[keys.size() - 1]):
+		return (anchors[str(keys[keys.size() - 1])] as Dictionary).duplicate()
+	if lo == hi:
+		return (anchors[str(lo)] as Dictionary).duplicate()
+	var a: Dictionary = anchors[str(lo)]
+	var b: Dictionary = anchors[str(hi)]
+	var t := float(f - lo) / float(hi - lo)
 	var out := {}
-	for k in base.keys():
-		out[k] = int(base[k]) + growth * 2
+	for kind in a.keys():
+		out[kind] = lerpf(float(a[kind]), float(b.get(kind, 0.0)), t)
+	for kind in b.keys():
+		if not out.has(kind):
+			out[kind] = lerpf(0.0, float(b[kind]), t)
 	return out
+
+
+## 每层刷怪表：floor_count 按构成权重分配（算法对齐 docs/v08/sim/_final.py 验证模型）
+static func floor_comp(floor_num: int) -> Dictionary:
+	var mix := mix_for_floor(floor_num)
+	var total := floor_count(floor_num)
+	var wsum := 0.0
+	for k in mix.keys():
+		wsum += float(mix[k])
+	if wsum <= 0.0:
+		return {"slime": total}
+	var counts := {}
+	var sum := 0
+	for k in mix.keys():
+		var n := int(round(float(mix[k]) / wsum * float(total)))
+		counts[k] = n
+		sum += n
+	# 不足则补给权重最大兵种；超出则从只数最大兵种扣
+	while sum < total:
+		var bk := ""
+		var bw := -1.0
+		for k in mix.keys():
+			if float(mix[k]) > bw:
+				bw = float(mix[k])
+				bk = String(k)
+		counts[bk] = int(counts[bk]) + 1
+		sum += 1
+	while sum > total:
+		var bk := ""
+		var bc := -1
+		for k in counts.keys():
+			if int(counts[k]) > bc:
+				bc = int(counts[k])
+				bk = String(k)
+		counts[bk] = int(counts[bk]) - 1
+		sum -= 1
+	var out := {}
+	for k in counts.keys():
+		if int(counts[k]) > 0:
+			out[k] = int(counts[k])
+	return out
+
+
+## 精英倍率（v0.7 的 ×8 造成精英层尖峰+断崖，下调为 ×2）
+static func elite_hp_mult() -> float:
+	return float(_floors().get("elite_hp_mult", 2.0))
+
+
+## 精英分配：精英层固定上限 2 只，兵种 = 构成中基础 HP 最高者（该兵种不足 2 只则按其只数，
+## 对齐 docs/v08/sim/_final.py 验证模型——顺延其他兵种会放大精英层尖峰、加深次层回落）
+static func elite_assignment(floor_num: int) -> Dictionary:
+	if not is_elite_floor(floor_num):
+		return {}
+	var top := elite_kind_for(floor_num)
+	if top == "":
+		return {}
+	return {top: mini(2, int(floor_comp(floor_num)[top]))}
+
+
+## 精英主兵种 = 该层实际刷怪构成中基础 HP 最高者（按只数，不按权重）
+static func elite_kind_for(floor_num: int) -> String:
+	var comp := floor_comp(floor_num)
+	var best := ""
+	var best_hp := -1.0
+	for k in comp.keys():
+		var hp := float(ENEMIES[k]["hp"])
+		if hp > best_hp:
+			best_hp = hp
+			best = String(k)
+	return best
 
 
 ## stat multiplier for enemies on a given floor

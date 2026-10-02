@@ -40,11 +40,11 @@ const SCHOOL_ORDER := ["combat", "survival", "greed"]
 
 # ---------- 永久属性升级（§8.1，每项 20 级，价格递增） ----------
 const ATTRS := {
-	"atk":  {"name": "强壮", "desc": "攻击 +%d%%", "max": 20, "cost": 60, "per": 0.02},
-	"hp":   {"name": "生命", "desc": "血量上限 +%d", "max": 20, "cost": 60, "per": 6.0},
-	"spd":  {"name": "神速", "desc": "移速 +%d%%", "max": 20, "cost": 50, "per": 0.01},
-	"pick": {"name": "搜刮", "desc": "拾取范围 +%d%%", "max": 20, "cost": 50, "per": 0.03},
-	"exp":  {"name": "睿智", "desc": "经验 +%d%%", "max": 20, "cost": 80, "per": 0.02},
+	"atk":  {"name": "强壮", "desc": "攻击 +%d%%", "max": 12, "cost": 60, "per": 0.02},
+	"hp":   {"name": "生命", "desc": "血量上限 +%d", "max": 12, "cost": 60, "per": 6.0},
+	"spd":  {"name": "神速", "desc": "移速 +%d%%", "max": 12, "cost": 50, "per": 0.01},
+	"pick": {"name": "搜刮", "desc": "拾取范围 +%d%%", "max": 12, "cost": 50, "per": 0.03},
+	"exp":  {"name": "睿智", "desc": "经验 +%d%%", "max": 12, "cost": 80, "per": 0.02},
 }
 const ATTR_ORDER := ["atk", "hp", "spd", "pick", "exp"]
 
@@ -353,7 +353,7 @@ static func attr_lv(aid: String) -> int:
 
 static func attr_cost(aid: String) -> int:
 	var d: Dictionary = ATTRS[aid]
-	return int(float(d["cost"]) * pow(1.35, attr_lv(aid)))
+	return int(float(d["cost"]) * pow(1.18, attr_lv(aid)))
 
 
 static func buy_attr(aid: String) -> bool:

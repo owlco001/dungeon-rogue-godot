@@ -46,7 +46,7 @@ func _ready() -> void:
 	var def: Dictionary = GameData.ENEMIES[enemy_id]
 	hp = float(def["hp"]) * hp_mult
 	if elite:
-		hp *= 8.0
+		hp *= GameData.elite_hp_mult()
 	max_hp = hp
 	speed = float(def["speed"])
 	dmg = float(def["dmg"]) * dmg_mult

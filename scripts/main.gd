@@ -23,6 +23,7 @@ var boss_kills := 0
 var run_time := 0.0
 var endless := false
 var _started := false
+var _elite_hint_shown := false
 var _stairs: Area2D = null
 var _boss_ref: Node2D = null
 var _last_advance_msec := -99999
@@ -97,7 +98,7 @@ func next_floor() -> void:
 		return
 	_last_advance_msec = Time.get_ticks_msec()
 	floor_num += 1
-	if endless and (floor_num == 35 or floor_num == 40 or floor_num == 50):
+	if endless and floor_num in [35, 40, 45, 50, 55, 60]:
 		Achievements.unlock("endless%d" % floor_num)
 	if floor_num > GameData.MAX_FLOOR and not endless:
 		return
@@ -139,13 +140,20 @@ func _spawn_floor_enemies() -> void:
 				_spawn_enemy(String(eid), hp_m, dmg_m, false)
 		return
 	var comp: Dictionary = GameData.floor_comp(floor_num)
-	var elite_left := 2 if GameData.is_elite_floor(floor_num) else 0
+	# v0.8 精英规则：固定 2 只，按基础 HP 从高到低分配（GameData.elite_assignment）
+	var elite_asg: Dictionary = GameData.elite_assignment(floor_num)
+	var elite_kind := GameData.elite_kind_for(floor_num)
 	for eid in comp.keys():
+		var elite_left := int(elite_asg.get(eid, 0))
 		for i in range(int(comp[eid])):
 			var is_elite := elite_left > 0
 			if is_elite:
 				elite_left -= 1
 			_spawn_enemy(String(eid), hp_m, dmg_m, is_elite)
+	# D4：第 3 层首只精英提示（每局一次）
+	if floor_num == 3 and elite_kind != "" and not _elite_hint_shown:
+		_elite_hint_shown = true
+		hud.show_toast(Lang.t("精英会掉落遗物"))
 
 
 func _spawn_enemy(eid: String, hp_m: float, dmg_m: float, is_elite: bool) -> void:
@@ -202,6 +210,7 @@ func _on_enemy_died(e: Node2D) -> void:
 		Meta.record_boss_kill(floor_num)
 		Achievements.unlock(GameData.boss_ach_id(floor_num))
 		_spawn_gem(e.global_position, "xp", 40, "")
+		_spawn_gem(e.global_position, "gold", 40 * (floor_num / 5), "")
 		_drop_relic(e.global_position, true)
 		var bdef: Dictionary = GameData.boss_def_for_floor(floor_num)
 		if not endless and bool(bdef.get("final", false)):
@@ -211,7 +220,7 @@ func _on_enemy_died(e: Node2D) -> void:
 		_spawn_stairs()
 		return
 	_spawn_gem(e.global_position, "xp", int(e.get("xp_value")), "")
-	if randf() < 0.25:
+	if randf() < 0.45:
 		_spawn_gem(e.global_position, "gold", randi_range(1, 3), "")
 	if bool(e.get("elite")):
 		_drop_relic(e.global_position, false)
@@ -426,6 +435,10 @@ func _bank_run_gold(victory: bool) -> void:
 		_last_banked = int(_last_banked * GameData.ENDLESS_GOLD_MULT)
 	if _last_banked > 0:
 		Meta.add_gold(_last_banked)
+	if victory:
+		Meta.add_gold(400)  # v0.8 通关奖励（01 §3.3）
+	# v0.8 天赋点按到达层数发放：每 5 层 1 点（01 §3.3）
+	Meta.add_talent_points(floor_num / 5)
 	Meta.record_run(floor_num, victory)
 	Meta.save_data_now()
 
