@@ -107,6 +107,16 @@ func _mk_label(text: String, size: int) -> Label:
 	return l
 
 
+## v0.8.19：纵向渐变纹理（上亮下暗），用于血条/经验条/计时条的 fill
+func _mk_gradient_tex(top: Color, bottom: Color) -> Texture2D:
+	var img := Image.create(4, 32, false, Image.FORMAT_RGBA8)
+	for y in range(32):
+		var c := top.lerp(bottom, float(y) / 31.0)
+		for x in range(4):
+			img.set_pixel(x, y, c)
+	return ImageTexture.create_from_image(img)
+
+
 func _mk_bar(fill_color: Color, w: float) -> ProgressBar:
 	var b := ProgressBar.new()
 	b.custom_minimum_size = Vector2(w, 18)
@@ -116,9 +126,11 @@ func _mk_bar(fill_color: Color, w: float) -> ProgressBar:
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = Color(0, 0, 0, 0.55)
 	bg.set_corner_radius_all(6)
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = fill_color
-	fill.set_corner_radius_all(6)
+	bg.set_border_width_all(1)
+	bg.border_color = Color(0, 0, 0, 0.8)
+	# v0.8.19：fill 改渐变（上亮下暗）+ 底框描边
+	var fill := StyleBoxTexture.new()
+	fill.texture = _mk_gradient_tex(fill_color.lightened(0.35), fill_color.darkened(0.3))
 	b.add_theme_stylebox_override("background", bg)
 	b.add_theme_stylebox_override("fill", fill)
 	return b
@@ -162,18 +174,46 @@ func _build_timer_bar() -> void:
 	_timer_bar.show_percentage = false
 	_timer_bar.visible = false
 	_timer_label.visible = false
+	# v0.8.19：计时条渐变 + 波次刻度（T+25/T+50，对应 3 波怪）
+	var tbg := StyleBoxFlat.new()
+	tbg.bg_color = Color(0, 0, 0, 0.55)
+	tbg.set_corner_radius_all(5)
+	_timer_bar.add_theme_stylebox_override("background", tbg)
+	var tfill := StyleBoxTexture.new()
+	tfill.texture = _mk_gradient_tex(Color(0.45, 0.65, 1.0), Color(0.25, 0.45, 0.85))
+	_timer_bar.add_theme_stylebox_override("fill", tfill)
+	for wave_t in [25.0, 50.0]:
+		var tick := ColorRect.new()
+		tick.color = Color(1.0, 0.85, 0.4, 0.9)
+		tick.custom_minimum_size = Vector2(2, 10)
+		tick.position = Vector2(320.0 * (70.0 - wave_t) / 70.0 - 1.0, 0)
+		tick.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_timer_bar.add_child(tick)
 	vc.add_child(_timer_bar)
 
 
 func _build_labels() -> void:
+	# v0.8.19：右上信息收进半透明圆角面板
+	var panel := PanelContainer.new()
+	panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	panel.offset_left = -330
+	panel.offset_right = -16
+	panel.offset_top = 12
+	panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	var psb := StyleBoxFlat.new()
+	psb.bg_color = Color(0.03, 0.03, 0.06, 0.62)
+	psb.set_corner_radius_all(8)
+	psb.set_border_width_all(1)
+	psb.border_color = Color(1, 1, 1, 0.12)
+	psb.content_margin_left = 12
+	psb.content_margin_right = 12
+	psb.content_margin_top = 8
+	psb.content_margin_bottom = 8
+	panel.add_theme_stylebox_override("panel", psb)
+	add_child(panel)
 	var box := VBoxContainer.new()
-	box.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	box.offset_left = -330
-	box.offset_right = -16
-	box.offset_top = 12
-	box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	box.add_theme_constant_override("separation", 2)
-	add_child(box)
+	panel.add_child(box)
 	_floor_label = _mk_label("第1层·地牢回廊", 17)
 	_floor_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	box.add_child(_floor_label)
