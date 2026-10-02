@@ -63,6 +63,8 @@ var _rescue := false
 # v0.3 状态：眩晕 / 减速 / 中毒 / 虚弱 / 诅咒
 var stun_t := 0.0
 var slow_t := 0.0
+var terrain_speed_mult := 1.0  # v0.8.5 地形移速倍率（main 写入，飞行怪免疫）
+var terrain_id := ""
 var poison_t := 0.0
 var poison_dps := 0.0
 var weaken_t := 0.0
@@ -92,6 +94,8 @@ func spawn_init() -> void:
 	touch_cd = 0.0
 	stun_t = 0.0
 	slow_t = 0.0
+	terrain_speed_mult = 1.0
+	terrain_id = ""
 	poison_t = 0.0
 	poison_dps = 0.0
 	weaken_t = 0.0
@@ -213,7 +217,7 @@ func _physics_process(delta: float) -> void:
 		return
 	sprite.rotation = 0.0
 
-	var spd := speed * (0.5 if slow_t > 0.0 else 1.0)
+	var spd := speed * terrain_speed_mult * (0.5 if slow_t > 0.0 else 1.0)
 	if slow_t > 0.0:
 		slow_t -= delta
 		# 减速染色

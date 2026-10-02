@@ -30,10 +30,10 @@ run_driver() {
 
 case "$MODE" in
   v1) run_v1 ;;
-  v2|v3|v5h|v8|v9|v9d|v10|v7|v5) run_driver "$MODE" ;;
+  v2|v3|v5h|v8|v9|v9d|v10|v11|v7|v5) run_driver "$MODE" ;;
   v3x) run_driver v3; run_driver v3setup; run_driver v3check ;;
   v4) echo "== V4 content gate =="; "$GODOT" --headless --path . --script res://tools/check_content.gd 2>&1 | grep -E "V4|SCRIPT ERROR"; [ ${PIPESTATUS[0]} -ne 0 ] && rc=1; python3 tools/check_audio.py || rc=1 ;;
-  all) run_v1; "$GODOT" --headless --path . --script res://tools/check_content.gd > /tmp/dr_v4.log 2>&1 || rc=1; grep -E "V4 RESULT" /tmp/dr_v4.log; python3 tools/check_audio.py || rc=1; run_driver v2; run_driver v3; run_driver v3setup; run_driver v3check; run_driver v5h; run_driver v5; run_driver v7; run_driver v8; run_driver v9; run_driver v9d; run_driver v10 ;;
+  all) run_v1; "$GODOT" --headless --path . --script res://tools/check_content.gd > /tmp/dr_v4.log 2>&1 || rc=1; grep -E "V4 RESULT" /tmp/dr_v4.log; python3 tools/check_audio.py || rc=1; run_driver v2; run_driver v3; run_driver v3setup; run_driver v3check; run_driver v5h; run_driver v5; run_driver v7; run_driver v8; run_driver v9; run_driver v9d; run_driver v10; run_driver v11 ;;
   *) echo "unknown mode $MODE"; exit 2 ;;
 esac
 echo "GATES RESULT: $([ $rc -eq 0 ] && echo PASS || echo FAIL)"

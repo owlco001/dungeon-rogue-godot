@@ -8,6 +8,8 @@ const BossScript := preload("res://scripts/boss.gd")
 const ChestScript := preload("res://scripts/chest.gd")
 const WaveDirectorScript := preload("res://systems/wave_director.gd")
 const RoomGenScript := preload("res://systems/room_gen.gd")
+const TerrainGenScript := preload("res://systems/terrain.gd")
+const TerrainLayerScript := preload("res://scripts/terrain_layer.gd")
 
 
 class BrambleZone extends Node2D:
@@ -70,6 +72,10 @@ var _director: WaveDirector = null
 var _floor_has_waves := false
 var _wave_ui_t := 0.0
 var _room = null  # RoomGen 实例（无类型：无头驱动编译图认不出新 class_name）
+var _terrain_patches: Array = []  # v0.8.5 地形块（TerrainGen 产出）
+var _terrain_layer: Node2D = null
+var _terrain_tick_t := 0.0
+var _terrain_hints_shown := {}
 var _wave_hp_m := 1.0
 var _wave_dmg_m := 1.0
 var _last_advance_msec := -99999
@@ -81,6 +87,13 @@ func _ready() -> void:
 	arena.set_script(ArenaScript)
 	arena.name = "Arena"
 	add_child(arena)
+
+	# v0.8.5 地形视觉层：压在地板之上、角色之下（z 1；角色按树序在其后绘制）
+	_terrain_layer = Node2D.new()
+	_terrain_layer.set_script(TerrainLayerScript)
+	_terrain_layer.name = "TerrainLayer"
+	_terrain_layer.z_index = 1
+	add_child(_terrain_layer)
 
 	_director = WaveDirectorScript.new()
 	_director.name = "WaveDirector"
@@ -148,6 +161,9 @@ func _on_character_chosen(char_id: String) -> void:
 func _physics_process(_delta: float) -> void:
 	# v0.8 B4：每物理帧首行重建空间网格（EntityRegistry）
 	Registry.begin_frame()
+	# v0.8.5 地形：移速/摩擦逐帧写入，持续伤害 0.5s 结算
+	if _started:
+		_tick_terrain(_delta)
 	# B6/B7：波次计时条 + 生存评分 0.25s 节流刷新
 	_wave_ui_t += _delta
 	if _wave_ui_t >= 0.25:
@@ -204,6 +220,7 @@ func next_floor() -> void:
 	hud.hide_boss_bar()
 	var fdef: Dictionary = GameData.floor_def(floor_num)
 	arena.set_theme(String(fdef["theme"]))
+	_build_terrain(String(fdef["theme"]))
 	if GameData.is_boss_floor(floor_num):
 		var bdef: Dictionary = GameData.boss_def_for_floor(floor_num)
 		hud.set_floor(floor_num, ("无尽Boss:" if endless else "Boss:") + String(bdef["name"]))
@@ -544,6 +561,83 @@ func _room_farthest_pos() -> Vector2:
 	if _room != null and is_instance_valid(player):
 		return _room.farthest_room_center(player.global_position)
 	return Vector2(-1, -1)
+
+
+# ---------- v0.8.5 地形 ----------
+func _build_terrain(theme: String) -> void:
+	var center := Vector2(ARENA_W * 0.5, ARENA_H * 0.5)
+	var reserved: Array = [center]
+	var walkable := PackedByteArray()
+	var is_boss := GameData.is_boss_floor(floor_num)
+	if _room != null:
+		walkable = _room.pf_grid
+		reserved.append(_room.farthest_room_center(center))
+		reserved.append(_room.farthest_room_center(center, true))
+	else:
+		walkable.resize(32 * 24)
+		walkable.fill(0)
+		reserved.append(Vector2(ARENA_W * 0.5, 320.0))
+	_terrain_patches = TerrainGenScript.generate(theme, floor_num, walkable,
+		reserved, 5 if is_boss else 6)
+	_terrain_tick_t = 0.0
+	_terrain_hints_shown.clear()
+	if _terrain_layer != null:
+		_terrain_layer.call("setup", _terrain_patches, theme)
+	if is_instance_valid(player):
+		player.terrain_speed_mult = 1.0
+		player.terrain_accel_mult = 1.0
+		player.terrain_friction_mult = 1.0
+		player.terrain_id = ""
+
+
+func _terrain_patch_at(pos: Vector2) -> Dictionary:
+	return TerrainGenScript.patch_at(_terrain_patches, pos)
+
+
+func _tick_terrain(delta: float) -> void:
+	if _terrain_patches.is_empty() or not is_instance_valid(player):
+		return
+	var p_patch := _terrain_patch_at(player.global_position)
+	player.terrain_speed_mult = float(p_patch.get("player_speed", 1.0))
+	player.terrain_accel_mult = float(p_patch.get("player_accel", 1.0))
+	player.terrain_friction_mult = float(p_patch.get("player_friction", 1.0))
+	player.terrain_id = String(p_patch.get("id", ""))
+	if not p_patch.is_empty():
+		var tid := String(p_patch.get("id", ""))
+		if not _terrain_hints_shown.has(tid):
+			_terrain_hints_shown[tid] = true
+			hud.show_toast(Lang.t(String(p_patch.get("hint", ""))))
+	var enemy_patches := {}
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(e) or bool(e.get("is_boss")) or bool(e.get("dead")):
+			continue
+		if bool(e.get("fly")):
+			e.set("terrain_speed_mult", 1.0)
+			e.set("terrain_id", "")
+			continue
+		var ep := _terrain_patch_at((e as Node2D).global_position)
+		enemy_patches[e.get_instance_id()] = ep
+		e.set("terrain_speed_mult", float(ep.get("enemy_speed", 1.0)))
+		e.set("terrain_id", String(ep.get("id", "")))
+	_terrain_tick_t += delta
+	if _terrain_tick_t < 0.5:
+		return
+	var dt := _terrain_tick_t
+	_terrain_tick_t = 0.0
+	if not p_patch.is_empty():
+		var pdps := float(p_patch.get("player_dps", 0.0))
+		if pdps > 0.0:
+			player.take_terrain_damage(pdps * dt)
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(e) or bool(e.get("is_boss")) or bool(e.get("dead")) \
+				or bool(e.get("fly")):
+			continue
+		var ep: Dictionary = enemy_patches.get(e.get_instance_id(), {})
+		if ep.is_empty():
+			continue
+		var edps := float(ep.get("enemy_dps", 0.0))
+		if edps > 0.0 and e.has_method("take_damage"):
+			e.take_damage(edps * dt, Vector2.ZERO, 0.0)
 
 
 # ---------- shared combat visuals ----------

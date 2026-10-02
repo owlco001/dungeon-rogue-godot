@@ -2,6 +2,7 @@ extends SceneTree
 
 const RG := preload("res://systems/room_gen.gd")
 const PF := preload("res://systems/pathfind.gd")
+const TG := preload("res://systems/terrain.gd")
 ## v0.8 无头门禁驱动（真实场景入口 + 按钮驱动，同 capture_* 模式）。
 ## 用法：godot --headless --audio-driver Dummy --path . --script res://test/auto_v08.gd -- <mode>
 ## mode: v2（启动基线） | v3（存档往返） | v5/v7/v8/v9 后续批次补齐
@@ -65,6 +66,8 @@ func _run(mode: String) -> void:
 			await _v9d()
 		"v10":
 			await _v10()
+		"v11":
+			await _v11()
 		"v7":
 			await _v7()
 		"v5":
@@ -516,6 +519,110 @@ func _v10() -> void:
 			stuck += 1
 	_check("V10 stuck rate < 1%", checked > 0 and stuck == 0,
 		"checked=%d stuck=%d" % [checked, stuck])
+
+
+# ---- V11（v0.8.5）：地形生成确定性/合法性 + 实战效果（敌人碎石减速、玩家熔岩烫伤） ----
+func _v11() -> void:
+	Lang.set_lang("zh")
+	var room = RG.new()
+	room.generate(12345)
+	var center := Vector2(RG.GW * RG.CELL * 0.5, RG.GH * RG.CELL * 0.5)
+	var reserved: Array = [center, room.farthest_room_center(center), room.farthest_room_center(center, true)]
+	var p1: Array = TG.generate("forge", 2, room.pf_grid, reserved, 6)
+	var p2: Array = TG.generate("forge", 2, room.pf_grid, reserved, 6)
+	_check("V11 terrain generated", p1.size() >= 3, "patches=%d" % p1.size())
+	var keys1 := {}
+	for patch in p1:
+		for c in patch["cells"]:
+			keys1[TG.cell_key(c)] = true
+	var keys2 := {}
+	for patch in p2:
+		for c in patch["cells"]:
+			keys2[TG.cell_key(c)] = true
+	_check("V11 same-seed reproducible", keys1 == keys2, "cells=%d" % keys1.size())
+	var legal := true
+	for patch in p1:
+		for c in patch["cells"]:
+			if room.pf_grid[c.y * RG.GW + c.x] != 0:
+				legal = false
+			var cp := TG.cell_center(c)
+			for r in reserved:
+				if cp.distance_to(r) < 135.0:
+					legal = false
+	_check("V11 cells walkable & reserved-clear", legal)
+	# 六主题在开放网格上都能出地形且 id 正确
+	var open_grid := PackedByteArray()
+	open_grid.resize(RG.GW * RG.GH)
+	open_grid.fill(0)
+	var ids_ok := true
+	for theme in ["corridor", "forge", "ice", "tomb", "thorn", "void"]:
+		var ps: Array = TG.generate(theme, 7, open_grid, [center], 5)
+		if ps.is_empty() or String(ps[0].get("id", "")) != String(TG.profile_for(theme).get("id", "")):
+			ids_ok = false
+	_check("V11 six themes produce patches", ids_ok)
+	if not p1.is_empty():
+		var at: Dictionary = TG.patch_at(p1, p1[0]["center"])
+		_check("V11 patch_at hits", String(at.get("id", "")) == "lava")
+	# 实战：进第 1 层（回廊=碎石），敌人站碎石上应被写入 0.75 倍速
+	var inst: Node = load("res://scenes/lobby.tscn").instantiate()
+	root.add_child(inst)
+	await _wait(1.0)
+	var tab := _find_btn(inst, ["出战", "Battle"])
+	if tab == null:
+		_check("V11 entry", false, "no fight tab")
+		return
+	tab.pressed.emit()
+	await _wait(0.5)
+	var btn := _find_btn(inst, ["开始战斗", "Start"])
+	if btn == null:
+		_check("V11 start", false, "no start btn")
+		return
+	btn.pressed.emit()
+	var main: Node = null
+	for i in range(50):
+		await _wait(0.1)
+		main = get_first_node_in_group("game")
+		if main != null:
+			break
+	_check("V11 in battle", main != null)
+	if main == null:
+		return
+	await _wait(0.5)
+	var patches: Array = main.get("_terrain_patches")
+	_check("V11 live patches exist", patches.size() >= 3, "n=%d" % patches.size())
+	if patches.is_empty():
+		return
+	var player := get_first_node_in_group("player")
+	main.call("_spawn_enemy", "slime", 1.0, 1.0, false)
+	await _wait(0.2)
+	var slime: Node = null
+	for e in get_nodes_in_group("enemies"):
+		slime = e  # 刚刷出的在组内顺序靠后；逐个试站位，找到被写减速的即可
+		e.global_position = patches[0]["center"]
+		await _wait(0.35)
+		if absf(float(e.get("terrain_speed_mult")) - 0.75) < 0.01:
+			slime = e
+			break
+	_check("V11 enemy slowed on rubble", slime != null
+		and absf(float(slime.get("terrain_speed_mult")) - 0.75) < 0.01,
+		"mult=%s" % str(slime.get("terrain_speed_mult") if slime != null else -1))
+	# 玩家熔岩烫伤：清场后切熔炉地形，把玩家放到熔岩块中心
+	main.call("_clear_minions")
+	await _wait(0.3)
+	main.call("_build_terrain", "forge")
+	await _wait(0.2)
+	var fpatches: Array = main.get("_terrain_patches")
+	_check("V11 forge rebuild", not fpatches.is_empty() and String(fpatches[0].get("id", "")) == "lava")
+	if fpatches.is_empty() or player == null:
+		return
+	player.global_position = fpatches[0]["center"]
+	player.set("velocity", Vector2.ZERO)
+	var hp0 := float(player.get("hp"))
+	await _wait(1.3)
+	_check("V11 player on lava id", String(player.get("terrain_id")) == "lava",
+		"id=%s" % str(player.get("terrain_id")))
+	_check("V11 player lava dps", float(player.get("hp")) <= hp0 - 2.0,
+		"hp %s -> %s" % [str(hp0), str(player.get("hp"))])
 
 
 # ---- V9d（B6）：波次拆分数学 + 实战波次/计时断言 ----

@@ -41,6 +41,11 @@ var _cross_aura_t := 0.0
 var _punch_start_ms := -1
 var _synth_aura: Node2D = null
 var external_slow_mult := 1.0  # 荆棘丛区域减速（L3）
+# v0.8.5 地形效果（main 每物理帧写入）：移速/加速度/摩擦倍率
+var terrain_speed_mult := 1.0
+var terrain_accel_mult := 1.0
+var terrain_friction_mult := 1.0
+var terrain_id := ""
 var _relic_tbl_cache: Dictionary = {}
 var MAGNET_RADIUS := BASE_MAGNET_RADIUS
 
@@ -157,9 +162,11 @@ func _physics_process(delta: float) -> void:
 
 	external_slow_mult = move_toward(external_slow_mult, 1.0, 2.0 * delta)
 	if input_vec != Vector2.ZERO:
-		velocity = velocity.move_toward(input_vec * speed * external_slow_mult, ACCEL * delta)
+		velocity = velocity.move_toward(
+			input_vec * speed * external_slow_mult * terrain_speed_mult,
+			ACCEL * terrain_accel_mult * delta)
 	else:
-		velocity = velocity.move_toward(Vector2.ZERO, FRICTION * delta)
+		velocity = velocity.move_toward(Vector2.ZERO, FRICTION * terrain_friction_mult * delta)
 	move_and_slide()
 
 	if input_vec.length() > 0.1:
@@ -1683,6 +1690,40 @@ func take_damage(amount: float, from_dir: Vector2, knock_mult: float = 1.0, from
 	hp_changed.emit(hp, max_hp)
 	EventBus.player_damaged.emit(amount, from_dir, from)
 	FX.shake(get_parent(), 6.0)
+	if hp <= 0.0:
+		var can_phoenix := "phoenixheart" in relics and not _revive_used
+		var can_talent := Meta.has_revive() and not _revive_talent_used
+		if can_phoenix or can_talent:
+			if can_phoenix:
+				_revive_used = true
+			else:
+				_revive_talent_used = true
+			hp = max_hp * 0.5
+			_invuln_t = 2.0
+			hp_changed.emit(hp, max_hp)
+			return
+		_die()
+
+
+## v0.8.5 地形持续伤害：走护甲/坚韧/护盾，但不触发无敌帧、击退、受击音与震屏
+func take_terrain_damage(amount: float) -> void:
+	if _dead or amount <= 0.0:
+		return
+	var armor := minf(0.04 * (float(passives.get("armor", 0)) + Meta.bonus_armor()), 0.6)
+	amount *= 1.0 - armor
+	amount *= Meta.bonus_tough_mult()
+	if _shield_hp > 0.0:
+		var absorbed := minf(_shield_hp, amount)
+		_shield_hp -= absorbed
+		amount -= absorbed
+		if _shield_hp <= 0.0:
+			_shield_t = 0.0
+	if amount <= 0.0:
+		hp_changed.emit(hp, max_hp)
+		return
+	hp = maxf(0.0, hp - amount)
+	_flash_t = maxf(_flash_t, 0.05)
+	hp_changed.emit(hp, max_hp)
 	if hp <= 0.0:
 		var can_phoenix := "phoenixheart" in relics and not _revive_used
 		var can_talent := Meta.has_revive() and not _revive_talent_used

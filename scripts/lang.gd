@@ -380,6 +380,12 @@ const _DICT := {
 	"武器会自动攻击最近的目标": "Weapons auto-attack the nearest enemy",
 	"技能默认自动释放，可切手动": "Skills cast automatically by default — tap to switch to manual",
 	"精英会掉落遗物": "Elites drop relics",
+	"碎石地：你略慢，敌人慢得多": "Rubble: you slow a little, enemies slow a lot",
+	"熔岩池：持续烫伤，敌人伤得更重": "Lava Pool: burns over time — enemies burn worse",
+	"薄冰面：速度略升，但很难刹住": "Thin Ice: slightly faster, very hard to stop",
+	"腐殖泥沼：深陷减速，敌人陷得更深": "Rot Mire: deep slow — enemies sink deeper",
+	"荆棘地：减速并持续扎伤": "Bramble Ground: slows and pricks over time",
+	"虚空裂隙：侵蚀生命，步伐不稳": "Void Rift: erodes HP, footing unstable",
 	"无尽模式：开": "Endless Mode: ON",
 	"无尽模式：关": "Endless Mode: OFF",
 }
