@@ -380,12 +380,16 @@ func _v7() -> void:
 	await _wait(0.4)
 	var reg_n2 := (reg.get("enemies") as Array).size()
 	_check("V7 unregister on death", reg_n2 == group_n - 1, "after=%d before=%d" % [reg_n2, group_n])
-	# FX 六池：战斗中应已预建 164 节点且不超额增长
+	# FX 六池：直接触发一次特效调用使池按需预建，再断言 164 节点不超额增长
+	var fx = load("res://scripts/fx.gd")
+	fx.glow(player.get_parent(), player.global_position, 60.0, Color(1, 1, 1, 0.8), 0.2, 5)
+	fx.damage_number(player.get_parent(), player.global_position, 7.0, false)
+	await _wait(0.8)
 	var pool_root := root.get_node_or_null("FXPool")
 	_check("V7 fx pool built", pool_root != null)
 	if pool_root != null:
 		_check("V7 fx pool size 164", pool_root.get_child_count() == 164,
-			"children=%d" % pool_root.get_child_count())
+			"children=%d stats=%s parents=%s" % [pool_root.get_child_count(), str(fx.pool_stats()), str(fx.pool_debug_parents())])
 
 func _corrupt_file(path: String) -> void:
 	var f := FileAccess.open(path, FileAccess.WRITE)

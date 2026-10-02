@@ -153,6 +153,22 @@ static func pool_stats() -> Dictionary:
 	return out
 
 
+## 调试：每个池空闲节点的父节点名（定位池节点被挪用/丢失问题）
+static func pool_debug_parents() -> Dictionary:
+	var out := {}
+	for k in _free.keys():
+		var ps := []
+		for n in _free[k]:
+			if not is_instance_valid(n):
+				ps.append("<invalid>")
+			elif (n as Node).get_parent() != null:
+				ps.append(String((n as Node).get_parent().name))
+			else:
+				ps.append("<orphan>")
+		out[k] = ps
+	return out
+
+
 static func _make_glow_sprite() -> Sprite2D:
 	var sp := Sprite2D.new()
 	sp.texture = _glow_texture()
@@ -326,11 +342,15 @@ class Ring extends Node2D:
 	var duration := 0.35
 	var tint := Color(1, 0.8, 0.4)
 	var width := 8.0
+	var active := false  # 池中待命时为 false，_process 直接返回（防待命节点自杀）
 	var on_finish: Callable = Callable()  # 池化时由 FX 注入回收回调
 	func _process(d: float) -> void:
+		if not active:
+			return
 		t += d
 		queue_redraw()
 		if t >= duration:
+			active = false
 			if on_finish.is_valid():
 				on_finish.call(self)
 			else:
@@ -359,6 +379,7 @@ static func explosion(parent: Node2D, pos: Vector2, radius: float, tint: Color) 
 		ring.z_index = 6
 		ring.visible = true
 		ring.on_finish = func(r: Node) -> void: _release(r)
+		ring.active = true
 		ring.set_process(true)
 	# spark particles（池化）
 	var sparks := _acquire("boom", parent.get_tree()) as CPUParticles2D
