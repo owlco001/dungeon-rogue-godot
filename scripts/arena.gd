@@ -90,15 +90,56 @@ func _add_box(pos: Vector2, size: Vector2) -> void:
 
 
 class WallsVisual extends Node2D:
-	# L4 房间墙体视觉：全部矩形一次 _draw（1 个 canvas item，1 draw call）
-	var rects: Array = []
+	# L4 房间墙体视觉（v0.8.6 主题化）：逐格主题墙砖 + 亮度抖动；
+	# 南侧邻地面 → 立面（side 贴图）+ 底边压暗 + 向地面投 10px 影；
+	# 北侧邻地面 → 顶部高光。全部命令在一个 canvas item 内（缓存绘制）。
+	var rects: Array = []  # grid 缺失时的兜底（合并矩形）
+	var grid := PackedByteArray()
+	var gw := 32
+	var gh := 24
+	var cell := 50.0
+	var wall_tex: Texture2D = null
+	var side_tex: Texture2D = null
+	var theme := "corridor"
+
+	func _is_wall(x: int, y: int) -> bool:
+		if x < 0 or y < 0 or x >= gw or y >= gh:
+			return true
+		return grid[y * gw + x] == 1
+
 	func _draw() -> void:
-		for r in rects:
-			var p: Vector2 = r["pos"]
-			var s: Vector2 = r["size"]
-			var top := Rect2(p - s * 0.5, s)
-			draw_rect(top, Color(0.16, 0.14, 0.18, 1.0))
-			draw_rect(Rect2(top.position, Vector2(s.x, 6.0)), Color(0.32, 0.28, 0.34, 1.0))
+		if grid.is_empty() or wall_tex == null:
+			# 兜底：旧平色矩形
+			for r in rects:
+				var p: Vector2 = r["pos"]
+				var s: Vector2 = r["size"]
+				var top := Rect2(p - s * 0.5, s)
+				draw_rect(top, Color(0.16, 0.14, 0.18, 1.0))
+				draw_rect(Rect2(top.position, Vector2(s.x, 6.0)), Color(0.32, 0.28, 0.34, 1.0))
+			return
+		var side: Texture2D = side_tex if side_tex != null else wall_tex
+		for y in range(gh):
+			for x in range(gw):
+				if grid[y * gw + x] != 1:
+					continue
+				var rect := Rect2(float(x) * cell, float(y) * cell, cell, cell)
+				var h := hash("%s:%d:%d" % [theme, x, y])
+				var shade := 0.88 + float(absi(h) % 100) / 100.0 * 0.20
+				# 主体：side 砖纹（wall 贴图是横向光带条纹，只能当顶盖用）
+				draw_texture_rect(side, rect, false, Color(shade, shade, shade))
+				if not _is_wall(x, y - 1):
+					# 北侧顶盖：wall 光带压进顶部 12px 成受光斜面 + 高光线
+					draw_texture_rect(wall_tex, Rect2(rect.position, Vector2(cell, 12.0)),
+						false, Color(shade, shade, shade))
+					draw_rect(Rect2(rect.position, Vector2(cell, 2.0)), Color(1, 1, 1, 0.25))
+				if not _is_wall(x, y + 1):
+					# 南侧立面：下半压暗 + 底边线 + 地面投影
+					draw_rect(Rect2(rect.position + Vector2(0, cell * 0.55),
+						Vector2(cell, cell * 0.45)), Color(0, 0, 0, 0.18))
+					draw_rect(Rect2(rect.position + Vector2(0, cell - 3.0), Vector2(cell, 3.0)),
+						Color(0, 0, 0, 0.45))
+					draw_rect(Rect2(rect.position + Vector2(0, cell), Vector2(cell, 10.0)),
+						Color(0, 0, 0, 0.28))
 
 
 var _room_wall_shapes: Array = []
@@ -106,7 +147,7 @@ var _room_walls_visual: WallsVisual = null
 
 
 ## L4：按房间生成结果建墙（碰撞挂本 StaticBody2D，layer 4 与边框一致）
-func build_room_walls(rects: Array) -> void:
+func build_room_walls(rects: Array, p_grid: PackedByteArray = PackedByteArray()) -> void:
 	clear_room_walls()
 	var visual_rects: Array = []
 	for r in rects:
@@ -120,6 +161,10 @@ func build_room_walls(rects: Array) -> void:
 		visual_rects.append(r)
 	_room_walls_visual = WallsVisual.new()
 	_room_walls_visual.rects = visual_rects
+	_room_walls_visual.grid = p_grid
+	_room_walls_visual.wall_tex = _wall_tex
+	_room_walls_visual.side_tex = _side_tex
+	_room_walls_visual.theme = theme
 	_room_walls_visual.z_index = 2
 	add_child(_room_walls_visual)
 
@@ -215,6 +260,12 @@ func set_theme(t: String) -> void:
 		})
 	_build_torches()
 	_build_rune_decals(drng, center)
+	# v0.8.6：房间内墙跟随主题换砖（build_room_walls 时用的是上一层贴图）
+	if _room_walls_visual != null and is_instance_valid(_room_walls_visual):
+		_room_walls_visual.wall_tex = _wall_tex
+		_room_walls_visual.side_tex = _side_tex
+		_room_walls_visual.theme = theme
+		_room_walls_visual.queue_redraw()
 	queue_redraw()
 	if not _is_baker:
 		_request_bake()

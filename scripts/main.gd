@@ -216,7 +216,7 @@ func next_floor() -> void:
 		var rseed := absi(hash(String(fdef.get("theme", "dungeon")) + ":" + str(floor_num)))
 		_room = RoomGenScript.new()
 		_room.generate(rseed)
-		arena.build_room_walls(_room.merged_wall_rects())
+		arena.build_room_walls(_room.merged_wall_rects(), _room.grid)
 	hud.hide_boss_bar()
 	var fdef: Dictionary = GameData.floor_def(floor_num)
 	arena.set_theme(String(fdef["theme"]))
