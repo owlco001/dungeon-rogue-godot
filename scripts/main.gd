@@ -5,6 +5,7 @@ extends Node2D
 const PlayerScene := preload("res://scenes/player.tscn")
 const EnemyScene := preload("res://scenes/enemy.tscn")
 const BossScript := preload("res://scripts/boss.gd")
+const ChestScript := preload("res://scripts/chest.gd")
 const HudScene := preload("res://scenes/hud.tscn")
 const ArenaScript := preload("res://scripts/arena.gd")
 const GemScript := preload("res://scripts/gem.gd")
@@ -27,6 +28,8 @@ var _started := false
 var _elite_hint_shown := false
 var _stairs: Area2D = null
 var _boss_ref: Node2D = null
+var _cine_mod: CanvasModulate = null
+var _cine_tween: Tween = null
 var _last_advance_msec := -99999
 
 
@@ -37,6 +40,9 @@ func _ready() -> void:
 	arena.name = "Arena"
 	add_child(arena)
 
+	_cine_mod = CanvasModulate.new()
+	_cine_mod.name = "CineModulate"
+	add_child(_cine_mod)
 	hud = HudScene.instantiate()
 	hud.name = "HUD"
 	add_child(hud)
@@ -123,6 +129,9 @@ func next_floor() -> void:
 	for c in get_tree().get_nodes_in_group("corpses"):
 		if is_instance_valid(c):
 			c.queue_free()
+	for ch in get_tree().get_nodes_in_group("chests"):
+		if is_instance_valid(ch):
+			ch.queue_free()
 	_boss_ref = null
 	hud.hide_boss_bar()
 	var fdef: Dictionary = GameData.floor_def(floor_num)
@@ -135,6 +144,7 @@ func next_floor() -> void:
 	player.global_position = Vector2(ARENA_W * 0.5, ARENA_H * 0.5)
 	player.velocity = Vector2.ZERO
 	_spawn_floor_enemies()
+	_maybe_spawn_chest()
 	_update_enemy_label()
 
 
@@ -143,14 +153,37 @@ func _spawn_floor_enemies() -> void:
 	var dmg_m := GameData.enemy_dmg_mult(floor_num)
 	if GameData.is_boss_floor(floor_num):
 		var bdef: Dictionary = GameData.boss_def_for_floor(floor_num)
-		var b := CharacterBody2D.new()
-		b.set_script(BossScript)
-		b.setup(bdef, Vector2(ARENA_W * 0.5, 320.0))
-		b.died.connect(_on_enemy_died)
-		b.hp_changed.connect(_on_boss_hp)
-		add_child(b)
-		_boss_ref = b
-		hud.show_boss_bar(String(bdef["name"]))
+		if bool(bdef.get("twin", false)):
+			# 双生亡语者：双体各 50% 血，一死另一狂暴（01 §4.3）
+			var half := float(bdef["hp"]) * 0.5
+			var da: Dictionary = bdef.duplicate(true)
+			da["hp"] = half
+			var db: Dictionary = bdef.duplicate(true)
+			db["hp"] = half
+			db["tex"] = String(bdef.get("tex_b", bdef["tex"]))
+			var ba := CharacterBody2D.new()
+			ba.set_script(BossScript)
+			ba.setup(da, Vector2(ARENA_W * 0.5 - 150.0, 320.0))
+			var bb := CharacterBody2D.new()
+			bb.set_script(BossScript)
+			bb.setup(db, Vector2(ARENA_W * 0.5 + 150.0, 320.0))
+			ba.twin_partner = bb
+			bb.twin_partner = ba
+			for b in [ba, bb]:
+				b.died.connect(_on_enemy_died)
+				b.hp_changed.connect(_on_boss_hp)
+				add_child(b)
+			_boss_ref = ba
+			hud.show_boss_bar(String(bdef["name"]))
+		else:
+			var b := CharacterBody2D.new()
+			b.set_script(BossScript)
+			b.setup(bdef, Vector2(ARENA_W * 0.5, 320.0))
+			b.died.connect(_on_enemy_died)
+			b.hp_changed.connect(_on_boss_hp)
+			add_child(b)
+			_boss_ref = b
+			hud.show_boss_bar(String(bdef["name"]))
 		# a few minions for company
 		var comp := {"slime": 2, "bat": 2}
 		for eid in comp.keys():
@@ -236,6 +269,12 @@ func _on_enemy_died(e: Node2D) -> void:
 	if is_instance_valid(player):
 		player.on_enemy_died(e)
 	var is_boss := bool(e.get("is_boss"))
+	if is_boss and bool(e.get("is_twin")):
+		var partner: Node = e.get("twin_partner")
+		if partner != null and is_instance_valid(partner) and not bool(partner.get("dead")):
+			# 双生第一体：不掉落不结算，等第二体
+			_update_enemy_label()
+			return
 	if is_boss:
 		boss_kills += 1
 		Meta.record_boss_kill(floor_num)
@@ -276,6 +315,46 @@ func _clear_minions() -> void:
 		if is_instance_valid(e) and not bool(e.get("dead")) and not bool(e.get("is_boss")):
 			e.queue_free()
 	_update_enemy_label()
+
+
+## v0.8 合成演出聚焦：全屏微暗（05 附录 T0 0.85 → T+1400 复原）
+func set_cine_dim(v: float) -> void:
+	if _cine_mod == null:
+		return
+	if _cine_tween != null and _cine_tween.is_valid():
+		_cine_tween.kill()
+	_cine_tween = create_tween()
+	_cine_tween.set_ignore_time_scale(true)
+	_cine_tween.tween_property(_cine_mod, "color", Color(v, v, v), 0.15)
+
+
+## 非 Boss 层 15% 刷宝箱（01 §4.2），位置离出生点 >300px
+func _maybe_spawn_chest() -> void:
+	if GameData.is_boss_floor(floor_num) or randf() >= 0.15:
+		return
+	var center := Vector2(ARENA_W * 0.5, ARENA_H * 0.5)
+	var pos := _spawn_pos()
+	for i in range(8):
+		if pos.distance_to(center) > 300.0:
+			break
+		pos = _spawn_pos()
+	var chest := Node2D.new()
+	chest.set_script(ChestScript)
+	chest.position = pos
+	add_child(chest)
+
+
+## 宝箱掉落结算：遗物（权重 roll）+ 30–60 金分 3 颗
+func spawn_chest_loot(pos: Vector2) -> void:
+	var owned: Array = player.relics if is_instance_valid(player) else []
+	var rid := Loot.roll_relic(owned)
+	if rid != "":
+		_spawn_gem(pos + Vector2(0, -18), "relic", 0, rid)
+	var total := randi_range(30, 60)
+	var third := total / 3
+	for i in range(3):
+		var v := third if i < 2 else total - 2 * third
+		_spawn_gem(pos + Vector2(randf_range(-44, 44), randf_range(-30, 30)), "gold", v, "")
 
 
 func _spawn_gem(pos: Vector2, kind: String, value: int, relic_id: String) -> void:

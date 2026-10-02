@@ -38,6 +38,8 @@ var relics: Array = []           # [relic_id]
 var _cross_until_ms := 0
 var _cross_aura: Node2D = null
 var _cross_aura_t := 0.0
+var _punch_start_ms := -1
+var _synth_aura: Node2D = null
 var _relic_tbl_cache: Dictionary = {}
 var MAGNET_RADIUS := BASE_MAGNET_RADIUS
 
@@ -206,7 +208,7 @@ func _update_feel(delta: float, moving: bool) -> void:
 		_walk_t += delta
 		var bob := sin(_walk_t * 16.0)
 		visual.position.y = bob * 3.0
-		visual.scale = Vector2(1.0 + 0.018 * bob, 1.0 - 0.018 * bob)
+		visual.scale = Vector2(1.0 + 0.018 * bob, 1.0 - 0.018 * bob) * _punch_now()
 		dust.emitting = true
 	else:
 		_breathe_t += delta
@@ -1219,12 +1221,8 @@ func apply_levelup_option(opt: Dictionary) -> void:
 					Achievements.unlock("super5")
 				if scn >= 19:
 					Achievements.unlock("super19")
-				# 金色大闪 + 震屏 + 顿帧
-				FX.glow(get_parent(), global_position, 300.0, Color(1.0, 0.85, 0.3, 0.95), 0.8, 6)
-				FX.glow_ring(get_parent(), global_position, 170.0, Color(1.0, 0.85, 0.3, 0.9), 0.6, 6)
-				FX.shake(get_parent(), 14.0)
-				FX.hitstop(get_tree(), 0.12, true)
-				Sfx.play("superfuse")
+				# v0.8 合成演出时间轴（05 附录 A.2）：蓄力→爆发→收幕共 1.4s
+				_synth_ceremony()
 		"new_skill":
 			add_skill(oid)
 		"skill_up":
@@ -1553,6 +1551,72 @@ func _cast_time_stop() -> void:
 	tw.chain().tween_callback(sp.queue_free)
 	FX.glow(get_parent(), global_position, 420.0, Color(0.5, 0.8, 1.0, 0.5), 0.6, 5)
 	FX.hitstop(get_tree(), 0.06)
+
+
+## 解除帧 punch：1.25 → 1.0（QUAD 衰减，Time 驱动不受顿帧缩放影响）
+func _punch_now() -> float:
+	if _punch_start_ms < 0:
+		return 1.0
+	var k := float(Time.get_ticks_msec() - _punch_start_ms) / 250.0
+	if k >= 1.0:
+		_punch_start_ms = -1
+		return 1.0
+	return 1.0 + 0.25 * (1.0 - k) * (1.0 - k)
+
+
+## v0.8 合成演出（05 附录 A.2 权威时间轴；计时器 ignore_time_scale）
+func _synth_ceremony() -> void:
+	var parent := get_parent()
+	if parent == null:
+		return
+	var gold := Color(1.0, 0.85, 0.3, 0.9)
+	# T0 蓄力：脚下金圈生长 + 全屏微暗聚焦 + supercharge 起
+	FX.glow(parent, global_position, 170.0, gold, 0.5, 5)
+	if parent.has_method("set_cine_dim"):
+		parent.set_cine_dim(0.85)
+	Sfx.play("supercharge")
+	await get_tree().create_timer(0.2, true, false, true).timeout
+	if not is_inside_tree():
+		return
+	# T+200 蓄力升尘（近似：脚下金辉）
+	FX.glow(parent, global_position + Vector2(0, 20), 90.0, gold, 0.3, 4)
+	await get_tree().create_timer(0.3, true, false, true).timeout
+	if not is_inside_tree():
+		return
+	# T+500 爆发帧：superweapon_burst + 双核 glow + 演出顿帧 0.12 + shake(14) 同帧
+	EventBus.superweapon_burst.emit(global_position)
+	FX.glow(parent, global_position, 300.0, Color(1.0, 0.85, 0.3, 0.95), 0.8, 6)
+	FX.glow(parent, global_position, 150.0, Color(1, 1, 1, 0.9), 0.5, 6)
+	FX.hitstop(get_tree(), 0.12, true)
+	FX.shake(parent, 14.0)
+	Sfx.play("superburst")
+	await get_tree().create_timer(0.12, true, false, true).timeout
+	if not is_inside_tree():
+		return
+	# T+620 解除帧：superring + punch + 第一重金环 + 冲击碎片
+	Sfx.play("superring")
+	_punch_start_ms = Time.get_ticks_msec()
+	FX.glow_ring(parent, global_position, 500.0, gold, 0.6, 6)
+	FX.hit_spark(parent, global_position, gold)
+	await get_tree().create_timer(0.09, true, false, true).timeout
+	if not is_inside_tree():
+		return
+	# T+710 / T+800 第二、三重金环
+	FX.glow_ring(parent, global_position, 500.0, gold, 0.6, 6)
+	await get_tree().create_timer(0.09, true, false, true).timeout
+	if not is_inside_tree():
+		return
+	FX.glow_ring(parent, global_position, 500.0, gold, 0.6, 6)
+	await get_tree().create_timer(0.1, true, false, true).timeout
+	if not is_inside_tree():
+		return
+	# T+900 超武金色常驻光环
+	if _synth_aura == null or not is_instance_valid(_synth_aura):
+		_synth_aura = FX.attach_aura(self, 100.0, Color(1.0, 0.85, 0.3, 0.45))
+	# T+1400 收幕：聚焦复原
+	await get_tree().create_timer(0.5, true, false, true).timeout
+	if is_inside_tree() and is_instance_valid(parent) and parent.has_method("set_cine_dim"):
+		parent.set_cine_dim(1.0)
 
 
 # ---------- relics ----------

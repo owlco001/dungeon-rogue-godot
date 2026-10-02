@@ -1,0 +1,67 @@
+{
+ "10": {
+  "charge_cd": 5.0,
+  "dmg": 30.0,
+  "hp": 6000.0,
+  "id": "batking",
+  "name": "噬影蝠王",
+  "slam_cd": 5.5,
+  "speed": 95.0
+ },
+ "15": {
+  "burn_ground": true,
+  "charge_cd": 8.0,
+  "dmg": 35.0,
+  "hp": 11500.0,
+  "id": "forgemaster",
+  "name": "熔渣铸造者",
+  "slam_cd": 5.0,
+  "speed": 50.0
+ },
+ "20": {
+  "charge_cd": 7.0,
+  "dmg": 40.0,
+  "hp": 15000.0,
+  "id": "widow",
+  "name": "双生亡语者",
+  "slam_cd": 4.5,
+  "speed": 70.0,
+  "twin": true
+ },
+ "25": {
+  "charge_cd": 7.5,
+  "dmg": 48.0,
+  "hp": 19000.0,
+  "id": "thorntyrant",
+  "name": "荆棘暴君",
+  "slam_cd": 4.5,
+  "speed": 60.0,
+  "summon_cd": 8.0,
+  "summon_count": 2
+ },
+ "30": {
+  "barrage_phase": 2,
+  "charge_cd": 7.0,
+  "dmg": 60.0,
+  "hp": 28000.0,
+  "id": "mohei",
+  "name": "深渊主宰·墨骸",
+  "phase_at": [
+   0.679,
+   0.357
+  ],
+  "slam_cd": 4.5,
+  "speed": 75.0,
+  "summon_cd": 10.0,
+  "summon_count": 3,
+  "summon_phase": 3
+ },
+ "5": {
+  "dmg": 25.0,
+  "hp": 2600.0,
+  "id": "colossus",
+  "name": "石颅巨像",
+  "slam_cd": 4.0,
+  "speed": 55.0
+ }
+}

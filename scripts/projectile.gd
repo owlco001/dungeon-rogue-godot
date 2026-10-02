@@ -78,10 +78,10 @@ func setup(p_tex: String, p_pos: Vector2, p_dir: Vector2, p_speed: float,
 ## 池化复用时由生成方在 add_child 后调用（_ready 不会重跑）
 ## v0.8 敌对弹设置：绿色 tint + 白核（05 §4.4 颜色域隔离），命中玩家
 func setup_hostile(p_tex: String, p_pos: Vector2, p_dir: Vector2, p_speed: float,
-		p_dmg: float, p_range: float) -> void:
+		p_dmg: float, p_range: float, p_tint: Color = Color(0.55, 1.0, 0.29)) -> void:
 	setup(p_tex, p_pos, p_dir, p_speed, p_dmg, 0, 0, 0.0, 0.0, 2.0, p_range, 0.0)
 	hostile = true
-	_sprite.modulate = Color(0.55, 1.0, 0.29)
+	_sprite.modulate = p_tint
 	_sprite.scale = Vector2.ONE * 0.8
 
 

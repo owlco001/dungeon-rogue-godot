@@ -3,6 +3,8 @@ extends CharacterBody2D
 ## Skills: ground slam (red-circle telegraph), charge dash, summon (final boss).
 ## Emits hp_changed for the HUD boss bar, died(enemy) like Enemy.
 
+const PoolManager := preload("res://systems/pool_manager.gd")
+
 signal died(enemy: Node2D)
 signal hp_changed(hp: float, max_hp: float)
 
@@ -20,6 +22,30 @@ class Telegraph extends Node2D:
 		draw_circle(Vector2.ZERO, radius, Color(1.0, 0.2, 0.2, 0.10 + 0.18 * k))
 		draw_arc(Vector2.ZERO, radius, 0.0, TAU, 48, Color(1.0, 0.25, 0.25, 0.45 + 0.55 * k), 5.0)
 
+class BurnZone extends Node2D:
+	var radius := 150.0
+	var tick_dmg := 10.0
+	var source: Node2D = null
+	var _t := 0.0
+	var _tick := 0.0
+	func _process(d: float) -> void:
+		_t += d
+		_tick -= d
+		queue_redraw()
+		if _tick <= 0.0:
+			_tick = 0.5
+			var pl := get_tree().get_first_node_in_group("player") as Node2D
+			if pl != null and is_instance_valid(pl) \
+					and global_position.distance_to(pl.global_position) <= radius:
+				pl.take_damage(tick_dmg, (pl.global_position - global_position).normalized(), 0.5, source)
+		if _t >= 3.0:
+			queue_free()
+	func _draw() -> void:
+		var fade := clampf(1.0 - _t / 3.0, 0.0, 1.0)
+		draw_circle(Vector2.ZERO, radius, Color(1.0, 0.45, 0.15, 0.16 + 0.10 * fade))
+		draw_arc(Vector2.ZERO, radius, 0.0, TAU, 48, Color(1.0, 0.5, 0.2, 0.5 * fade), 4.0)
+
+
 var boss_def := {}
 var boss_name := "Boss"
 var hp := 1000.0
@@ -30,6 +56,17 @@ var dead := false
 var elite := false
 var is_boss := true
 var can_summon := false
+var boss_id := ""
+var phase := 1
+var is_twin := false
+var twin_partner: Node2D = null
+var _slam_cd := 5.0
+var _charge_cd := 0.0
+var _summon_cd := 0.0
+var _summon_count := 3
+var _barrage_t := 3.0
+var _base_speed := 55.0
+var _enraged := false
 
 var _player: Node2D = null
 var _game: Node = null
@@ -61,11 +98,21 @@ func _ready() -> void:
 	add_to_group("enemies")
 	Registry.register_enemy(self)
 	boss_name = String(boss_def["name"])
+	boss_id = String(boss_def.get("id", ""))
 	max_hp = float(boss_def["hp"])
 	hp = max_hp
 	dmg = float(boss_def["dmg"])
 	speed = float(boss_def["speed"])
+	_base_speed = speed
 	can_summon = bool(boss_def.get("final", false))
+	is_twin = bool(boss_def.get("twin", false))
+	_slam_cd = float(boss_def.get("slam_cd", 5.0))
+	_charge_cd = float(boss_def.get("charge_cd", 0.0))
+	_summon_cd = float(boss_def.get("summon_cd", 0.0))
+	_summon_count = int(boss_def.get("summon_count", 3))
+	_slam_t = _slam_cd * 0.6
+	_charge_t = _charge_cd * 0.8
+	_summon_t = _summon_cd
 	_sprite = Sprite2D.new()
 	_sprite.texture = load(String(boss_def["tex"])) as Texture2D
 	_base_scale = float(boss_def.get("scale", 1.0))
@@ -174,24 +221,31 @@ func _physics_process(delta: float) -> void:
 func _tick_skills(delta: float) -> void:
 	_slam_t -= delta
 	_charge_t -= delta
+	# 深渊主宰 P2+ 八向弹幕（敌对弹，紫 tint）
+	var barrage_phase := int(boss_def.get("barrage_phase", 0))
+	if barrage_phase > 0 and phase >= barrage_phase:
+		_barrage_t -= delta
+		if _barrage_t <= 0.0:
+			_barrage_t = 3.0
+			_fire_barrage()
 	if _slam_t <= 0.0:
-		_slam_t = 5.0
+		_slam_t = _slam_cd
 		# 攻击前摇 0.4s：膨胀+红闪+红辉，然后出砸地
 		_windup_t = 0.4
 		_windup_pos = _player.global_position
 		FX.glow(get_parent(), global_position, 460.0, Color(1.0, 0.25, 0.2, 0.7), 0.4, 4)
 		return
-	if _charge_t <= 0.0:
-		_charge_t = 9.0
+	if _charge_cd > 0.0 and _charge_t <= 0.0:
+		_charge_t = _charge_cd
 		_telegraph_t = 0.6
 		_charge_dir = (_player.global_position - global_position).normalized()
 		return
-	if can_summon:
+	if _summon_cd > 0.0 and phase >= int(boss_def.get("summon_phase", 1)):
 		_summon_t -= delta
 		if _summon_t <= 0.0:
-			_summon_t = 12.0
+			_summon_t = _summon_cd
 			if _game != null and _game.has_method("spawn_boss_minions"):
-				_game.spawn_boss_minions(global_position, 3)
+				_game.spawn_boss_minions(global_position, _summon_count)
 
 
 func _do_slam_at(at: Vector2) -> void:
@@ -205,6 +259,13 @@ func _do_slam_at(at: Vector2) -> void:
 		return
 	if _game != null and _game.has_method("spawn_hazard"):
 		_game.spawn_hazard(at, 150.0, dmg * 1.6, self)
+	if bool(boss_def.get("burn_ground", false)) and get_parent() != null:
+		var zone := BurnZone.new()
+		zone.radius = 150.0
+		zone.tick_dmg = dmg * 0.35
+		zone.source = self
+		zone.global_position = at
+		get_parent().add_child(zone)
 
 
 func _do_slam() -> void:
@@ -218,8 +279,82 @@ func take_damage(amount: float, from_dir: Vector2, knock_mult: float = 1.0, stun
 	_flash_t = 0.12
 	_squash_t = 0.12
 	hp_changed.emit(hp, max_hp)
+	_check_phase()
 	if hp <= 0.0:
 		_die()
+
+
+## 阶段机：phase_at 为 HP 比例阈值（降序），跨段触发 boss_phase_changed
+func _check_phase() -> void:
+	var thresholds: Array = boss_def.get("phase_at", [])
+	if thresholds.is_empty():
+		return
+	var frac := hp / maxf(1.0, max_hp)
+	var np := 1
+	for th in thresholds:
+		if frac <= float(th):
+			np += 1
+	if np > phase:
+		phase = np
+		_enter_phase(np)
+
+
+func _enter_phase(p: int) -> void:
+	EventBus.boss_phase_changed.emit(boss_id, p)
+	var pdef: Dictionary = boss_def.get("phases", {}).get(str(p), {})
+	if pdef.has("slam_cd"):
+		_slam_cd = float(pdef["slam_cd"])
+	if pdef.has("charge_cd"):
+		_charge_cd = float(pdef["charge_cd"])
+	if pdef.has("speed_mult"):
+		speed = _base_speed * float(pdef["speed_mult"])
+	var tex_key := "tex" + str(p)
+	if boss_def.has(tex_key) and _sprite != null:
+		_sprite.texture = load(String(boss_def[tex_key])) as Texture2D
+	if get_parent() != null:
+		FX.glow_ring(get_parent(), global_position, 500.0,
+			Color(0.75, 0.3, 1.0, 0.8), 0.6, 6)
+		FX.shake(get_parent(), 14.0)
+	FX.hitstop(get_tree(), 0.10, true)
+	if p >= 3 and _sprite != null:
+		FX.attach_aura(self, 210.0, Color(1.0, 0.35, 0.25, 0.55))
+
+
+## 八向弹幕：复用 projectile 敌对弹（紫 tint，05 §4.4）
+func _fire_barrage() -> void:
+	var game := get_parent()
+	if game == null:
+		return
+	for i in range(8):
+		var dir := Vector2.RIGHT.rotated(TAU * float(i) / 8.0 + _wobble)
+		var p: Node2D = PoolManager.acquire("projectile", func() -> Node:
+			var np := Node2D.new()
+			np.set_script(load("res://scripts/projectile.gd"))
+			return np)
+		p.setup_hostile("res://assets/sprites/fx/projectiles/proj_orb.png",
+			global_position + dir * 60.0, dir, 260.0, dmg * 0.5, 700.0,
+			Color(0.71, 0.29, 1.0))
+		p.home = self
+		game.add_child(p)
+		p.add_to_group("projectiles")
+		if p.has_meta("pooled_reuse"):
+			p.remove_meta("pooled_reuse")
+			p.spawn_init()
+
+
+## 双生：另一体死亡时狂暴（攻速 +50%、伤害 +30%）
+func enrage_twin() -> void:
+	if _enraged or dead:
+		return
+	_enraged = true
+	_slam_cd *= 0.67
+	if _charge_cd > 0.0:
+		_charge_cd *= 0.67
+	dmg *= 1.3
+	EventBus.boss_phase_changed.emit(boss_id, 99)
+	if get_parent() != null:
+		FX.glow(get_parent(), global_position, 200.0, Color(1.0, 0.3, 0.25, 0.85), 0.5, 5)
+	FX.attach_aura(self, 200.0, Color(1.0, 0.3, 0.25, 0.5))
 
 
 ## 时间凝滞用：Boss 也吃减速
@@ -229,6 +364,11 @@ func apply_slow(duration: float) -> void:
 
 func _die() -> void:
 	dead = true
+	EventBus.boss_died.emit(boss_id)
+	if is_twin and twin_partner != null and is_instance_valid(twin_partner) \
+			and not bool(twin_partner.get("dead")) \
+			and twin_partner.has_method("enrage_twin"):
+		twin_partner.enrage_twin()
 	Registry.unregister_enemy(self)
 	collision_layer = 0
 	collision_mask = 0
