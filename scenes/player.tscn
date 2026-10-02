@@ -3,9 +3,8 @@
 [ext_resource type="Script" path="res://scripts/player.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/shadow.gd" id="2"]
 
-[sub_resource type="CapsuleShape2D" id="1"]
-radius = 18.0
-height = 56.0
+[sub_resource type="CircleShape2D" id="1"]
+radius = 12.0
 
 [node name="Player" type="CharacterBody2D"]
 collision_layer = 1
@@ -24,7 +23,7 @@ script = ExtResource("2")
 emitting = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, 28)
+position = Vector2(0, 40)
 shape = SubResource("1")
 
 [node name="Camera2D" type="Camera2D" parent="."]
