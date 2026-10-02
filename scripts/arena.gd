@@ -32,6 +32,13 @@ var _torches: Array = []  # {flame: Sprite2D, glow: Sprite2D, bracket: Sprite2D,
 var _torch_wall_spots: Array = []  # 火把附近位置（hazard 避让用）
 var _rune_nodes: Array = []
 var _time := 0.0
+# v0.8 B4 A5 烘焙：静态层（地面/墙/柱/decal/符文）离屏渲染成单张纹理，
+# _draw 从 ~950 条绘制命令降为 0（烘焙图由子 Sprite 显示）；未就绪/失败时回退逐砖绘制
+var _bake_cache := {}  # theme -> ImageTexture
+var _baked_sprite: Sprite2D = null
+var _baked_applied := false
+var _baking := false
+var _is_baker := false
 
 
 func _ready() -> void:
@@ -84,6 +91,9 @@ func _add_box(pos: Vector2, size: Vector2) -> void:
 
 func set_theme(t: String) -> void:
 	theme = t
+	_baked_applied = false
+	if _baked_sprite != null:
+		_baked_sprite.visible = false
 	_floor_texs.clear()
 	for v in ["a", "b", "c"]:
 		var tex := load("res://assets/tiles/%s/tile_%s_floor_%s.png" % [t, t, v]) as Texture2D
@@ -160,6 +170,69 @@ func set_theme(t: String) -> void:
 		})
 	_build_torches()
 	_build_rune_decals(drng, center)
+	queue_redraw()
+	if not _is_baker:
+		_request_bake()
+
+
+## ---- A5 烘焙：同脚本实例在离屏 SubViewport 里以相同主题重建（散点全确定性，画面一致） ----
+func _request_bake() -> void:
+	if _bake_cache.has(theme):
+		_apply_bake(_bake_cache[theme])
+		return
+	if _baking or not is_inside_tree():
+		return
+	_baking = true
+	var bake_theme := theme
+	var vp := SubViewport.new()
+	vp.size = Vector2i(int(W + WALL_T * 2.0), int(H + WALL_T * 2.0))
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	vp.world_2d = World2D.new()
+	add_child(vp)
+	var baker: StaticBody2D = get_script().new()
+	baker.set("_is_baker", true)
+	baker.set("theme", bake_theme)
+	baker.position = Vector2(WALL_T, WALL_T)
+	vp.add_child(baker)
+	# baker 的火焰/光晕是动态层，不入烘焙（本体的火把照常燃）
+	for tc in baker.get("_torches"):
+		(tc["flame"] as CanvasItem).visible = false
+		(tc["glow"] as CanvasItem).visible = false
+	for i in range(3):
+		await get_tree().process_frame
+		if not is_instance_valid(self):
+			return
+		if not is_instance_valid(vp):
+			_baking = false
+			return
+	var img := vp.get_texture().get_image()
+	vp.queue_free()
+	_baking = false
+	# 校验：尺寸正确且中心不透明（headless 哑渲染会给空图 → 放弃烘焙保持逐砖）
+	if img == null or img.get_width() != vp.size.x or img.get_height() != vp.size.y:
+		return
+	if img.get_pixel(vp.size.x / 2, vp.size.y / 2).a < 0.5:
+		return
+	var tex := ImageTexture.create_from_image(img)
+	_bake_cache[bake_theme] = tex
+	if theme == bake_theme:
+		_apply_bake(tex)
+
+
+func _apply_bake(tex: ImageTexture) -> void:
+	if _baked_sprite == null:
+		_baked_sprite = Sprite2D.new()
+		_baked_sprite.centered = false
+		_baked_sprite.z_index = 0
+		add_child(_baked_sprite)
+	_baked_sprite.texture = tex
+	_baked_sprite.position = Vector2(-WALL_T, -WALL_T)
+	_baked_sprite.visible = true
+	_baked_applied = true
+	# 符文已烘进静态图，隐藏实时符文节点防 ADD 双绘
+	for n in _rune_nodes:
+		if is_instance_valid(n):
+			(n as CanvasItem).visible = false
 	queue_redraw()
 
 
@@ -334,6 +407,8 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
+	if _baked_applied:
+		return  # 静态层已烘焙为单张纹理（_baked_sprite 显示），本层零绘制命令
 	if _floor_texs.is_empty() or _floor_texs[0] == null:
 		return
 	var nx := int(W / TILE) + 1

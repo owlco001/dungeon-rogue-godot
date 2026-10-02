@@ -60,6 +60,8 @@ func _run(mode: String) -> void:
 			_v9()
 		"v7":
 			await _v7()
+		"v5":
+			await _v5()
 		"v2":
 			await _v2()
 		_:
@@ -408,6 +410,75 @@ func _v7() -> void:
 	_check("V7 enemy pool recycles", ep >= 4, "enemy pool=%d" % ep)
 	_check("V7 registry drained", (reg.get("enemies") as Array).is_empty(),
 		"left=%d" % (reg.get("enemies") as Array).size())
+
+# ---- V5（B4）：高压战斗采样——节点/粒子上限 + time_scale 恢复 + 帧时 p95（headless 参考） ----
+func _v5() -> void:
+	Lang.set_lang("zh")
+	var inst: Node = load("res://scenes/lobby.tscn").instantiate()
+	root.add_child(inst)
+	await _wait(1.0)
+	var tab := _find_btn(inst, ["出战", "Battle"])
+	if tab == null:
+		_check("V5 entry", false, "no fight tab")
+		return
+	tab.pressed.emit()
+	await _wait(0.5)
+	var btn := _find_btn(inst, ["开始战斗", "Start"])
+	if btn == null:
+		_check("V5 entry", false, "no start btn")
+		return
+	btn.pressed.emit()
+	var player: Node = null
+	for i in range(50):
+		await _wait(0.1)
+		player = get_first_node_in_group("player")
+		if player != null:
+			break
+	_check("V5 entry", player != null)
+	if player == null:
+		return
+	player.set("max_hp", 100000.0)
+	player.set("hp", 100000.0)
+	var game := get_first_node_in_group("game")
+	game.set("floor_num", 28)
+	game.call("next_floor")  # 第 29 层：44 只怪高压
+	await _wait(1.0)
+	var nodes_max := 0
+	var parts_max := 0
+	var slow_frames := 0
+	var frames := 0
+	var durs: Array = []
+	var last_us := Time.get_ticks_usec()
+	var t_end := Time.get_ticks_msec() + 5000
+	while Time.get_ticks_msec() < t_end:
+		await process_frame
+		var now_us := Time.get_ticks_usec()
+		durs.append(float(now_us - last_us) / 1000.0)
+		last_us = now_us
+		frames += 1
+		nodes_max = maxi(nodes_max, get_node_count())
+		if frames % 30 == 0:
+			parts_max = maxi(parts_max, _particle_total(root))
+		if Engine.time_scale < 0.95:
+			slow_frames += 1
+	durs.sort()
+	var p95 := 0.0
+	if not durs.is_empty():
+		p95 = float(durs[mini(int(float(durs.size()) * 0.95), durs.size() - 1)])
+	_check("V5 nodes <=900", nodes_max <= 900, "max=%d" % nodes_max)
+	_check("V5 particles <=800", parts_max <= 800, "max=%d" % parts_max)
+	_check("V5 timescale recovered", float(slow_frames) / maxf(1.0, float(frames)) <= 0.2,
+		"slow=%d/%d p95=%.2fms(headless参考)" % [slow_frames, frames, p95])
+
+func _particle_total(n: Node) -> int:
+	var t := 0
+	if n is CPUParticles2D and (n as CPUParticles2D).emitting:
+		t += (n as CPUParticles2D).amount
+	elif n is GPUParticles2D and (n as GPUParticles2D).emitting:
+		t += (n as GPUParticles2D).amount
+	for c in n.get_children():
+		t += _particle_total(c)
+	return t
 
 func _corrupt_file(path: String) -> void:
 	var f := FileAccess.open(path, FileAccess.WRITE)
