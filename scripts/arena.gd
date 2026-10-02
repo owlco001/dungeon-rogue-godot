@@ -126,20 +126,29 @@ class WallsVisual extends Node2D:
 				var h := hash("%s:%d:%d" % [theme, x, y])
 				var shade := 0.88 + float(absi(h) % 100) / 100.0 * 0.20
 				# 主体：side 砖纹（wall 贴图是横向光带条纹，只能当顶盖用）
-				draw_texture_rect(side, rect, false, Color(shade, shade, shade))
+				# v0.8.15 去重复：按 hash 水平镜像，打破竖条纹周期感
+				if (absi(h >> 7) % 2) == 0:
+					draw_set_transform(rect.position + Vector2(cell, 0.0), 0.0, Vector2(-1, 1))
+					draw_texture_rect(side, Rect2(Vector2.ZERO, Vector2(cell, cell)), false,
+						Color(shade, shade, shade))
+					draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+				else:
+					draw_texture_rect(side, rect, false, Color(shade, shade, shade))
 				if not _is_wall(x, y - 1):
 					# 北侧顶盖：wall 光带压进顶部 12px 成受光斜面 + 高光线
 					draw_texture_rect(wall_tex, Rect2(rect.position, Vector2(cell, 12.0)),
 						false, Color(shade, shade, shade))
 					draw_rect(Rect2(rect.position, Vector2(cell, 2.0)), Color(1, 1, 1, 0.25))
 				if not _is_wall(x, y + 1):
-					# 南侧立面：下半压暗 + 底边线 + 地面投影
+					# 南侧立面：下半压暗 + 底边线 + 地面投影（v0.8.15 投影改 4 级柔边渐隐）
 					draw_rect(Rect2(rect.position + Vector2(0, cell * 0.55),
 						Vector2(cell, cell * 0.45)), Color(0, 0, 0, 0.18))
 					draw_rect(Rect2(rect.position + Vector2(0, cell - 3.0), Vector2(cell, 3.0)),
 						Color(0, 0, 0, 0.45))
-					draw_rect(Rect2(rect.position + Vector2(0, cell), Vector2(cell, 10.0)),
-						Color(0, 0, 0, 0.28))
+					for i in range(4):
+						var sa := 0.28 * (1.0 - float(i) / 4.0)
+						draw_rect(Rect2(rect.position + Vector2(0, cell + float(i) * 2.5),
+							Vector2(cell, 2.5)), Color(0, 0, 0, sa))
 
 
 var _room_wall_shapes: Array = []
@@ -200,6 +209,8 @@ func set_theme(t: String) -> void:
 	for dn in DECAL_NAMES:
 		_decal_texs.append(load("res://assets/tiles/decals/decal_%s.png" % dn) as Texture2D)
 	# 每砖变体 + 亮度抖动（确定性 hash）
+	# v0.8.15 去杂乱：变体按 70/20/10 加权（a 干净打底、c 苔藓只做点缀），取高位避免整行同变体的带状；
+	# 亮度抖动 0.90~1.08 收窄为 0.95~1.03
 	var nx := int(W / TILE) + 1
 	var ny := int(H / TILE) + 1
 	_floor_pick.resize(nx * ny)
@@ -207,8 +218,9 @@ func set_theme(t: String) -> void:
 	for ix in range(nx):
 		for iy in range(ny):
 			var h := hash("%s:%d:%d" % [t, ix, iy])
-			_floor_pick[ix * ny + iy] = int(abs(h) % 3)
-			_floor_shade[ix * ny + iy] = 0.90 + float(abs(h) % 100) / 100.0 * 0.18
+			var r := int(absi(h >> 9) % 10)
+			_floor_pick[ix * ny + iy] = 0 if r < 7 else (1 if r < 9 else 2)
+			_floor_shade[ix * ny + iy] = 0.95 + float(absi(h >> 3) % 100) / 100.0 * 0.08
 	# hazard 散点：远离墙边（200px）和火把位置
 	_torch_wall_spots.clear()
 	for x in [200.0, 600.0, 1000.0, 1400.0]:
