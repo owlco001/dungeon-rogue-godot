@@ -1126,9 +1126,28 @@ func build_levelup_options() -> Array:
 			w = float(cfg.get("new_passive_dim", 6))
 		if String(pair[1]) == "passive_up" and weapons_full:
 			w = float(cfg.get("slots_full_passive_up", 30))
-		for o in pair[0]:
+		var plist: Array = pair[0]
+		var ptype := String(pair[1])
+		# v0.8.13 流派亲和：只作用于新武器"发现"（new_weapon），按类别均值归一化——
+		# 类别总权重不变（不挤占被动/技能槽位），只改变"哪把新武器更常出现"。
+		# weapon_up 不加亲和：已持有武器的升级节奏保持原样，避免升级资源被亲和武器吸走、
+		# 拖慢超武合成（V8 超武可达率回归验证）。
+		var amults: Array = []
+		var aavg := 1.0
+		if ptype == "new_weapon":
+			for o in plist:
+				amults.append(_affinity_draft_mult(String(o["id"]), cfg))
+			if not amults.is_empty():
+				var s := 0.0
+				for m in amults:
+					s += float(m)
+				aavg = s / float(amults.size())
+		for i in range(plist.size()):
+			var o: Dictionary = plist[i]
 			var ew := w
-			if String(pair[1]) == "weapon_up" and String(o["id"]) == focus_wid:
+			if ptype == "new_weapon":
+				ew *= float(amults[i]) / aavg
+			if ptype == "weapon_up" and String(o["id"]) == focus_wid:
 				ew *= float(cfg.get("funnel_mult_weapon", 2.0))
 			if String(pair[1]) == "passive_up" and String(o["id"]) == focus_needp:
 				ew *= float(cfg.get("funnel_mult_passive", 3.0))
@@ -1168,6 +1187,21 @@ func _funnel_passive_of(wid: String) -> String:
 		if String(sw["weapon"]) == wid:
 			return String(sw["passive"])
 	return ""
+
+
+## v0.8.13 流派亲和选秀权重：武器所属流派在角色亲和内 → 单亲和 ×affinity_mult，
+## 双亲和角色各流派 ×affinity_mult_dual；非亲和流派 ×1
+func _affinity_draft_mult(wid: String, cfg: Dictionary) -> float:
+	var d: Dictionary = GameData.WEAPONS.get(GameData.base_weapon_of(wid), {})
+	var school := String(d.get("school", ""))
+	if school == "":
+		return 1.0
+	var aff: Array = char_def.get("affinity", [])
+	if not school in aff:
+		return 1.0
+	if aff.size() > 1:
+		return float(cfg.get("affinity_mult_dual", 2.0))
+	return float(cfg.get("affinity_mult", 2.5))
 
 
 ## 从池中取出第一个满足 pred 的选项（取出即移除）；无则返回空字典

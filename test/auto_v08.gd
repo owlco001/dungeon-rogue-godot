@@ -68,6 +68,8 @@ func _run(mode: String) -> void:
 			await _v10()
 		"v11":
 			await _v11()
+		"v13":
+			await _v13()
 		"v7":
 			await _v7()
 		"v5":
@@ -780,3 +782,74 @@ func _v3check() -> void:
 		var p: String = dir + "/savegame.cfg" + suffix + ".v3bak"
 		if FileAccess.file_exists(p):
 			DirAccess.rename_absolute(p, dir + "/savegame.cfg" + suffix)
+
+
+# ---- V13：流派亲和选秀权重（v0.8.13） ----
+# 艾拉单亲和 gun（池 5/19，期望 ~47%）断言 ≥40%；墨菲双亲和 necro+summon
+# （池 9/19，期望 ~64%）断言 ≥58%。不实际选取，只统计选秀分布。
+func _v13() -> void:
+	Lang.set_lang("zh")
+	var inst: Node = load("res://scenes/lobby.tscn").instantiate()
+	root.add_child(inst)
+	await _wait(1.0)
+	var tab := _find_btn(inst, ["出战", "Battle"])
+	_check("V13 entry", tab != null, "no fight tab")
+	if tab == null:
+		return
+	tab.pressed.emit()
+	await _wait(0.5)
+	var btn := _find_btn(inst, ["开始战斗", "Start"])
+	_check("V13 start", btn != null, "no start btn")
+	if btn == null:
+		return
+	btn.pressed.emit()
+	var player: Node = null
+	for i in range(50):
+		await _wait(0.1)
+		player = get_first_node_in_group("player")
+		if player != null:
+			break
+	_check("V13 player", player != null)
+	if player == null:
+		return
+	# 默认角色即艾拉（gun 单亲和）。注意无头环境 Meta 为默认解锁 7 把
+	# （gun×4：dual/shotgun/sniper/gatling；summon×1 sentry；necro×1 corpse_blast；
+	# melee×1 melee_axe），期望 gun 占比 = 10/13 ≈ 77%
+	_v13_measure(player, "ella", ["gun"], 0.70)
+	# 切墨菲（necro+summon 双亲和；期望 4/9 ≈ 44%，无加权基线仅 2/7 ≈ 29%）
+	player.set("character_id", "mofei")
+	player.set("char_def", GameData.CHARACTERS["mofei"])
+	_v13_measure(player, "mofei", ["necro", "summon"], 0.38)
+
+
+func _v13_measure(player: Node, who: String, schools: Array, min_share: float) -> void:
+	var skills0: Array = (player.get("skills") as Array).duplicate(true)
+	var aff_n := 0
+	var total := 0
+	for run in range(20):
+		seed(9000 + run)
+		for step in range(20):
+			player.set("weapons", [{"id": "bow", "lv": 1, "cd_t": 0.0}])
+			player.set("passives", {})
+			player.set("skills", skills0.duplicate(true))
+			player.set("_lvup_count", 99)
+			player.set("_lvups_since_passive", 0)
+			player.set("_funnel_weapon", "")
+			player.call("_recalc")
+			var opts: Array = player.call("build_levelup_options")
+			if opts.is_empty():
+				break
+			# 只统计新武器选项：weapon_up 必然是已持有的弓（稀释统计，排除）
+			for o in opts:
+				if String(o["type"]) != "new_weapon":
+					continue
+				total += 1
+				var wid := String(o["id"])
+				var d: Dictionary = GameData.WEAPONS.get(GameData.base_weapon_of(wid), {})
+				if String(d.get("school", "")) in schools:
+					aff_n += 1
+	var share := 0.0
+	if total > 0:
+		share = float(aff_n) / float(total)
+	_check("V13 %s affinity draft share>=%.2f" % [who, min_share], share >= min_share,
+		"share=%.3f n=%d" % [share, total])
