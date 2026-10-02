@@ -1,4 +1,7 @@
 extends SceneTree
+
+const RG := preload("res://systems/room_gen.gd")
+const PF := preload("res://systems/pathfind.gd")
 ## v0.8 无头门禁驱动（真实场景入口 + 按钮驱动，同 capture_* 模式）。
 ## 用法：godot --headless --audio-driver Dummy --path . --script res://test/auto_v08.gd -- <mode>
 ## mode: v2（启动基线） | v3（存档往返） | v5/v7/v8/v9 后续批次补齐
@@ -60,6 +63,8 @@ func _run(mode: String) -> void:
 			_v9()
 		"v9d":
 			await _v9d()
+		"v10":
+			await _v10()
 		"v7":
 			await _v7()
 		"v5":
@@ -418,6 +423,100 @@ func _v7() -> void:
 	_check("V7 enemy pool recycles", ep >= maxi(1, reg_n2), "enemy pool=%d killed=%d" % [ep, reg_n2])
 	_check("V7 registry drained", (reg.get("enemies") as Array).is_empty(),
 		"left=%d" % (reg.get("enemies") as Array).size())
+
+# ---- V10（B7）：房间复现/连通/寻路 + 实战卡墙率 ----
+func _v10() -> void:
+	Lang.set_lang("zh")
+	var a = RG.new()
+	a.generate(12345)
+	var b = RG.new()
+	b.generate(12345)
+	_check("V10 same-seed reproducible", a.grid == b.grid and a.rooms.size() == b.rooms.size())
+	# 连通性：中心大厅洪泛填充到全部房间中心
+	var seen := {}
+	var queue: Array = [Vector2i(RG.GW / 2, RG.GH / 2)]
+	seen[queue[0]] = true
+	while not queue.is_empty():
+		var c: Vector2i = queue.pop_front()
+		for dd in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var nb: Vector2i = c + dd
+			if nb.x < 0 or nb.y < 0 or nb.x >= RG.GW or nb.y >= RG.GH:
+				continue
+			if not seen.has(nb) and a.pf_grid[nb.y * RG.GW + nb.x] == 0:
+				seen[nb] = true
+				queue.append(nb)
+	var reached := 0
+	for r in a.rooms:
+		var c := Vector2i(int(r["x"]) + int(r["w"]) / 2, int(r["y"]) + int(r["h"]) / 2)
+		if seen.has(c):
+			reached += 1
+	_check("V10 all rooms connected", reached == a.rooms.size(),
+		"reached=%d rooms=%d" % [reached, a.rooms.size()])
+	# 寻路存在性：50 对随机地面格
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 777
+	var floors: Array = []
+	for y in range(RG.GH):
+		for x in range(RG.GW):
+			if a.pf_grid[y * RG.GW + x] == 0:
+				floors.append(Vector2i(x, y))
+	var ok_paths := 0
+	for i in range(50):
+		var c1: Vector2i = floors[rng.randi_range(0, floors.size() - 1)]
+		var c2: Vector2i = floors[rng.randi_range(0, floors.size() - 1)]
+		var path: PackedVector2Array = PF.find_path(a.pf_grid, RG.GW, RG.GH,
+			Vector2((float(c1.x) + 0.5) * RG.CELL, (float(c1.y) + 0.5) * RG.CELL),
+			Vector2((float(c2.x) + 0.5) * RG.CELL, (float(c2.y) + 0.5) * RG.CELL), RG.CELL)
+		if path.size() >= 2:
+			ok_paths += 1
+	_check("V10 paths exist for 50 pairs", ok_paths == 50, "ok=%d" % ok_paths)
+	# 实战卡墙：进第 1 层，额外刷 8 只怪，4s 后须移动或已接近玩家
+	var inst: Node = load("res://scenes/lobby.tscn").instantiate()
+	root.add_child(inst)
+	await _wait(1.0)
+	var tab := _find_btn(inst, ["出战", "Battle"])
+	if tab == null:
+		_check("V10 entry", false)
+		return
+	tab.pressed.emit()
+	await _wait(0.5)
+	var btn := _find_btn(inst, ["开始战斗", "Start"])
+	if btn == null:
+		_check("V10 start", false)
+		return
+	btn.pressed.emit()
+	var main: Node = null
+	for i in range(50):
+		await _wait(0.1)
+		main = get_first_node_in_group("game")
+		if main != null:
+			break
+	if main == null:
+		_check("V10 in battle", false)
+		return
+	await _wait(0.5)
+	for i in range(8):
+		main.call("_spawn_enemy", "slime", 1.0, 1.0, false)
+	await _wait(0.3)
+	var snap := {}
+	for e in get_nodes_in_group("enemies"):
+		snap[e.get_instance_id()] = e.global_position
+	await _wait(4.0)
+	var pl: Node = get_first_node_in_group("player")
+	var stuck := 0
+	var checked := 0
+	for e in get_nodes_in_group("enemies"):
+		if not snap.has(e.get_instance_id()):
+			continue
+		checked += 1
+		var moved: float = e.global_position.distance_to(snap[e.get_instance_id()])
+		var near: bool = pl != null and is_instance_valid(pl) \
+			and e.global_position.distance_to(pl.global_position) < 220.0
+		if moved < 40.0 and not near:
+			stuck += 1
+	_check("V10 stuck rate < 1%", checked > 0 and stuck == 0,
+		"checked=%d stuck=%d" % [checked, stuck])
+
 
 # ---- V9d（B6）：波次拆分数学 + 实战波次/计时断言 ----
 func _v9d() -> void:

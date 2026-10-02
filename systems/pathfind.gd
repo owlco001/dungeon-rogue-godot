@@ -69,6 +69,15 @@ static func _reconstruct(came: Dictionary, cur: Vector2i, cell: float) -> Packed
 	return out
 
 
+## 离 pos 最近的可达格中心（卡墙救援落点）
+static func nearest_floor_center(grid: PackedByteArray, gw: int, gh: int,
+		pos: Vector2, cell: float) -> Vector2:
+	var c := _nearest_floor(grid, gw, gh, _to_cell(pos, gw, gh, cell))
+	if c.x < 0:
+		return pos
+	return _cell_center(c, cell)
+
+
 static func _to_cell(p: Vector2, gw: int, gh: int, cell: float) -> Vector2i:
 	return Vector2i(clampi(int(p.x / cell), 0, gw - 1), clampi(int(p.y / cell), 0, gh - 1))
 

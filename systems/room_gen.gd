@@ -8,6 +8,9 @@ const GW := 32
 const GH := 24
 
 var grid := PackedByteArray()
+var pf_grid := PackedByteArray()  # 寻路专用：布局网格 + 柱子占位（柱子不在布局里）
+const PILLARS := [Vector2(480, 380), Vector2(1120, 380), Vector2(480, 820), Vector2(1120, 820)]
+const PF := preload("res://systems/pathfind.gd")
 var rooms: Array = []  # [{x,y,w,h}] 格子矩形
 var rng := RandomNumberGenerator.new()
 
@@ -48,6 +51,60 @@ func generate(p_seed: int) -> void:
 	rooms.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["x"]) < int(b["x"]))
 	for i in range(1, rooms.size()):
 		_carve_corridor(rooms[i - 1], rooms[i])
+	# 柱子广场：每根柱子周围 3×3 挖空成小广场（柱径 84 + 身宽 44 = 128 < 150 可绕行）
+	for p in PILLARS:
+		var pc := world_to_cell(p)
+		for dy in range(-1, 2):
+			for dx in range(-1, 2):
+				var cx := pc.x + dx
+				var cy := pc.y + dy
+				if cx > 0 and cy > 0 and cx < GW - 1 and cy < GH - 1:
+					grid[cy * GW + cx] = 0
+	_rebuild_pf()
+	# 连通性修复 v2：柱子封格堵死时，不解封不可达格——改为沿布局路径
+	# 把走廊加宽（3×3 挖空）后重建 pf，让路径从柱子旁绕过去
+	var hall_c := Vector2(GW * CELL * 0.5, GH * CELL * 0.5)
+	for rm in rooms:
+		var rc := Vector2((float(rm["x"]) + float(rm["w"]) * 0.5) * CELL,
+			(float(rm["y"]) + float(rm["h"]) * 0.5) * CELL)
+		if PF.find_path(pf_grid, GW, GH, rc, hall_c, CELL).is_empty():
+			var lp: PackedVector2Array = PF.find_path(grid, GW, GH, rc, hall_c, CELL)
+			for wp in lp:
+				var cc := world_to_cell(wp)
+				for dy in range(-1, 2):
+					for dx in range(-1, 2):
+						var nx := cc.x + dx
+						var ny := cc.y + dy
+						if nx > 0 and ny > 0 and nx < GW - 1 and ny < GH - 1:
+							grid[ny * GW + nx] = 0
+			_rebuild_pf()
+	# 口袋修剪：pf 上未连通大厅的地面格一律标墙（不可达区域不进刷怪/寻路池）
+	var seen := {}
+	var queue: Array = [world_to_cell(hall_c)]
+	seen[queue[0]] = true
+	while not queue.is_empty():
+		var c: Vector2i = queue.pop_front()
+		for dd in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var nb: Vector2i = c + dd
+			if nb.x < 0 or nb.y < 0 or nb.x >= GW or nb.y >= GH:
+				continue
+			if not seen.has(nb) and pf_grid[nb.y * GW + nb.x] == 0:
+				seen[nb] = true
+				queue.append(nb)
+	for y in range(GH):
+		for x in range(GW):
+			if pf_grid[y * GW + x] == 0 and not seen.has(Vector2i(x, y)):
+				pf_grid[y * GW + x] = 1
+
+
+## 寻路网格重建：布局网格 + 柱心 63px（柱 r42 + 身 r22）内格心标墙
+func _rebuild_pf() -> void:
+	pf_grid = grid.duplicate()
+	for p in PILLARS:
+		for y in range(GH):
+			for x in range(GW):
+				if cell_center(x, y).distance_to(p) < 63.0:
+					pf_grid[y * GW + x] = 1
 
 
 func is_wall(cx: int, cy: int) -> bool:
@@ -69,14 +126,14 @@ func random_floor_cell_far(player_pos: Vector2, min_dist_px: float) -> Vector2:
 	for i in range(60):
 		var cx := rng.randi_range(1, GW - 2)
 		var cy := rng.randi_range(1, GH - 2)
-		if grid[cy * GW + cx] == 0:
+		if pf_grid[cy * GW + cx] == 0:
 			var p := cell_center(cx, cy)
 			if p.distance_to(player_pos) > min_dist_px:
 				return p
 	# 兜底：任一地面格
 	for y in range(GH):
 		for x in range(GW):
-			if grid[y * GW + x] == 0:
+			if pf_grid[y * GW + x] == 0:
 				return cell_center(x, y)
 	return Vector2(GW * CELL * 0.5, GH * CELL * 0.5)
 

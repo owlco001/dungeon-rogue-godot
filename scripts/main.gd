@@ -302,7 +302,7 @@ func _spawn_enemy(eid: String, hp_m: float, dmg_m: float, is_elite: bool) -> voi
 	e.hp_mult = hp_m
 	e.dmg_mult = dmg_m
 	e.elite = is_elite
-	e.pf_grid = _room.grid if _room != null else PackedByteArray()
+	e.pf_grid = _room.pf_grid if _room != null else PackedByteArray()
 	e.position = _spawn_pos()
 	e.died.connect(_on_enemy_died)
 	add_child(e)

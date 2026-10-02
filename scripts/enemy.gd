@@ -56,6 +56,9 @@ var _path_i := 0
 var _repath_t := 0.0
 var _los_clear := true
 var _los_t := 0.0
+var _stuck_t := 0.0
+var _path_mode := false
+var _rescue := false
 
 # v0.3 状态：眩晕 / 减速 / 中毒 / 虚弱 / 诅咒
 var stun_t := 0.0
@@ -142,6 +145,16 @@ func _release_self() -> void:
 
 func _physics_process(delta: float) -> void:
 	if dead:
+		return
+	# L4 卡墙救援：深陷碰撞/挤压时传送回最近可达格心（几何边角的最终保险）
+	if _rescue and not pf_grid.is_empty():
+		_rescue = false
+		global_position = PathfindScript.nearest_floor_center(pf_grid, pf_gw, pf_gh,
+			global_position, pf_cell)
+		_path = PackedVector2Array()
+		_path_i = 0
+		_repath_t = 0.0
+		velocity = Vector2.ZERO
 		return
 	if not is_instance_valid(_player):
 		_player = get_tree().get_first_node_in_group("player") as Node2D
@@ -240,9 +253,18 @@ func _physics_process(delta: float) -> void:
 	elif not behavior_hold:
 		# L3 转向插值：方向 slerp 平滑，避免瞬时掉头抖动
 		var desired: Vector2
-		if not pf_grid.is_empty() and not _los_clear and target != null:
+		_path_mode = not pf_grid.is_empty() and not _los_clear and target != null
+		if _path_mode:
+			if velocity.length() < spd * 0.25:
+				_stuck_t += delta
+				if _stuck_t > 0.5:
+					_stuck_t = 0.0
+					_rescue = true
+			else:
+				_stuck_t = 0.0
 			desired = _path_desired(delta, target)
 		else:
+			_stuck_t = 0.0
 			desired = (dir + side).normalized()
 		if _dir_smooth == Vector2.ZERO:
 			_dir_smooth = desired
@@ -325,8 +347,9 @@ func _path_desired(delta: float, target: Node2D) -> Vector2:
 			global_position, target.global_position, pf_cell)
 		_path_i = 1  # index 0 ≈ 自身位置
 	if _path_i < _path.size():
+		# 严格格心跟随（格 50px、身半径 22：格心线距墙面 25px，跳点拉直会把身体送进墙角）
 		while _path_i < _path.size() \
-				and global_position.distance_to(_path[_path_i]) < 30.0:
+				and global_position.distance_to(_path[_path_i]) < 20.0:
 			_path_i += 1
 	if _path_i >= _path.size():
 		var to: Vector2 = target.global_position - global_position
