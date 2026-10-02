@@ -60,7 +60,7 @@ func _blob_points(center: Vector2, cell: Vector2i, kind: String, shrink: float) 
 	var key := "%d:%d:%s" % [cell.x, cell.y, kind]
 	for i in range(8):
 		var a := TAU * float(i) / 8.0
-		var jitter := 0.82 + _rand01(key, i) * 0.30
+		var jitter := 0.76 + _rand01(key, i) * 0.48
 		var p := center + Vector2(cos(a), sin(a)) * half * jitter
 		pts.append(p)
 	return pts
@@ -80,7 +80,7 @@ func _draw() -> void:
 		for cell_v in patch.get("cells", []):
 			var cell: Vector2i = cell_v
 			var center := Vector2((float(cell.x) + 0.5) * CELL, (float(cell.y) + 0.5) * CELL)
-			var blob := _blob_points(center, cell, kind, 3.0)
+			var blob := _blob_points(center, cell, kind, 0.5)
 			draw_colored_polygon(blob, fill)
 			# Agnes 贴图层：UV 按世界坐标取样，相邻格图案连续
 			var tex: Texture2D = _textures.get(kind, null)
@@ -96,43 +96,31 @@ func _draw() -> void:
 				draw_polygon(blob, pcols, uvs, tex)
 			var outline := blob.duplicate()
 			outline.append(blob[0])
-			draw_polyline(outline, edge, 2.0, true)
+			draw_polyline(outline, Color(edge, edge.a * 0.38), 1.5, true)
 			_draw_details(kind, center, cell, edge, accent)
 
 
 func _draw_details(kind: String, center: Vector2, cell: Vector2i, edge: Color, accent: Color) -> void:
 	var key := "%d:%d:%s" % [cell.x, cell.y, kind]
 	match kind:
-		"rubble":
-			for i in range(4):
-				var p := center + Vector2(_rand01(key, 10 + i) - 0.5, _rand01(key, 20 + i) - 0.5) * 30.0
-				draw_circle(p, 2.5 + _rand01(key, 30 + i) * 3.0, accent)
+		"rubble", "bramble":
+			# v0.8.9：贴图本身已有碎石/荆棘细节，不再叠程序化圆点/线条（真机上像贴纸）
+			pass
 		"lava":
 			var inner := _blob_points(center, cell, kind, 16.0)
-			draw_colored_polygon(inner, Color(1.0, 0.45, 0.06, 0.55 + 0.25 * sin(_time * 2.6)))
-			for i in range(2):
-				var p := center + Vector2(_rand01(key, 10 + i) - 0.5, _rand01(key, 20 + i) - 0.5) * 22.0
-				draw_circle(p, 2.2, accent)
+			draw_colored_polygon(inner, Color(1.0, 0.45, 0.06, 0.38 + 0.17 * sin(_time * 2.6)))
+			var p := center + Vector2(_rand01(key, 10) - 0.5, _rand01(key, 20) - 0.5) * 22.0
+			draw_circle(p, 2.2, accent)
 		"ice":
-			for i in range(2):
-				var off := Vector2(_rand01(key, 10 + i) - 0.5, _rand01(key, 20 + i) - 0.5) * 16.0
-				var pts := PackedVector2Array()
-				for s in range(4):
-					pts.append(center + off + Vector2(-16.0 + 10.0 * float(s),
-						(_rand01(key, 30 + i * 4 + s) - 0.5) * 12.0 + (8.0 if i == 0 else -6.0)))
-				draw_polyline(pts, accent, 1.5, true)
+			var off := Vector2(_rand01(key, 10) - 0.5, _rand01(key, 20) - 0.5) * 16.0
+			var pts := PackedVector2Array()
+			for s in range(4):
+				pts.append(center + off + Vector2(-16.0 + 10.0 * float(s),
+					(_rand01(key, 30 + s) - 0.5) * 12.0 + 8.0))
+			draw_polyline(pts, Color(accent, 0.30), 1.5, true)
 		"mire":
-			for i in range(3):
-				var p := center + Vector2(_rand01(key, 10 + i) - 0.5, _rand01(key, 20 + i) - 0.5) * 28.0
-				draw_arc(p, 3.0 + _rand01(key, 30 + i) * 3.5, 0.0, TAU, 12, accent, 1.5, true)
-		"bramble":
-			for i in range(3):
-				var a := _rand01(key, 10 + i) * TAU
-				var d := Vector2(cos(a), sin(a))
-				draw_line(center - d * 17.0, center + d * 17.0, edge, 2.5, true)
-				var mid := center + d * (_rand01(key, 20 + i) - 0.5) * 14.0
-				var perp := d.rotated(PI * 0.5)
-				draw_line(mid - perp * 5.0, mid + perp * 5.0, accent, 1.8, true)
+			var p := center + Vector2(_rand01(key, 10) - 0.5, _rand01(key, 20) - 0.5) * 28.0
+			draw_arc(p, 3.0 + _rand01(key, 30) * 3.5, 0.0, TAU, 12, Color(accent, 0.30), 1.5, true)
 		"rift":
 			var pulse := 0.5 + 0.5 * sin(_time * 2.6 + float(cell.x + cell.y))
 			draw_arc(center, 8.0 + 5.0 * pulse, 0.0, TAU, 20, accent, 2.0, true)

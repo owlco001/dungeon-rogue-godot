@@ -4,7 +4,7 @@ extends RefCounted
 ## 存档走 Meta（已完成 id -> 完成时间戳）。
 ## 触发点埋在：Boss击杀 / 通关 / 无尽层数 / 击杀计数 / 超武合成 / 武器获得 / 天赋购买。
 ## unlock() 成功时：Meta 落盘 + 成就音效 + 待发 toast（HUD/大厅 _process 里 drain_pending 消费）。
-## 文案只用 hud-subset.ttf 已有字（完/鉴/奖/✦ 等字缺，避开）。
+## 文案用字必须被 hud-subset.ttf 覆盖（tools/check_font.py 门禁），新字先跑 tools/make_font_subset.py。
 
 const DEFS := {
 	"first_clear": {"name": "初通深渊", "desc": "第1次通关30层", "points": 5},
