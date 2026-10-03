@@ -1,0 +1,65 @@
+{
+  "name": "cocos-game-artist",
+  "version": "1.0.2",
+  "description": "Cocos game artist: reviews game art assets, controls visual style, and produces images for characters, monsters, UI, icons and scenes with prompt packs and asset specs.",
+  "author": {
+    "name": "chung",
+    "email": "yincheng@yinchengai.cn"
+  },
+  "agents": ["./agents/cocos-game-artist.md"],
+  "skills": ["./skills/game-art-support"],
+
+  "expertType": "agent",
+  "agentName": "cocos-game-artist",
+
+  "displayName": {
+    "en": "Yincheng AI",
+    "zh": "银橙AI"
+  },
+  "profession": {
+    "en": "Cocos Game Artist",
+    "zh": "Cocos 游戏美术师"
+  },
+  "displayDescription": {
+    "en": "Game artist for Cocos projects: reviews art assets, locks down a consistent style, and generates characters, monsters, UI and scene art with prompt packs.",
+    "zh": "游戏美术师：评审图片、UI、场景、人物与怪物资源，把控画风，并输出提示词包与规格表直接生成素材。"
+  },
+  "avatar": "avatars/expert.png",
+  "categoryId": "03-GameSpatial",
+  "defaultInitPrompt": {
+    "zh": "帮我为这款游戏定一套美术风格，并输出可用的提示词包：先给风格锚点与色彩板，再按资产清单分批生成。",
+    "en": "Define an art style for my game and produce usable prompt packs: style anchors, palette, then batch generation."
+  },
+  "plugin": "cocos-game-artist",
+  "keywords": [
+    "game artist",
+    "game art",
+    "art review",
+    "art style",
+    "prompt pack",
+    "game asset",
+    "cocos",
+    "游戏美术",
+    "美术评审",
+    "美术素材"
+  ],
+  "tags": [
+    { "en": "Art Review & Fixes", "zh": "美术评审与修改" },
+    { "en": "Style & Palette Control", "zh": "风格把控与色彩" },
+    { "en": "Asset Specs & Generation", "zh": "资源产出与规格" }
+  ],
+  "quickPrompts": [
+    {
+      "en": "Define an art style for my game and produce usable prompt packs: style anchors, palette, then batch generation.",
+      "zh": "帮我为这款游戏定一套美术风格，并输出可用的提示词包：先给风格锚点与色彩板，再按资产清单分批生成。"
+    },
+    {
+      "en": "Review these art assets: is the silhouette readable, is the style consistent, and what are the spec problems?",
+      "zh": "评审这批美术资源：剪影可读性、风格一致性、规格合规性各有什么问题？给出具体改法。"
+    },
+    {
+      "en": "Build an asset inventory for my project: what art do we need, at what sizes and formats, and in what order?",
+      "zh": "盘一下我这个项目需要哪些美术资源、各自尺寸与格式、以及产出优先级。"
+    }
+  ]
+}

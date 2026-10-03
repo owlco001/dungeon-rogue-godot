@@ -1,7 +1,7 @@
 class_name WaveDirector
 extends Node
 ## v0.8 L3 波次调度（01 §5.1/§5.3）：独立于 main 的推进逻辑，只发事件，
-## 不直接调用 main 的推进函数。3 波 60/25/15（T+0/25/50s）；
+## 不直接调用 main 的推进函数。3 波 60/25/15（T+0/8/18s）；
 ## 楼梯条件 = 层计时 70s 到期（本类 stairs_ready）或三波全清（main 存活计数判定）。
 
 signal spawn_wave(entries: Array)  # entries: [{kind: String, elite: bool}]
@@ -9,7 +9,7 @@ signal stairs_ready
 signal wave_announced(n: int, total: int)
 signal tick_warning(seconds_left: int)
 
-const WAVE_TIMES := [0.0, 25.0, 50.0]
+const WAVE_TIMES := [0.0, 8.0, 18.0]
 const FLOOR_TIME := 70.0
 
 var active := false

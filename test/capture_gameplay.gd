@@ -1,7 +1,8 @@
 extends SceneTree
-const OUT := "/tmp/gameplay_cap"
+static var OUT := OS.get_environment("CAPTURE_OUT")
+static var OUT_DIR := OUT if OUT != "" else "/tmp/gameplay_cap"
 func _initialize() -> void:
-	DirAccess.make_dir_recursive_absolute(OUT)
+	DirAccess.make_dir_recursive_absolute(OUT_DIR)
 	root.size = Vector2i(960, 640)
 	var inst: Node = load("res://scenes/main.tscn").instantiate()
 	root.add_child(inst)
@@ -9,7 +10,7 @@ func _initialize() -> void:
 func _shot(name: String) -> void:
 	await process_frame
 	await process_frame
-	root.get_texture().get_image().save_png(OUT + "/" + name + ".png")
+	root.get_texture().get_image().save_png(OUT_DIR + "/" + name + ".png")
 	print("shot: ", name)
 func _wait(secs: float) -> void:
 	var start := Time.get_ticks_msec()

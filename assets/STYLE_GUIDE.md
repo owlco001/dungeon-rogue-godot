@@ -23,28 +23,51 @@
 无文字 / 无 UI / 无边框 / 无写实照片感 / 无复杂渐变 / 主体不搞半透明 / 背景透明（靠后处理实现，不靠 prompt）
 
 ## 4. Godot 技术规格
-- 格式：PNG（RGBA），透明背景（tile 除外，全幅 RGB）
-- 分辨率：角色 128｜杂兵/召唤/投射物 64｜Boss 256｜tile 48（无缝平铺）｜图标 64｜特效 128｜拾取物 48
-- 目录：`assets/sprites/characters/{aila,batong,mofei}/`、`sprites/enemies/`、`sprites/bosses/`、`sprites/summons/`、`sprites/fx/projectiles/`、`sprites/fx/`、`sprites/pickups/`、`tiles/{corridor,forge,ice,tomb,thorn,void}/`、`icons/{relics,skills,passives}/`
-- 命名：`<类别>_<id>_<方向>_<动作>_<帧号>.png`（如 `char_aila_down_walk_01.png`）
-- 角色动画：4 方向 ×（idle 1 帧 + walk 4 帧），Godot `SpriteFrames` 直接导入
+
+> ⚠️ **2026-10-03 校准**：本节原先写的分辨率（角色 128/杂兵 64/Boss 256/tile 48）
+> 与命名（`down`/`up`）**已过时**，与当前代码实际不符。下表为实测值，以代码为准。
+
+| 类别 | 实际尺寸 | 命名示例 |
+|---|---|---|
+| 角色 | **384×384** | `char_batong_front_walk_01.png` |
+| 杂兵 | **384×384** | 7 种 × 4 帧 |
+| Boss | **640×640** | 含双生 A/B、墨骸三阶段 |
+| 特效 | **256×256** | 加法混合，**黑底不抠图** |
+| 投射物 / 拾取物 | **256×256** | 投射物**只需朝右单帧**（代码按 `dir.angle()` 旋转） |
+| tile | 见 `assets/tiles/*` | — |
+| 图标 | 见 `assets/icons/{skills,relics}/` | 两个特例：`icon_relic_berserk`（狂暴战鼓）、`icon_skill_dash`（闪现） |
+
+- 目录：`assets/sprites/characters/{aila,batong,mofei}/`、`sprites/enemies/`、`sprites/bosses/`、`sprites/fx/projectiles/`、`sprites/fx/`、`sprites/pickups/`、`tiles/{corridor,forge,ice,tomb,thorn,void}/`、`icons/{relics,skills}/`
+- 格式：PNG（RGBA）透明底（tile 除外，全幅 RGB）
+- **角色朝向素材侧是 `front`/`back`/`left`/`right`**，不存在 `down`/`up`
+  —— `scripts/player.gd` 的 `_tex()` 做了 `down→front` / `up→back` 的引擎侧映射
+- 角色动画：4 方向 ×（idle 1 帧 + walk 6 帧）
 
 ## 5. Agnes 调用规范
-- 工具：`~/workspace/skills/agnes/bin/agnes`；模型 `agnes-image-2.1-flash`
-- `txt2img --prompt "..." --size 1024x1024 --out out.png`；`img2img --prompt "..." --image ref.png --out out.png`
-- 认证走 skill 内置 helper，绝不打印/持久化 raw key
-- 返回 429/5xx → 指数退避重试（30s/60s/120s）；校验文件 >0 字节才算完成
-- 单资产 prompt 模板：`top-down 2D game sprite, <主体>, dark fantasy dungeon, flat color with bold dark outline, transparent background, <调色板约束>, no text, clean silhouette` + 方向/动作/阶段限定
+
+> ⚠️ **2026-10-03 校准**：原先写的工具路径 `~/workspace/skills/agnes/bin/agnes`
+> 与 `~/workspace/.rbg-venv` 是旧机器的个人路径，已不存在。现行规范：
+
+- 密钥：**`PAVO_API_KEY`** 环境变量（不是 `AGNES_API_KEY`——设错会抛 `MissingApiKey`）
+- 模块：`agnes_client` 属于 **pavo-drama** 仓库，用 `tools/agnes_path.py` 定位
+  （支持 `PAVO_ROOT` / `AGNES_CLIENT_DIR` / `PYTHONPATH` / 同级目录自动探测）
+- 模型：`agnes-image-2.1-flash`
+- **抠图（rembg）**：需装在专用 venv，`new_session("u2net")`，**单进程串行**，并行必OOM
+- 返回 429/5xx → 指数退避重试；校验文件 >0 字节才算完成
+- `generate_image` 返回 `{"data":[{"url":...}], "created":..., "task_id":...}`
+  —— 图片 URL 在 **`data[0].url`**，不是顶层
+- 单资产 prompt 模板：`top-down 2D game sprite, <主体>, dark fantasy dungeon, flat color with bold dark outline, <调色板约束>, no text, clean silhouette` + 方向/动作/阶段限定
+  - ⚠️ `transparent background` **写在 prompt 里不可信**（实测换来白底/棋盘格/场景底），透明靠 rembg 后处理
 - tile 必加：`NO grid lines, NOT a tileset atlas`（否则必出成网格 atlas，已验证）
-- 图标模板：`game UI icon, <主体>, dark fantasy, flat color with bold dark outline, transparent background, no text, centered, single object`
+- 图标模板：`game UI icon, <主体>, dark fantasy, flat color with bold dark outline, no text, centered, single object`（**必须做 40px 等比缩略图测试**）
 
 ## 6. 管线铁律（血泪版，违反必返工）
 1. **四方向/多帧一律 img2img 转**，不独立文生图（会变人）；右方向 = PIL 镜像左方向
-2. **"transparent background" prompt 不可信**（实测只换来纯白/棋盘格/场景底），全部走 rembg：venv `~/workspace/.rbg-venv`，`new_session("u2net")`（默认模型会下载 1GB），**单进程串行**，并行必 OOM（7GB 内存）
+2. **"transparent background" prompt 不可信**（实测只换来纯白/棋盘格/场景底），全部走 rembg：`new_session("u2net")` 需装在专用 venv（`VENV_PY` 指向它），**单进程串行**，并行必 OOM
 3. 同一动作多帧用 **union bbox 统一裁剪**后再缩到目标尺寸，否则缩放/配准抖动
 4. 每帧人工目视朝向（模型有方向偏置，如"朝右"画成朝左）；tile 全查 atlas 问题；图标/特效拼蒙太奇批量查
 5. 模型自带脚下椭圆阴影，抠图会保留——游戏里可直接当阴影用；不想要需在 prompt 明确禁止
-6. 后处理脚本：`~/workspace/games/dungeon-rogue-godot/tools/postprocess_assets.py`（venv python 运行，消费 `.staging/*/files.json`）
+6. 后处理脚本：`tools/postprocess_assets.py`、`tools/video_to_sprite.py`（抠图阶段用 venv python）
 
 ## 7. 省量规则
 - 超武弹道/特效 = 基础版变色放大，不单独生成

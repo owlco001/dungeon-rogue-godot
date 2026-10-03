@@ -5,8 +5,10 @@ extends StaticBody2D
 
 const W := 1600.0
 const H := 1200.0
-const WALL_T := 48.0
-const TILE := 48.0
+const WALL_T := 50.0
+# RoomGen / WallRow / pathfinding use a 32x24 grid with 50px cells.
+# Keep the floor and outer-wall renderer on the same world-unit grid.
+const TILE := 50.0
 const PILLARS := [Vector2(480, 380), Vector2(1120, 380), Vector2(480, 820), Vector2(1120, 820)]
 const PILLAR_R := 42.0
 const SPAWN_SAFE_R := 220.0  # 出生点（中心）不撒装饰
@@ -244,8 +246,8 @@ func set_theme(t: String) -> void:
 	# 每砖变体 + 亮度抖动（确定性 hash）
 	# v0.8.15 去杂乱：变体按 70/20/10 加权（a 干净打底、c 苔藓只做点缀），取高位避免整行同变体的带状；
 	# 亮度抖动 0.90~1.08 收窄为 0.95~1.03
-	var nx := int(W / TILE) + 1
-	var ny := int(H / TILE) + 1
+	var nx := roundi(W / TILE)
+	var ny := roundi(H / TILE)
 	_floor_pick.resize(nx * ny)
 	_floor_shade.resize(nx * ny)
 	for ix in range(nx):
@@ -304,7 +306,8 @@ func set_theme(t: String) -> void:
 			"scl": drng.randf_range(0.75, 1.25),
 		})
 	_build_torches()
-	_build_rune_decals(drng, center)
+	# 已移除紫色地面符文，避免实时层与静态烘焙层生成圆圈。
+	_clear_rune_decals()
 	# v0.8.6：房间内墙跟随主题换砖（build_room_walls 时用的是上一层贴图）
 	for rn in _room_wall_rows:
 		if is_instance_valid(rn):
@@ -378,41 +381,12 @@ func _apply_bake(tex: ImageTexture) -> void:
 	queue_redraw()
 
 
-## 发光符文：黑底 ADD 混合，必须用 Sprite2D（_draw 里换不了混合模式）
-func _build_rune_decals(drng: RandomNumberGenerator, center: Vector2) -> void:
+## 紫色地面符文已移除；保留清理函数以兼容主题切换和旧节点。
+func _clear_rune_decals() -> void:
 	for n in _rune_nodes:
-		(n as Node).queue_free()
+		if is_instance_valid(n):
+			(n as Node).queue_free()
 	_rune_nodes.clear()
-	var rune_tex := load("res://assets/tiles/decals/decal_rune.png") as Texture2D
-	if rune_tex == null:
-		return
-	var add_mat := CanvasItemMaterial.new()
-	add_mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
-	var tries := 0
-	var placed := 0
-	while placed < 3 and tries < 60:
-		tries += 1
-		var pos := Vector2(drng.randf_range(140.0, W - 140.0), drng.randf_range(140.0, H - 140.0))
-		if pos.distance_to(center) < SPAWN_SAFE_R:
-			continue
-		var bad := false
-		for p in PILLARS:
-			if pos.distance_to(p) < PILLAR_R + 70.0:
-				bad = true
-				break
-		if bad:
-			continue
-		var sp := Sprite2D.new()
-		sp.texture = rune_tex
-		sp.material = add_mat
-		sp.modulate = Color(0.75, 0.6, 1.0, 0.5)
-		sp.position = pos
-		sp.rotation = drng.randf_range(0.0, TAU)
-		sp.scale = Vector2.ONE * drng.randf_range(0.9, 1.3)
-		sp.z_index = 1
-		add_child(sp)
-		_rune_nodes.append(sp)
-		placed += 1
 
 
 func _build_torches() -> void:
@@ -553,8 +527,8 @@ func _draw() -> void:
 		return  # 静态层已烘焙为单张纹理（_baked_sprite 显示），本层零绘制命令
 	if _floor_texs.is_empty() or _floor_texs[0] == null:
 		return
-	var nx := int(W / TILE) + 1
-	var ny := int(H / TILE) + 1
+	var nx := roundi(W / TILE)
+	var ny := roundi(H / TILE)
 	# 地面：3 变体 hash 拼 + 每砖亮度抖动
 	for ix in range(nx):
 		for iy in range(ny):
@@ -578,7 +552,7 @@ func _draw() -> void:
 	for s in _hazard_spots:
 		draw_texture_rect(_hazard_tex, Rect2(s.x - TILE * 0.5, s.y - TILE * 0.5, TILE, TILE), false)
 	# 墙体（先左右、后上下压住转角）
-	var my := int(H / TILE) + 1
+	var my := roundi(H / TILE)
 	for iy in range(my):
 		var y := iy * TILE
 		draw_texture_rect(_side_tex, Rect2(-WALL_T, y, WALL_T, TILE), false)

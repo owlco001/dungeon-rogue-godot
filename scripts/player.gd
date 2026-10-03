@@ -11,6 +11,8 @@ signal died
 signal relics_changed
 
 const ACCEL := 1500.0
+# 192px 地砖按 48px 世界单位绘制；384px 角色帧也必须归一到同一标尺。
+const ART_SCALE := 0.25
 const PoolManager := preload("res://systems/pool_manager.gd")
 const FRICTION := 1800.0
 const BASE_MAGNET_RADIUS := 110.0
@@ -82,6 +84,7 @@ var _regen_t := 0.0
 
 func _ready() -> void:
 	add_to_group("player")
+	visual.scale = Vector2.ONE * ART_SCALE
 	char_def = GameData.CHARACTERS[character_id]
 	base_speed = float(char_def["speed"])
 	base_max_hp = float(char_def["max_hp"])
@@ -106,8 +109,35 @@ func heal_full() -> void:
 
 
 func _tex(cid: String, dirn: String, action: String, frame: int) -> Texture2D:
-	var p := "res://assets/sprites/characters/%s/char_%s_%s_%s_%02d.png" % [cid, cid, dirn, action, frame]
+	# down/up 复用 front/back 素材：行走动画只产出 right/left/front/back 四个朝向，
+	# 引擎的 down/up 对应玩家的正面/背面。
+	var d := dirn
+	if dirn == "down":
+		d = "front"
+	elif dirn == "up":
+		d = "back"
+	var p := "res://assets/sprites/characters/%s/char_%s_%s_%s_%02d.png" % [cid, cid, d, action, frame]
 	return load(p) as Texture2D
+
+
+func _frame_count(cid: String, dirn: String, action: String) -> int:
+	# 视频抽帧产出的帧数按方向不同（25/25/27），不能硬编码
+	var d := dirn
+	if dirn == "down":
+		d = "front"
+	elif dirn == "up":
+		d = "back"
+	var dir := DirAccess.open("res://assets/sprites/characters/%s" % cid)
+	if dir == null:
+		return 0
+	var n := 0
+	for f in dir.get_files():
+		# 必须排除 .import 伴随文件，否则会数出双倍帧数
+		if f.ends_with(".import"):
+			continue
+		if f.begins_with("char_%s_%s_%s_" % [cid, d, action]) and f.ends_with(".png"):
+			n += 1
+	return n
 
 
 func _add_anim(sf: SpriteFrames, anim_name: String, frames: Array, fps: float) -> void:
@@ -121,12 +151,42 @@ func _add_anim(sf: SpriteFrames, anim_name: String, frames: Array, fps: float) -
 func _build_sprite_frames() -> void:
 	var sf := SpriteFrames.new()
 	for d in ["down", "up", "left", "right"]:
-		_add_anim(sf, "idle_" + d, [_tex(character_id, d, "idle", 0)], 2.0)
+		# idle 缺省回退到 walk 首帧，避免素材未生成时报错
+		# idle 素材尚未产出：取 walk 首帧作为静态待机姿势
+		var idle_tex: Texture2D = _tex(character_id, d, "walk", 0)
+		_add_anim(sf, "idle_" + d, [idle_tex], 2.0)
+
+		# 帧数按实际素材自动探测（视频抽帧产出的帧数按方向不同）
+		var n := _frame_count(character_id, d, "walk")
 		var walk: Array = []
-		for i in range(4):
-			walk.append(_tex(character_id, d, "walk", i))
-		_add_anim(sf, "walk_" + d, walk, 9.0)
+		if n == 0:
+			walk.append(_tex(character_id, d, "walk", 0))
+		else:
+			for i in range(n):
+				walk.append(_tex(character_id, d, "walk", i))
+		# 2026-10-03 修正：原先四向一律写死 12fps。但各向帧数差异很大
+		# （batong front/back 6 帧、left/right 18 帧），写死 fps 会让
+		# 步态周期相差 3 倍 —— 上下走比左右走快 3 倍，肉眼可见。
+		# 改为按帧数反推 fps，使各向周期统一到 WALK_CYCLE_SEC。
+		# 以 batong 为例：6 帧 -> 8.6fps，18 帧 -> 25.7fps，周期均为 0.7s。
+		_add_anim(sf, "walk_" + d, walk, _walk_fps(walk.size()))
 	sprite.frames = sf
+
+
+## 步态目标周期（秒）。与视频抽帧的原生周期同量级。
+const WALK_CYCLE_SEC := 0.7
+
+## 按帧数反推 fps，使不同帧数的素材播放出同样的步态周期。
+## 固定 fps 是错的：各方向抽帧帧数本就不同，周期必须按帧数归一。
+##
+## 注意上限不能用 30：aila 是 25/27 帧的大周期素材，压到 30 会把
+## 0.833s 与 0.900s 强行拉成同一个 fps，周期反而又不一致了
+## （2026-10-03 实测踩到：test/verify_walk_cycle.gd 报 aila FAIL）。
+## 上限取 60fps 足以覆盖所有现存素材，同时仍能拦住异常小帧数导致的超高 fps。
+func _walk_fps(n: int) -> float:
+	if n <= 1:
+		return 2.0
+	return clampf(float(n) / WALK_CYCLE_SEC, 4.0, 60.0)
 
 
 func _setup_dust() -> void:
@@ -177,7 +237,9 @@ func _physics_process(delta: float) -> void:
 		else:
 			dir_name = "down" if input_vec.y > 0.0 else "up"
 
-	var moving := velocity.length() > 25.0
+	# Animate from requested input rather than velocity: acceleration, wall collision,
+	# or one-frame input latency must not leave a visibly moving hero in idle frames.
+	var moving := input_vec.length() > 0.08 or velocity.length() > 25.0
 	_play(("walk_" if moving else "idle_") + dir_name)
 	_update_feel(delta, moving)
 
@@ -218,13 +280,13 @@ func _update_feel(delta: float, moving: bool) -> void:
 		_walk_t += delta
 		var bob := sin(_walk_t * 16.0)
 		visual.position.y = bob * 3.0
-		visual.scale = Vector2(1.0 + 0.018 * bob, 1.0 - 0.018 * bob) * _punch_now()
+		visual.scale = Vector2(1.0 + 0.018 * bob, 1.0 - 0.018 * bob) * ART_SCALE * _punch_now()
 		dust.emitting = true
 	else:
 		_breathe_t += delta
 		visual.position.y = lerpf(visual.position.y, 0.0, minf(1.0, 10.0 * delta))
 		var b := 1.0 + 0.02 * sin(_breathe_t * 2.6)
-		visual.scale = visual.scale.lerp(Vector2(2.0 - b, b), minf(1.0, 8.0 * delta))
+		visual.scale = visual.scale.lerp(Vector2(2.0 - b, b) * ART_SCALE, minf(1.0, 8.0 * delta))
 		dust.emitting = false
 
 

@@ -2,7 +2,7 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dlgh1m2474pd0"
+uid="uid://h5rlttcsfdqm"
 path="res://.godot/imported/tex_lava.webp-e09cb61f23562d6c4833af22a983e42b.ctex"
 metadata={
 "vram_texture": false
@@ -15,7 +15,7 @@ dest_files=["res://.godot/imported/tex_lava.webp-e09cb61f23562d6c4833af22a983e42
 
 [params]
 
-compress/mode=1
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

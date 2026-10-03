@@ -2,14 +2,17 @@
 """19 武器图标批量生成（Agnes txt2img）+ 抠图入库 128px。"""
 import subprocess
 from collections import deque
+import os
 from pathlib import Path
 
 import numpy as np
 from PIL import Image
 from scipy.ndimage import binary_dilation
 
-ROOT = Path("/home/hatch/workspace/games/dungeon-rogue-godot")
-AGNES = Path("/home/hatch/workspace/skills/agnes/bin/agnes")
+# 仓库根目录= 本脚本上级目录；如在别处运行可设 DUNGEON_ROOT 覆盖
+ROOT = Path(os.environ.get("DUNGEON_ROOT", Path(__file__).resolve().parent.parent))
+# Agnes CLI 路径：默认读环境变量 AGNES_BIN，找不到时回退到 PATH 里的 agnes
+AGNES = Path(os.environ.get("AGNES_BIN", "agnes"))
 RAW = Path("/tmp/icon_gen")
 OUT = ROOT / "assets/icons/weapons"
 OUT.mkdir(parents=True, exist_ok=True)

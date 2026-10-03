@@ -1,6 +1,8 @@
 extends CharacterBody2D
 class_name Summon
 const PoolManager := preload("res://systems/pool_manager.gd")
+# 召唤物帧与角色/杂兵同为 384px 画布，统一到 48px 地砖世界单位。
+const ART_SCALE := 0.25
 ## 召唤物 v0.3：哨兵炮塔(定点自动射击) / 猎犬·骷髅战士·蜂群(近战追击索敌)。
 ## 单帧精灵 + 程序化 juice：y 正弦浮动、移动倾斜、受击 squash。
 ## flags: overload(超载) / split(死亡分裂) / bloodlust(嗜血) / hp_mult /
@@ -61,12 +63,13 @@ func _ready() -> void:
 		_frames.append(load(TEX_DIR % [summon_type, i]) as Texture2D)
 	_sprite = Sprite2D.new()
 	_sprite.texture = _frames[0]
+	_sprite.scale = Vector2.ONE * ART_SCALE
 	add_child(_sprite)
 	# 骷髅大军：骷髅战士精灵染绿紫（尸毒主题）以示区别
 	if summon_type == "skeleton_warrior" and wid in ["skel_army", "super_skel_army"]:
 		_sprite.modulate = Color(0.62, 1.0, 0.72)
 	if mini:
-		_sprite.scale = Vector2.ONE * 0.62
+		_sprite.scale = Vector2.ONE * ART_SCALE * 0.62
 	var s := _stats()
 	var def: Dictionary = SUMMON_DEFS[summon_type]
 	max_hp = float(def["hp"]) * float(s.get("summon_hp_mult", 1.0))
@@ -236,10 +239,10 @@ func _juice(delta: float, def: Dictionary) -> void:
 	var sc := 0.62 if mini else 1.0
 	if _squash_t > 0.0:
 		var k := _squash_t / 0.12
-		_sprite.scale = Vector2(sc * (1.0 + 0.35 * k), sc * (1.0 - 0.3 * k))
+		_sprite.scale = Vector2(sc * (1.0 + 0.35 * k), sc * (1.0 - 0.3 * k)) * ART_SCALE
 	else:
 		var b := 1.0 + 0.05 * sin(_bob_t * 4.2)
-		_sprite.scale = Vector2(sc * (2.0 - b), sc * b)
+		_sprite.scale = Vector2(sc * (2.0 - b), sc * b) * ART_SCALE
 
 
 func take_damage(amount: float, from_dir: Vector2 = Vector2.ZERO, knock_mult: float = 1.0, from: Node2D = null) -> void:

@@ -1,9 +1,9 @@
 {
   "count": {
-    "base": 10,
-    "max": 80,
-    "min": 10,
-    "per_floor": 2.2
+    "base": 24,
+    "max": 160,
+    "min": 24,
+    "per_floor": 4.0
   },
   "elite_hp_mult": 2.0,
   "mix_anchors": {

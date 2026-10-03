@@ -573,7 +573,8 @@ func _fight_card(cid: String, compact: bool = false) -> Control:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
 	p.add_child(vb)
-	var tex := load("res://assets/sprites/characters/%s/char_%s_down_idle_00.png" % [cid, cid]) as Texture2D
+	# 与 hud.gd 的角色面板保持同一命名约定：素材侧朝向名是 front/back
+	var tex := load("res://assets/sprites/characters/%s/char_%s_front_idle_00.png" % [cid, cid]) as Texture2D
 	var pr := TextureRect.new()
 	pr.texture = tex
 	pr.custom_minimum_size = Vector2(128, 128)

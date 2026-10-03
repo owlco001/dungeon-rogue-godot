@@ -2,11 +2,12 @@ extends SceneTree
 ## v0.7 地牢环境精细化验证：corridor/forge/void 三套主题，全景+近景。
 ## Run: xvfb-run godot --rendering-driver opengl3 --audio-driver Dummy --path <project> --script res://test/capture_env.gd
 
-const OUT := "/tmp/env_verify"
+static var OUT := OS.get_environment("CAPTURE_OUT")
+static var OUT_DIR := OUT if OUT != "" else "/tmp/env_verify"
 
 
 func _initialize() -> void:
-	DirAccess.make_dir_recursive_absolute(OUT)
+	DirAccess.make_dir_recursive_absolute(OUT_DIR)
 	_run.call_deferred()
 
 
@@ -14,7 +15,7 @@ func _shot(name: String) -> void:
 	await process_frame
 	await process_frame
 	var img: Image = root.get_texture().get_image()
-	img.save_png(OUT + "/" + name + ".png")
+	img.save_png(OUT_DIR + "/" + name + ".png")
 	print("shot: ", name)
 
 

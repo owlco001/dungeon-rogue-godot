@@ -7,6 +7,9 @@ class_name Enemy
 signal died(enemy: Enemy)
 
 const PoolManager := preload("res://systems/pool_manager.gd")
+# 敌人帧同样是 384px 画布；地砖源图 192px 映射到 48px 世界单位。
+const ART_SCALE := 0.25
+const DEATH_SQUASH := Vector2(1.15, 0.45)
 
 var enemy_id := "slime"
 # v0.8 B4：SpriteFrames 按兵种共享（原实现每只怪新建一份，7 份重复构建）
@@ -146,7 +149,7 @@ func spawn_init() -> void:
 	_los_clear = true
 	_los_t = randf() * 0.25
 	sprite.frames = _shared_frames(enemy_id)
-	sprite.scale = Vector2.ONE * base_scale
+	sprite.scale = Vector2.ONE * ART_SCALE * base_scale
 	sprite.modulate = Color.WHITE
 	sprite.play("idle")
 	_player = get_tree().get_first_node_in_group("player") as Node2D
@@ -299,12 +302,12 @@ func _physics_process(delta: float) -> void:
 	if fly:
 		# bat hover: gentle sine bob, no ground hop
 		sprite.position.y = -18.0 + sin(_wobble * 2.2) * 6.0
-		sprite.scale = Vector2.ONE * base_scale * (1.0 + 0.04 * sin(_wobble * 4.0)) * _punch
+		sprite.scale = Vector2.ONE * ART_SCALE * base_scale * (1.0 + 0.04 * sin(_wobble * 4.0)) * _punch
 	else:
 		# ground hop: squash & stretch so it reads as moving, not sliding
 		var hop := absf(sin(_wobble * 2.0))
 		sprite.position.y = -10.0 - hop * 7.0
-		sprite.scale = Vector2(base_scale * (1.0 - 0.06 * hop), base_scale * (1.0 + 0.09 * hop)) * _punch
+		sprite.scale = Vector2(base_scale * (1.0 - 0.06 * hop), base_scale * (1.0 + 0.09 * hop)) * ART_SCALE * _punch
 	if _fuse_t >= 0.0:
 		sprite.scale *= 1.0 + (1.0 - maxf(_fuse_t, 0.0)) * 0.45
 
@@ -460,6 +463,6 @@ func _die() -> void:
 		FX.hitstop(get_tree(), 0.04)
 	var tw := create_tween()
 	tw.set_parallel(true)
-	tw.tween_property(sprite, "scale", Vector2(base_scale * 1.3, base_scale * 0.3), 0.16).set_trans(Tween.TRANS_QUAD)
+	tw.tween_property(sprite, "scale", ART_SCALE * base_scale * DEATH_SQUASH, 0.16).set_trans(Tween.TRANS_QUAD)
 	tw.tween_property(sprite, "modulate:a", 0.0, 0.3).set_delay(0.1)
 	tw.chain().tween_callback(_release_self)

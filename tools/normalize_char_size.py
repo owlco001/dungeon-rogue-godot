@@ -9,6 +9,8 @@
 串行 rembg（u2net），防 OOM。用 venv python 运行。
 """
 import gc
+import os
+import sys
 from pathlib import Path
 from PIL import Image
 import numpy as np
@@ -16,7 +18,7 @@ import numpy as np
 BASE = Path(__file__).resolve().parent.parent
 ASSETS = BASE / "assets"
 STAGING = ASSETS / ".staging"
-VENV_PY = Path.home() / "workspace" / ".rbg-venv" / "bin" / "python"
+VENV_PY = Path(os.environ.get("VENV_PY", sys.executable))  # 抠图需rembg，建议跑在专用 venv 里
 
 
 def alpha_bbox(img):

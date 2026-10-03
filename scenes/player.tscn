@@ -29,6 +29,8 @@ shape = SubResource("1")
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true
 position_smoothing_speed = 8.0
+# 统一放大地图、角色、敌人和掉落物的世界视觉，不改变碰撞/寻路单位。
+zoom = Vector2(1.16, 1.16)
 limit_left = 0
 limit_top = 0
 limit_right = 1600

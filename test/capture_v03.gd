@@ -1,7 +1,7 @@
 # v0.3 截图验证（新武器/召唤物/超武合成/超武释放/技能/第10层Boss）
 extends SceneTree
 
-const OUT := "/home/hatch/workspace/your_files/dungeon-rogue-godot-demo/v03"
+const OUT := "user://shot_v03"
 var _t0 := 0
 var _main: Node = null
 

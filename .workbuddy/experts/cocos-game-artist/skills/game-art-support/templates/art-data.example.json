@@ -1,0 +1,86 @@
+{
+  "_comment": "美术文档 PPT 生成器的数据契约示例。【全部内容为虚构示例，与任何真实项目无关】，仅用于演示结构与自测。",
+  "meta": {
+    "project": "雾山灯火",
+    "tagline": "水墨剪影 + 灯火暖光点缀，夜色里只有灯是亮的",
+    "resolution": "720×1280 竖屏",
+    "platform": "微信小游戏",
+    "version": "v1",
+    "date": "2026-09-19",
+    "accent": "#C97B3A"
+  },
+  "anchors": [
+    { "item": "画风", "value": "国风水墨剪影，人物与山石以剪影呈现" },
+    { "item": "视角", "value": "正交侧视，横版推进" },
+    { "item": "光照", "value": "全局冷色月光 + 局部暖色灯火（唯一高饱和来源）" },
+    { "item": "线宽", "value": "不做描边，靠明度分离；重要轮廓用 1px 亮边提亮" },
+    { "item": "质感", "value": "哑光平涂 + 少量水墨晕染，无高光反射" },
+    { "item": "比例", "value": "Q 版三头身，主角占总高约 45%" },
+    { "item": "色彩倾向", "value": "整体低饱和冷色，暖色仅用于灯火与交互提示" },
+    { "item": "禁忌", "value": "不模仿在世艺术家个人风格；不用渐变光晕；不做写实解剖；不使用高饱和绿" }
+  ],
+  "anchors_note": "禁忌清单是防止生成漂移的关键，不可省略。",
+  "palette": [
+    { "name": "月白", "hex": "#E8EDF2", "usage": "月光亮面 / 高光", "luminance": "最高" },
+    { "name": "墨青", "hex": "#2B3A44", "usage": "主体固有色", "luminance": "中低" },
+    { "name": "远山", "hex": "#39485A", "usage": "背景山体", "luminance": "低" },
+    { "name": "灯火", "hex": "#C97B3A", "usage": "灯笼 / 交互提示", "luminance": "高" },
+    { "name": "砚底", "hex": "#141A20", "usage": "阴影与剪影", "luminance": "最低" },
+    { "name": "竹青", "hex": "#5A6B4A", "usage": "植被（低饱和）", "luminance": "中" }
+  ],
+  "palette_note": "主体（墨青）与背景（远山）明度差约 2 档，缩略图下可分。",
+  "luminance": [
+    { "level": "高光", "range": "80–95", "usage": "灯火、水面反光" },
+    { "level": "主体亮面", "range": "60–80", "usage": "月光照到的角色面" },
+    { "level": "主体中间调", "range": "35–55", "usage": "角色固有色" },
+    { "level": "背景", "range": "20–35", "usage": "山体、天空" },
+    { "level": "阴影 / 剪影", "range": "5–18", "usage": "树木剪影、建筑暗部" }
+  ],
+  "luminance_note": "转灰度后主体与背景仍可分，明度层级才算合格。",
+  "assets": [
+    { "category": "角色", "count": 4, "priority": "P0", "spec": "256×256 PNG 透明，朝右", "group": "char_atlas" },
+    { "category": "场景瓦片", "count": 24, "priority": "P0", "spec": "64×64 PNG 透明，需无缝拼接", "group": "env_tile_atlas" },
+    { "category": "UI", "count": 12, "priority": "P0", "spec": "按钮三态 + 九宫格边距 24px", "group": "ui_common_atlas" },
+    { "category": "图标", "count": 18, "priority": "P1", "spec": "96×96 PNG 透明，统一内边距", "group": "icon_atlas" },
+    { "category": "特效", "count": 6, "priority": "P1", "spec": "128×128 PNG，黑底（加法叠加）", "group": "fx_atlas" },
+    { "category": "怪物", "count": 8, "priority": "P0", "spec": "256×256 PNG 透明，同族共用辅色", "group": "mon_atlas" }
+  ],
+  "assets_note": "首屏必需资源与后半程资源分图集，避免首包加载无关资源。",
+  "assets_chart_note": "场景瓦片数量最多，它的规格（是否无缝）必须最先定死。",
+  "batches": [
+    { "batch": "第1批", "content": "1 个主体剪影 + 1 只怪物基准图", "count": 2, "goal": "敲定锚点与明度层级" },
+    { "batch": "第2批", "content": "怪物同族变体 + 角色动作状态", "count": 10, "goal": "验证锚点可复用" },
+    { "batch": "第3批", "content": "场景瓦片（含无缝验证）", "count": 24, "goal": "验证与角色是否同族" },
+    { "batch": "第4批", "content": "UI 与图标", "count": 30, "goal": "验证界面可读性" },
+    { "batch": "第5批", "content": "特效", "count": 6, "goal": "依赖前四批定稿" }
+  ],
+  "batches_note": "第 1 批只是 2 张基准图，定稿前不要批量生成后面的批次。",
+  "gaps": [
+    { "asset": "char_hero_idle", "category": "角色", "priority": "P0", "blocks": "核心玩法无法验收", "status": "未开始" },
+    { "asset": "mon_lantern_idle", "category": "怪物", "priority": "P0", "blocks": "第一关无法验收", "status": "未开始" },
+    { "asset": "ui_btn_primary", "category": "UI", "priority": "P0", "blocks": "所有交互界面", "status": "未开始" },
+    { "asset": "env_tile_ground", "category": "场景瓦片", "priority": "P0", "blocks": "地图无法搭建", "status": "规格待定" },
+    { "asset": "fx_lantern_glow", "category": "特效", "priority": "P1", "blocks": "无（可后补）", "status": "未开始" }
+  ],
+  "gaps_note": "优先级只按玩法依赖定：P0 缺了无法验收，P2 是锦上添花。",
+  "review": {
+    "verdict": "小改",
+    "summary": "2 张通过、3 张小改、1 张重做。问题集中在明度分离与抠图边缘。",
+    "issues": [
+      { "asset": "mon_lantern_idle", "issue": "灯火与角色轮廓明度接近，缩略图下糊在一起",
+        "fix": "角色剪影压到砚底档（明度 ≤15），灯火保持 80+，拉开两档以上", "priority": "P0" },
+      { "asset": "ui_btn_primary", "issue": "按钮边缘有半透明像素（生成时带了外发光）",
+        "fix": "重新生成时明确要求无外发光；已产出的用 keyout 后人工修边", "priority": "P0" },
+      { "asset": "env_tile_ground", "issue": "瓦片左右拼接有可见缝隙",
+        "fix": "生成时要求可无缝拼接，并预留 1px 重叠；引擎侧再验证一次", "priority": "P1" },
+      { "asset": "icon_shovel", "issue": "图标内边距不一致，视觉重量比同组偏小",
+        "fix": "统一画布 96×96、四周留 12px 内边距后重新导出", "priority": "P1" }
+    ]
+  },
+  "next": [
+    "先出第 1 批 2 张基准图，确认锚点后再放量",
+    "待定：场景瓦片是否必须无缝（影响第 3 批出图方式）",
+    "待定：主角是否需要独立的左右两版（含不对称道具，镜像会翻车）",
+    "需人工精修：已生成的 3 张边缘半透明图，建议先修边再入图集"
+  ]
+}

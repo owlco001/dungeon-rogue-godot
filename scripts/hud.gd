@@ -174,7 +174,7 @@ func _build_timer_bar() -> void:
 	_timer_bar.show_percentage = false
 	_timer_bar.visible = false
 	_timer_label.visible = false
-	# v0.8.19：计时条渐变 + 波次刻度（T+25/T+50，对应 3 波怪）
+	# v0.8.19：计时条渐变 + 波次刻度（T+8/T+18，对应 3 波怪）
 	var tbg := StyleBoxFlat.new()
 	tbg.bg_color = Color(0, 0, 0, 0.55)
 	tbg.set_corner_radius_all(5)
@@ -182,7 +182,7 @@ func _build_timer_bar() -> void:
 	var tfill := StyleBoxTexture.new()
 	tfill.texture = _mk_gradient_tex(Color(0.45, 0.65, 1.0), Color(0.25, 0.45, 0.85))
 	_timer_bar.add_theme_stylebox_override("fill", tfill)
-	for wave_t in [25.0, 50.0]:
+	for wave_t in [8.0, 18.0]:
 		var tick := ColorRect.new()
 		tick.color = Color(1.0, 0.85, 0.4, 0.9)
 		tick.custom_minimum_size = Vector2(2, 10)
@@ -984,8 +984,12 @@ func _char_card(cid: String, compact: bool = false) -> Control:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
 	panel.add_child(vb)
-	# portrait from the down idle sprite
-	var tex := load("res://assets/sprites/characters/%s/char_%s_down_idle_00.png" % [cid, cid]) as Texture2D
+	# portrait from the front idle sprite
+	# v0.8素材命名统一：player.gd _tex() 的 down->front / up->back 映射说明
+	# front/back 才是素材侧的真实朝向名（down/up 只是引擎侧的说法）。
+	# 原先这里拼 down_idle_00，只有 down/up 命名的角色能出图，front/back 命名的角色
+	# 头像会加载成 null（实测 aila 头像空白）。改为 front_idle_00 后三角色一致。
+	var tex := load("res://assets/sprites/characters/%s/char_%s_front_idle_00.png" % [cid, cid]) as Texture2D
 	var pr := TextureRect.new()
 	pr.texture = tex
 	pr.custom_minimum_size = Vector2(96, 96) if compact else Vector2(128, 128)
@@ -1022,7 +1026,11 @@ func _char_card(cid: String, compact: bool = false) -> Control:
 	b.add_theme_font_override("font", _font)
 	b.add_theme_font_size_override("font_size", 20)
 	b.custom_minimum_size = Vector2(140, 44) if compact else Vector2(160, 48)
-	b.pressed.connect(func() -> void: character_chosen.emit(cid))
+	b.pressed.connect(func() -> void:
+		Sfx.play("click")
+		if OS.has_feature("web"):
+			JavaScriptBridge.eval("window._gameBgm&&window._gameBgm.play();window._gameSfx&&window._gameSfx.unlock()", true)
+		character_chosen.emit(cid))
 	var bc := CenterContainer.new()
 	bc.add_child(b)
 	vb.add_child(bc)

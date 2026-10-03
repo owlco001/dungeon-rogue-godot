@@ -4,6 +4,9 @@ extends CharacterBody2D
 ## Emits hp_changed for the HUD boss bar, died(enemy) like Enemy.
 
 const PoolManager := preload("res://systems/pool_manager.gd")
+# Boss 源图为 640px，按 48px 世界瓦片标尺归一显示。
+const ART_SCALE := 0.25
+const DEATH_SQUASH := Vector2(1.15, 0.45)
 
 signal died(enemy: Node2D)
 signal hp_changed(hp: float, max_hp: float)
@@ -118,6 +121,7 @@ func _ready() -> void:
 	_sprite = Sprite2D.new()
 	_sprite.texture = load(String(boss_def["tex"])) as Texture2D
 	_base_scale = float(boss_def.get("scale", 1.0))
+	_base_scale *= ART_SCALE
 	_sprite.scale = Vector2.ONE * _base_scale
 	add_child(_sprite)
 	# 脚下扬尘
@@ -442,6 +446,6 @@ func _die() -> void:
 	burst.emitting = true
 	var tw := create_tween()
 	tw.set_parallel(true)
-	tw.tween_property(_sprite, "scale", Vector2(1.6, 0.4), 0.35).set_trans(Tween.TRANS_QUAD)
+	tw.tween_property(_sprite, "scale", _base_scale * DEATH_SQUASH, 0.35).set_trans(Tween.TRANS_QUAD)
 	tw.tween_property(_sprite, "modulate:a", 0.0, 0.5).set_delay(0.2)
 	tw.chain().tween_callback(queue_free)

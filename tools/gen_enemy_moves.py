@@ -2,11 +2,14 @@
 """批量生成怪物移动帧（Agnes img2img）+ 蛮兽待机重画。"""
 import subprocess
 import sys
+import os
 from pathlib import Path
 from PIL import Image
 
-ROOT = Path("/home/hatch/workspace/games/dungeon-rogue-godot")
-AGNES = Path("/home/hatch/workspace/skills/agnes/bin/agnes")
+# 仓库根目录= 本脚本上级目录；如在别处运行可设 DUNGEON_ROOT 覆盖
+ROOT = Path(os.environ.get("DUNGEON_ROOT", Path(__file__).resolve().parent.parent))
+# Agnes CLI 路径：默认读环境变量 AGNES_BIN，找不到时回退到 PATH 里的 agnes
+AGNES = Path(os.environ.get("AGNES_BIN", "agnes"))
 OUT = ROOT / "assets/sprites/enemies"
 TMP = Path("/tmp/enemy_gen")
 TMP.mkdir(exist_ok=True)

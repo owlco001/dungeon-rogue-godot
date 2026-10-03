@@ -21,19 +21,32 @@ func _ready() -> void:
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
-			_active = true
-			_origin = _clamp_origin(event.position)
-			_hint = _origin
-			_update_knob(event.position)
+			_begin_drag(event.position)
 		else:
 			_release()
 	elif event is InputEventMouseMotion and _active:
 		_update_knob(event.position)
+	elif event is InputEventScreenTouch:
+		if event.pressed:
+			_begin_drag(event.position)
+		else:
+			_release()
+	elif event is InputEventScreenDrag and _active:
+		_update_knob(event.position)
+
+
+func _begin_drag(pos: Vector2) -> void:
+	_active = true
+	_origin = _clamp_origin(pos)
+	_hint = _origin
+	_update_knob(pos)
 
 
 func _input(event: InputEvent) -> void:
 	# catch release outside the control
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed and _active:
+		_release()
+	elif event is InputEventScreenTouch and not event.pressed and _active:
 		_release()
 
 

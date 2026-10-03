@@ -1,7 +1,8 @@
 class_name RoomGen
 extends RefCounted
-## v0.8 L4 程序化房间（01 §6.2）：格子房间-走廊图，确定性 seed（同 seed 同布局）。
+## v0.8 L4 程序化布局（01 §6.2）：开放竞技场 + 逻辑房间区域，确定性 seed（同 seed 同布局）。
 ## 网格 32×24（CELL=50px = 1600×1200，贴合 ARENA_W/H）；1=墙 0=地面。
+## 场地内部默认开放，仅保留一格外圈墙；rooms 继续服务刷怪、楼梯和主题逻辑。
 
 const CELL := 50.0
 const GW := 32
@@ -18,12 +19,20 @@ var rng := RandomNumberGenerator.new()
 func generate(p_seed: int) -> void:
 	rng.seed = p_seed
 	grid.resize(GW * GH)
-	grid.fill(1)
+	# 开放竞技场：内部默认全地面，只保留一格外圈墙；房间仍保留为刷怪/楼梯的逻辑区域。
+	# 旧版先铺满墙再挖房间和走廊，视觉上墙过密，也把角色限制在狭窄通道里。
+	grid.fill(0)
+	for x in range(GW):
+		grid[x] = 1
+		grid[(GH - 1) * GW + x] = 1
+	for y in range(GH):
+		grid[y * GW] = 1
+		grid[y * GW + GW - 1] = 1
 	rooms.clear()
-	# 出生大厅：中央 6×5 固定先挖（保证玩家出生点是地面）
+	# 出生大厅：中央 6×5 固定逻辑区域（开放场地中仍作为刷怪安全区）
 	var hall := {"x": GW / 2 - 3, "y": GH / 2 - 2, "w": 6, "h": 5}
 	rooms.append(hall)
-	_carve_rect(hall)
+	# 5–8 个随机逻辑区域；开放场地不再挖墙，避免形成狭窄房间/走廊。
 	# 5–8 个随机房间
 	var target := 5 + rng.randi_range(0, 3)
 	var tries := 0

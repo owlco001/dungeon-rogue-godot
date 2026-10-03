@@ -2,6 +2,12 @@ extends Node2D
 ## Pickup: XP gem (s/m/l) or gold coin. Magnet-attracted to the player.
 
 const PoolManager := preload("res://systems/pool_manager.gd")
+# 拾取物源图为 256px，统一映射到 48px 地砖世界标尺。
+const PICKUP_ART_SCALE := 0.29
+# 金币透明内容占 256 画布约 240px 宽；相机整体放大后保持小而清晰。
+const COIN_ART_SCALE := 0.13
+# 遗物图标也按掉落物世界标尺显示，避免 0.75 造成远大于角色的图标。
+const RELIC_ART_SCALE := 0.29
 
 var kind := "xp"   # "xp" / "gold" / "relic"
 var value := 2
@@ -44,11 +50,13 @@ func _build_sprite() -> void:
 	sp.name = "Sprite2D"
 	if kind == "xp":
 		sp.texture = load(GameData.GEM_TEX[GameData.gem_tier_for_xp(value)]) as Texture2D
+		sp.scale = Vector2.ONE * PICKUP_ART_SCALE
 	elif kind == "relic":
 		sp.texture = load(String(GameData.RELICS[relic_id]["icon"])) as Texture2D
-		sp.scale = Vector2.ONE * 0.75
+		sp.scale = Vector2.ONE * RELIC_ART_SCALE
 	else:
 		sp.texture = load(GameData.COIN_TEX) as Texture2D
+		sp.scale = Vector2.ONE * COIN_ART_SCALE
 	add_child(sp)
 	sprite = sp
 

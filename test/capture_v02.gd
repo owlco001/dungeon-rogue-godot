@@ -4,7 +4,7 @@ extends SceneTree
 ## Run: xvfb-run godot --rendering-driver opengl3 --audio-driver Dummy \
 ##      --path <project> --script res://test/capture_v02.gd
 
-const OUT := "/home/hatch/workspace/your_files/dungeon-rogue-godot-demo/v02"
+const OUT := "user://shot_v02"
 
 var main: Node
 

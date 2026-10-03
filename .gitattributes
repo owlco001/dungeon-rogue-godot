@@ -1,0 +1,22 @@
+# Godot 导入元数据不做行尾转换。
+# .import 是引擎生成的 YAML，内容几乎恒定，但在 Windows 上 Git 会因
+# core.autocrlf 把 LF 改写成 CRLF，于是每次 --import 后 286 个 .import
+# 全部显示为已修改（而 `git diff` 看不到任何实际内容变化，纯噪声）。
+# 后果：掩盖真正需要提交的文件改动，污染提交记录。
+*.import -text
+
+# 素材与证据图是二进制，禁止任何行尾/文本转换。
+*.png binary
+*.webp binary
+*.ogg binary
+*.ttf binary
+
+# 源码与文档统一按 LF 存（避免同样的 CRLF 噪声）。
+*.gd text eol=lf
+*.py text eol=lf
+*.sh text eol=lf
+*.md text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.cfg text eol=lf
+*.godot text eol=lf

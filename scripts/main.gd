@@ -167,6 +167,9 @@ func _on_character_chosen(char_id: String) -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	# 先于 Player 的物理帧同步外部输入，避免摇杆输入晚一帧导致角色看起来不动。
+	if _started and is_instance_valid(player):
+		player.external_move = hud.get_move_vector()
 	# v0.8 B4：每物理帧首行重建空间网格（EntityRegistry）
 	Registry.begin_frame()
 	# v0.8.5 地形：移速/摩擦逐帧写入，持续伤害 0.5s 结算
@@ -285,8 +288,8 @@ func _spawn_floor_enemies() -> void:
 			add_child(b)
 			_boss_ref = b
 			hud.show_boss_bar(String(bdef["name"]))
-		# a few minions for company
-		var comp := {"slime": 2, "bat": 2}
+		# Boss 层也保持较高场面密度，避免开放竞技场下陪战单位过少
+		var comp := {"slime": 3, "bat": 3}
 		for eid in comp.keys():
 			for i in range(int(comp[eid])):
 				_spawn_enemy(String(eid), hp_m, dmg_m, false)

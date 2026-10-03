@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """数值审查：模拟 1~30 层玩家期望 DPS vs 敌人 HP/TTK/承伤，找断层。"""
-import re, math
+import re, math, os
+from pathlib import Path
 
-SRC = "/home/hatch/workspace/games/dungeon-rogue-godot/scripts/game_data.gd"
+SRC = str(Path(os.environ.get("DUNGEON_ROOT", Path(__file__).resolve().parent.parent)) / "scripts/game_data.gd")
 txt = open(SRC).read()
 
 def grab_block(name):
